@@ -53,6 +53,11 @@
 </code></pre><pre><code>    "mem_max": "2",
 </code></pre><pre><code>    "mem_min": "1",
 </code></pre><pre><code>    "port": "25565",
+</code></pre><pre><code>    "running": [
+</code></pre><pre><code>        "/srv/mc_server",
+</code></pre><pre><code>        "/usr/bin/java",
+</code></pre><pre><code>        "7341"
+</code></pre><pre><code>    ],
 </code></pre><pre><code>    "screen_name": "sweetpotato_mc",
 </code></pre><pre><code>    "server_dir": "/srv/mc_server",
 </code></pre><pre><code>    "world_name": "Larryland",

@@ -69,6 +69,7 @@ You can create your own file like this:
         "mem_format": "MB",
         "mem_max": "2048",
         "mem_min": "1024",
+        "running": "false",
         "port": "25565",
         "screen_name": "minecraft",
         "server_dir": "/srv/mc_server",
@@ -91,6 +92,11 @@ Or set the default configuration file, which allows you to run `sweetpotato` wit
         "mem_max": "2",
         "mem_min": "1",
         "port": "25565",
+        "running": [
+            "/srv/mc_server",
+            "/usr/bin/java",
+            "7341"
+        ],
         "screen_name": "sweetpotato_mc",
         "server_dir": "/srv/mc_server",
         "world_name": "Larryland",
