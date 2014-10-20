@@ -34,6 +34,7 @@
 </code></pre><pre><code>    "mem_format": "MB",
 </code></pre><pre><code>    "mem_max": "2048",
 </code></pre><pre><code>    "mem_min": "1024",
+</code></pre><pre><code>    "running": "false",
 </code></pre><pre><code>    "port": "25565",
 </code></pre><pre><code>    "screen_name": "minecraft",
 </code></pre><pre><code>    "server_dir": "/srv/mc_server",

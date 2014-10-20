@@ -11,6 +11,7 @@ import json
 import os
 import pty
 import shlex
+import socket
 import subprocess
 import sys
 import time
@@ -40,7 +41,7 @@ LOCK_FILE_NAME = '{0}/sweetpot.lock'.format(CONFIG_DIR)
 DEFAULT_CONF_FILE = '{0}/{1}.conf'.format(CONFIG_DIR, __progname__)
 DEFAULT_SCREEN_NAME = 'sweetpotato_mc'
 REQUIRED = 'backup_dir mem_format mem_max mem_min port server_dir world_name'
-RESTART_WAIT = 2
+SERVER_WAIT_TIME = 0.5
 VANILLA_DL_URL = 'https://s3.amazonaws.com/Minecraft.Download/versions/{0}/{1}'
 VANILLA_JAR_NAME = 'minecraft_server.{0}.jar'
 
@@ -571,8 +572,12 @@ def validate_port(port_num):
     @param port_num:
     @return:
     """
-    # TODO
-    pass
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        s.bind(('127.0.0.1', int(port_num)))
+    except (OSError, PermissionError) as e:
+        error_and_die(e)
+    s.close()
 
 
 def validate_settings(settings):
@@ -601,7 +606,7 @@ def wait_for_server_shutdown(screen_name, server_pid):
     @return:
     """
     while os.path.exists("/proc/{0}".format(server_pid)):
-        time.sleep(0.5)
+        time.sleep(SERVER_WAIT_TIME)
         send_command('stop', screen_name)
 
 
@@ -639,88 +644,6 @@ def write_server_properties(print_pre, file, settings):
         f.close()
     else:
         do_the_write()
-
-
-# functions for web, if bottle.py is installed
-if bottle:
-    # logging.basicConfig(format='127.0.0.1 - - [%(asctime)s] %(message)s', level=logging.DEBUG)
-
-    app = bottle.app()
-    # log = logging.getLogger(__name__)
-    static_path = os.path.join(BASE_DIR, 'data/static')
-    tpl_path = os.path.join(BASE_DIR, 'data/tpl')
-
-    bottle.debug(True)  # TODO: disable
-    bottle.TEMPLATE_PATH.insert(0, tpl_path)
-
-    if markdown:
-        # only provide these pages if we have Markdown installed
-        def generate_readme_tpl(readme, tpl):
-            """
-            Runs markdown() on a markdown-formatted README.md file to generate an html file.
-
-            @param readme:
-            @param tpl:
-            @return:
-            """
-            # TODO: add logic that checks whether or not the page needs to be generated
-            r = open(readme, 'r')
-            t = open(tpl, 'w')
-
-            [t.write(markdown(l)) for l in r.readlines()]
-            r.close()
-            t.close()
-
-            # Add the footer
-            t = open(tpl, 'a')
-            t.write("\n% include('readme_padding.tpl')")
-            t.write("\n% rebase('base.tpl', title='README.md')")
-            t.close()
-
-        @bottle.route('/readme')
-        @bottle.view('readme')
-        def readme_page():
-            path = bottle.request.path
-            generate_readme_tpl(
-                os.path.join(BASE_DIR, 'README.md'),
-                os.path.join(tpl_path, 'readme.tpl')
-            )
-            return {'path': path}
-    else:
-        @bottle.route('/readme')
-        @bottle.view('readme_no_md')
-        def readme_page():
-            path = bottle.request.path
-            return {'path': path}
-
-    @bottle.route('/')
-    @bottle.view('index')
-    def index_page():
-        path = bottle.request.path
-        return {'path': path}
-
-    # noinspection PyUnresolvedReferences
-    @bottle.route('/static/<file_path:path>')
-    def serve_static(file_path):
-        return bottle.static_file(file_path, root=static_path)
-
-    @bottle.error(404)
-    @bottle.view('404')
-    def error404(error):
-        path = bottle.request.path
-        return {
-            'error': error,
-            'path': path
-        }
-
-    @bottle.error(500)
-    @bottle.view('500')
-    def error500(error):
-        path = bottle.request.path
-        return {
-            'error': error,
-            'path': path
-        }
 
 
 def arg_parse(argz):
@@ -812,6 +735,8 @@ def arg_parse(argz):
     except EmptySettingError as e:
         error_and_die(e)
 
+    # validate_port(settings.port)
+
     if args.backup:
         print_pre = '[' + Colors.yellow_green + 'live-backup' + Colors.end + '] '
         try:
@@ -860,6 +785,111 @@ def arg_parse(argz):
             error_and_die(e)
     elif args.web:
         if bottle:
+            # logging.basicConfig(format='127.0.0.1 - - [%(asctime)s] %(message)s', level=logging.DEBUG)
+
+            app = bottle.app()
+            # log = logging.getLogger(__name__)
+            static_path = os.path.join(BASE_DIR, 'data/static')
+            tpl_path = os.path.join(BASE_DIR, 'data/tpl')
+
+            bottle.debug(True)  # TODO: disable
+            bottle.TEMPLATE_PATH.insert(0, tpl_path)
+
+            if markdown:
+                # only provide these pages if we have Markdown installed
+                def generate_readme_tpl(readme_file, tpl):
+                    """
+                    Runs markdown() on a markdown-formatted README.md file to generate an html file.
+
+                    @param readme_file:
+                    @param tpl:
+                    @return:
+                    """
+                    # TODO: add logic that checks whether or not the page needs to be generated
+                    r = open(readme_file, 'r')
+                    t = open(tpl, 'w')
+
+                    [t.write(markdown(l)) for l in r.readlines()]
+                    r.close()
+                    t.close()
+
+                    # Add the footer
+                    t = open(tpl, 'a')
+                    t.write("\n% include('readme_padding.tpl')")
+                    t.write("\n% rebase('base.tpl', title='README.md')")
+                    t.close()
+
+                @bottle.route('/readme')
+                @bottle.view('readme')
+                def readme():
+                    path = bottle.request.path
+                    generate_readme_tpl(
+                        os.path.join(BASE_DIR, 'README.md'),
+                        os.path.join(tpl_path, 'readme.tpl')
+                    )
+                    return {'path': path}
+            else:
+                @bottle.route('/readme')
+                @bottle.view('readme_no_md')
+                def readme():
+                    path = bottle.request.path
+                    return {'path': path}
+
+            @bottle.route('/backups')
+            @bottle.view('backups')
+            def backups():
+                path = bottle.request.path
+                todays_file = '{0}_{1}.tar.{2}'.format(
+                    datetime.now().strftime('%Y-%m-%d'),
+                    settings.world_name,
+                    settings.z
+                )
+                # noinspection PyTypeChecker
+                backup_dir_contents = os.listdir(settings.backup_dir)
+                return {
+                    'backup_dir_contents': backup_dir_contents,
+                    'path': path,
+                    'todays_file': todays_file,
+                    'world_name': settings.world_name
+                }
+
+            @bottle.route('/')
+            @bottle.view('index')
+            def index():
+                path = bottle.request.path
+                return {'path': path}
+
+            @bottle.route('/server')
+            @bottle.view('server')
+            def server():
+                path = bottle.request.path
+                return {
+                    'path': path,
+                    'settings': settings
+                }
+
+            # noinspection PyUnresolvedReferences
+            @bottle.route('/static/<file_path:path>')
+            def serve_static(file_path):
+                return bottle.static_file(file_path, root=static_path)
+
+            @bottle.error(404)
+            @bottle.view('404')
+            def error404(error):
+                path = bottle.request.path
+                return {
+                    'error': error,
+                    'path': path
+                }
+
+            @bottle.error(500)
+            @bottle.view('500')
+            def error500(error):
+                path = bottle.request.path
+                return {
+                    'error': error,
+                    'path': path
+                }
             bottle.run(app=app, host='127.0.0.1', quiet=False, reloader=True)
         else:
             error_and_die('The web component requires both bottle.py to function, '
