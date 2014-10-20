@@ -7,7 +7,6 @@ except ImportError:
     bottle = None
 import configparser
 import json
-# import logging
 import os
 import pty
 import shlex
@@ -32,7 +31,7 @@ __forgeversion__ = '1.7.10-10.13.2.1230'
 __license__ = 'GPLv3'
 __mcversion__ = '1.8'
 __progname__ = 'sweetpotato'
-__version__ = '0.8 BETA'
+__version__ = '0.11 BETA'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -933,14 +932,11 @@ def arg_parse(argz):
             error_and_die(e)
     elif args.web:
         if bottle:
-            # logging.basicConfig(format='127.0.0.1 - - [%(asctime)s] %(message)s', level=logging.DEBUG)
-
             app = bottle.app()
-            # log = logging.getLogger(__name__)
             static_path = os.path.join(BASE_DIR, 'data/static')
             tpl_path = os.path.join(BASE_DIR, 'data/tpl')
 
-            bottle.debug(True)  # TODO: disable
+            bottle.debug(False)
             bottle.TEMPLATE_PATH.insert(0, tpl_path)
 
             if markdown:
@@ -1000,15 +996,16 @@ def arg_parse(argz):
             @bottle.route('/')
             @bottle.view('index')
             def index():
+                is_running = is_server_running(settings.server_dir)
                 path = bottle.request.path
                 pid = None
-                if running:
-                    pid = running[-1]
+                if is_running:
+                    pid = is_running[-1]
                 return {
                     'path': path,
                     'pid': pid,
                     'settings': settings,
-                    'server_running': running
+                    'server_running': is_running
                 }
 
             @bottle.route('/json')
@@ -1016,13 +1013,42 @@ def arg_parse(argz):
                 settings.running = running
                 return settings.__dict__
 
-            @bottle.route('/server')
+            @bottle.get('/server')
+            @bottle.post('/server')
             @bottle.view('server')
             def server():
+                is_running = is_server_running(settings.server_dir)
                 path = bottle.request.path
+                request_method = bottle.request.method
+                restart = None
+                start = None
+                stop = None
+                if bottle.request.method == 'POST':
+                    postdata = bottle.request.POST
+                    restart = postdata.get('restart')
+                    start = postdata.get('start')
+                    stop = postdata.get('stop')
+                    if restart is not None:
+                        t = Thread(target=restart_server, args=('', settings))
+                        t.daemon = True
+                        t.start()
+                    elif start is not None:
+                        t = Thread(target=start_server, args=('', settings))
+                        t.daemon = True
+                        t.start()
+                    elif stop is not None:
+                        t = Thread(target=stop_server,
+                                   args=('', settings.screen_name, settings.server_dir, settings.world_name))
+                        t.daemon = True
+                        t.start()
                 return {
                     'path': path,
-                    'settings': settings
+                    'request_method': request_method,
+                    'restart': restart,
+                    'start': start,
+                    'stop': stop,
+                    'server_running': is_running,
+                    'world_name': settings.world_name
                 }
 
             # noinspection PyUnresolvedReferences

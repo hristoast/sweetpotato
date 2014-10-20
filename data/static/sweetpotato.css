@@ -29,6 +29,10 @@ a:focus, a:hover {
     background-color: #008000;
 }
 
+button.srvctl {
+    margin-top: 20px;
+}
+
 div.divider {
     border-bottom: 1px dotted #000000;
     margin-bottom: 10px;
