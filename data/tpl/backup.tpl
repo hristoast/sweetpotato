@@ -1,4 +1,4 @@
-                % rebase('base.tpl', title='Backups')
+                % rebase('base.tpl', title='Backup')
                 <div class="center">
                     <h1>Backup</h1>
                     % if request_method == 'POST':

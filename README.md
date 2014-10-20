@@ -12,17 +12,17 @@ It was created as a way to simplify managing a Minecraft server by providing a s
 
 ## Installation
 
-Installation is simple: git clone this repo to wherever you want it, then create a symbolic link to wherever you want it.
+Installation is simple: git clone this repo to wherever you want it (or download an archive and extract it), then create a symbolic link to wherever you want it.
 
     $ ln -s $HOME/src/sweetpotato/sweetpotato.py $HOME/bin/sweetpotato
 
 ## Issues
 
-I am sure there may be actual bugs and unintended problems in here, but this section is for known issues relating to design decisions. Things that happen, things we can or can't do - things like that.
+I am sure there may be actual bugs and unintended problems in here, but this section is for known issues relating to design decisions. Things that happen, things `sweetpotato` can or can't do - things like that.
 
   * `sweetpotato` is very careful in may ways, but it will not keep your settings straight for you. Meaning, you must take care to ensure the directories you configure for backups, servers, and so forth are where you really want these things to be.
 
-  * At present we have no way of validating the screen you have chosen. This means that if you have two servers running on the same machine, and you give them both the same screen name, `sweetpotato` is not going to be able to do anything about it!
+  * At present `sweetpotato` has no way of validating the screen you have chosen. This means that if you have two servers running on the same machine, and you give them both the same screen name, `sweetpotato` is not going to be able to do anything about it and unexpected things will happen!
 
   * The WebUI includes no extra security whatsoever. This is deliberate, any decent HTTP server has a way of providing SSL and authentication functions for you.
 
@@ -180,21 +180,21 @@ Fails if the configured world is not running.
 
 ### WebUI
 
-At this time, the WebUI is just a stub, but you can fire it up if you have a valid configuration and have bottle.py installed.
+This feature is experimental.
 
     $ sweetpotato --web
     Bottle v0.12.7 server starting up (using WSGIRefServer())...
     Listening on http://127.0.0.1:8080/
     Hit Ctrl-C to quit.
 
-As the output says, after launching you can then fire up the WebUI in your favorite browser at http://127.0.0.1:8080/. This feature is still experimental, so use at your own risk even more so!
+As the output says, after launching you can then fire up the WebUI in your favorite browser at http://127.0.0.1:8080/.
 
 ## Mod (Forge) support
 ----
 
 TODO
 
-## Installation
-----
+## ETC
 
-TODO
+  * http://hristoast.github.io/sweetpotato
+  * https://github.com/hristoast/sweetpotato
