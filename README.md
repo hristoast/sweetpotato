@@ -6,7 +6,7 @@
 ## What is it?
 ----
 
-`sweetpotato` is a tool for running a Minecraft server from inside a screen session on a GNU/Linux system. It is written in Python, specifically Python 3.
+`sweetpotato` is a tool for running a Minecraft server from inside a screen session on a GNU/Linux system. It is written in Python, specifically Python 3, but with no external Python dependencies, except for the optional WebUI function.
 
 It was created as a way to simplify managing a Minecraft server by providing a simple wrapper for common tasks. It knows what your world is and where its files are via command-line options, values set in a configuration file, or a mixture of both!
 
@@ -109,6 +109,17 @@ As with the live backup, this will not be ran if the file (named after today's d
     sweetpotato --offline
     [offline-backup]  Stopping "Larryland" ... backing up ... starting "Larryland" ... Done!
     FATAL: File "/srv/backups/minecraft/2014-10-19_Larryland.tar.gz" already exists!
+
+### WebUI
+
+At this time, the WebUI is just a stub, but you can fire it up if you have a valid configuration and have bottle.py installed.
+
+    $ sweetpotato --web
+    Bottle v0.12.7 server starting up (using WSGIRefServer())...
+    Listening on http://127.0.0.1:8080/
+    Hit Ctrl-C to quit.
+
+As the output says, after launching you can then fire up the WebUI in your favorite browser at http://127.0.0.1:8080/.
 
 ## Mod (Forge) support
 ----

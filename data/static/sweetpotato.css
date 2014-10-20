@@ -53,3 +53,8 @@ div#container {
     width: 900px;
     margin: 0 auto;
 }
+
+div#rmpad {
+    border-top: 1px solid #000000;
+    margin-top: 200px;
+}

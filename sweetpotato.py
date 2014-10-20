@@ -7,7 +7,7 @@ except ImportError:
     bottle = None
 import configparser
 import json
-import logging
+# import logging
 import os
 import pty
 import shlex
@@ -627,10 +627,10 @@ def write_server_properties(print_pre, file, settings):
 
 # functions for web, if bottle.py is installed
 if bottle:
-    logging.basicConfig(format='127.0.0.1 - - [%(asctime)s] %(message)s', level=logging.DEBUG)
+    # logging.basicConfig(format='127.0.0.1 - - [%(asctime)s] %(message)s', level=logging.DEBUG)
 
     app = bottle.app()
-    log = logging.getLogger(__name__)
+    # log = logging.getLogger(__name__)
     static_path = os.path.join(BASE_DIR, 'data/static')
     tpl_path = os.path.join(BASE_DIR, 'data/tpl')
 
@@ -657,25 +657,31 @@ if bottle:
 
             # Add the footer
             t = open(tpl, 'a')
-            t.write("\n%rebase base.tpl title='README.md'")
+            t.write("\n% include('readme_padding.tpl')")
+            t.write("\n% rebase('base.tpl', title='README.md')")
             t.close()
 
         @bottle.route('/readme')
         @bottle.view('readme')
         def readme_page():
-            generate_readme_tpl('README.md', 'data/views/readme.tpl')
-            return {}
+            path = bottle.request.path
+            generate_readme_tpl(
+                os.path.join(BASE_DIR, 'README.md'),
+                os.path.join(tpl_path, 'readme.tpl')
+            )
+            return {'path': path}
     else:
         @bottle.route('/readme')
         @bottle.view('readme_no_md')
         def readme_page():
-            return {}
+            path = bottle.request.path
+            return {'path': path}
 
     @bottle.route('/')
     @bottle.view('index')
     def index_page():
-        ip = bottle.request.environ.get('REMOTE_ADDR')
-        return {'ip': ip}
+        path = bottle.request.path
+        return {'path': path}
 
     # noinspection PyUnresolvedReferences
     @bottle.route('/static/<file_path:path>')
@@ -685,12 +691,20 @@ if bottle:
     @bottle.error(404)
     @bottle.view('404')
     def error404(error):
-        return {'error': error}
+        path = bottle.request.path
+        return {
+            'error': error,
+            'path': path
+        }
 
     @bottle.error(500)
     @bottle.view('500')
     def error500(error):
-        return {'error': error}
+        path = bottle.request.path
+        return {
+            'error': error,
+            'path': path
+        }
 
 
 def arg_parse(argz):
@@ -830,7 +844,7 @@ def arg_parse(argz):
             bottle.run(app=app, host='127.0.0.1', quiet=False, reloader=True)
         else:
             error_and_die('The web component requires both bottle.py to function, '
-                          'with python-markdown2 as an optional dependency.')
+                          'with Python-Markdown as an optional dependency.')
     else:
         parser.print_usage()
 
