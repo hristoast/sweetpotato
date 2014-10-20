@@ -356,9 +356,11 @@ def list_or_create_dir(d):
 
     :param d:
     """
-    # TODO: test this with a directory that we don't have permission to write
     if not os.path.isdir(d):
-        os.makedirs(d)
+        try:
+            os.makedirs(d)
+        except PermissionError as e:
+            error_and_die(e)
     return os.listdir(d)
 
 
@@ -374,12 +376,16 @@ def read_conf_file(file, settings):
     """
     # TODO: handle multiple servers by using their world name as a section header name
     # TODO: come up with a system for this
-    if not os.path.isfile(file):
-        raise ConfFileError('The specified conf file does not exist: {}'.format(file))
+    if len(file.split('/')) == 1:
+        file_path = os.path.join(os.getcwd(), file)
+    else:
+        file_path = file
+    if not os.path.isfile(file_path):
+        raise ConfFileError('The specified conf file does not exist: {}'.format(file_path))
 
     section = 'Settings'
     c = configparser.ConfigParser()
-    c.read(file)
+    c.read(file_path)
 
     try:
         options = c.options(section)
@@ -522,10 +528,13 @@ def run_server_backup(print_pre, settings, offline=False):
             print('Backing up "{}" ...'.format(world_name), end=' ')
         sys.stdout.flush()
     else:
+        send_command('save-all', screen_name)
+        send_command('save-on', screen_name)
         print(print_pre + Colors.light_blue + 'Running live backup of "{}"  ...'.format(world_name), end=' ')
         sys.stdout.flush()
         send_command('say Server backing up now', screen_name)
 
+    list_or_create_dir(backup_dir)
     if not force:
         try:
             with open(full_path_to_backup_file, 'rb'):
@@ -539,6 +548,7 @@ def run_server_backup(print_pre, settings, offline=False):
 
     if not offline:
         send_command('say Backup complete', screen_name)
+        send_command('save-on', screen_name)
 
     screen_started = is_screen_started(screen_name)
     server_running = is_server_running(server_dir)
@@ -618,7 +628,7 @@ def write_server_properties(print_pre, file, settings):
 # functions for web, if bottle.py is installed
 if bottle:
     logging.basicConfig(format='127.0.0.1 - - [%(asctime)s] %(message)s', level=logging.DEBUG)
-    os.chdir(BASE_DIR)
+    # os.chdir(BASE_DIR)  # This breaks sweetpotato if you have created a symlink to run sweetpotato
 
     app = bottle.app()
     log = logging.getLogger(__name__)
@@ -701,13 +711,13 @@ def arg_parse(argz):
     settings = parser.add_argument_group('Settings', 'Config options for %(prog)s')
     settings.add_argument('-c', '--conf', help='config file containing your settings', metavar='CONF FILE')
     settings.add_argument('-d', '--backup-dir', help='the FULL path to your backups folder',
-                          metavar='/path/to/backups/')
+                          metavar='/path/to/backups')
     settings.add_argument('--force', help='forces writing of server files, even when they already exist',
                           action='store_true')
     settings.add_argument('--forge', help='does this server use Forge?', action='store_true')
     settings.add_argument('--level-seed', '--seed', help='Optional and only applied during world creation')
     settings.add_argument('-p', '--port', help='port you wish to run your server on. Default: 25565')
-    settings.add_argument('-s', '--server-dir', metavar='/path/to/server/',
+    settings.add_argument('-s', '--server-dir', metavar='/path/to/server',
                           help='set the FULL path to the directory containing your server files')
     settings.add_argument('-S', '--screen', metavar='SCREEN NAME',
                           help='set the name of your Minecraft world. Default: {}'.format(DEFAULT_SCREEN_NAME))
@@ -747,12 +757,12 @@ def arg_parse(argz):
         settings.forge = args.forge
     if args.mb:
         settings.mem_format = 'MB'
-        settings.mem_max = args.mb[0]
-        settings.mem_min = args.mb[1]
+        settings.mem_max = args.mb[1]
+        settings.mem_min = args.mb[0]
     elif args.gb:
         settings.mem_format = 'GB'
-        settings.mem_max = args.gb[0]
-        settings.mem_min = args.gb[1]
+        settings.mem_max = args.gb[1]
+        settings.mem_min = args.gb[0]
     if args.level_seed:
         settings.level_seed = args.level_seed
     if args.port:
