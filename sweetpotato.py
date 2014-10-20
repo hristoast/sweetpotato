@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-"""
- A tool for managing Minecraft servers on GNU/Linux
-"""
+"""A tool for managing Minecraft servers on GNU/Linux."""
 import argparse
 try:
     import bottle
@@ -15,6 +13,7 @@ import pty
 import shlex
 import subprocess
 import sys
+import time
 # import tarfile
 import urllib.request
 
@@ -40,9 +39,10 @@ CONFIG_DIR = '{0}/.config/{1}'.format(HOME_DIR, __progname__)
 LOCK_FILE_NAME = '{0}/sweetpot.lock'.format(CONFIG_DIR)
 DEFAULT_CONF_FILE = '{0}/{1}.conf'.format(CONFIG_DIR, __progname__)
 DEFAULT_SCREEN_NAME = 'sweetpotato_mc'
+REQUIRED = 'backup_dir mem_format mem_max mem_min port server_dir world_name'
+RESTART_WAIT = 2
 VANILLA_DL_URL = 'https://s3.amazonaws.com/Minecraft.Download/versions/{0}/{1}'
 VANILLA_JAR_NAME = 'minecraft_server.{0}.jar'
-REQUIRED = 'backup_dir mem_format mem_max mem_min port server_dir world_name'
 
 
 class Colors:
@@ -448,6 +448,34 @@ def stop_server(print_pre, screen_name, server_dir, world_name):
         raise ServerNotRunningError('Cannot stop "{}" - it is not running!'.format(world_name))
 
 
+def restart_server(print_pre, settings):
+    jar_name = VANILLA_JAR_NAME.format(settings.mc_version)
+    mem_format = settings.mem_format
+    mem_max = settings.mem_max
+    mem_min = settings.mem_min
+    launch_server = 'java -Xms{0}{2} -Xmx{1}{2} -jar {3} nogui'.format(mem_min, mem_max, mem_format[0], jar_name)
+    screen_name = settings.screen_name
+    server_dir = settings.server_dir
+    world_name = settings.world_name
+
+    screen_started = is_screen_started(screen_name)
+    server_running = is_server_running(server_dir)
+
+    if not screen_started:
+        start_screen(screen_name, server_dir)
+
+    if server_running:
+        print(print_pre + 'Restarting {} ...'.format(world_name), end=' ')
+        sys.stdout.flush()
+        send_command('stop', screen_name)
+        time.sleep(RESTART_WAIT)
+    else:
+        print(print_pre + 'Starting {} ...'.format(world_name), end=' ')
+        sys.stdout.flush()
+    send_command(launch_server, screen_name)
+    print('Done!' + Colors.end)
+
+
 def validate_port(port_num):
     """
     Ensure that the provided port is usable.
@@ -681,7 +709,8 @@ def arg_parse(argz):
     elif args.offline:
         print('-o: Offline Backup YEY!')
     elif args.restart:
-        print('-r: Restart YEY!')
+        print_pre = '[' + Colors.yellow_green + 'restart' + Colors.end + '] '
+        restart_server(print_pre, settings)
     elif args.start:
         print_pre = '[' + Colors.yellow_green + 'start' + Colors.end + '] '
         try:
