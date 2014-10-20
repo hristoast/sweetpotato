@@ -11,11 +11,12 @@ import json
 import os
 import pty
 import shlex
-import socket
+# import socket
 import subprocess
 import sys
 import time
 import tarfile
+import urllib.error
 import urllib.request
 
 from datetime import datetime
@@ -34,6 +35,7 @@ __version__ = '0.8 BETA'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
+DEFAULT_WORLD_NAME = 'SweetpotatoWorld'
 DESCRIPTION = "Manage your Minecraft server on a GNU/Linux system."
 HOME_DIR = os.getenv('HOME')
 CONFIG_DIR = '{0}/.config/{1}'.format(HOME_DIR, __progname__)
@@ -98,6 +100,11 @@ class ServerNotRunningError(SweetpotatoIOErrorBase):
     pass
 
 
+class UnsupportedVersionError(SweetpotatoIOErrorBase):
+    """Raised when we try to generate a server.properties for an unsupported mc_version."""
+    pass
+
+
 class SweetpotatoConfig:
     """
     Representing the settings sweetpotato needs to function.
@@ -139,6 +146,38 @@ class SweetpotatoConfig:
 
     @property
     def as_serverproperties(self):
+        vanilla_server_properties_1710 = """generator-settings=
+op-permission-level=4
+allow-nether=true
+level-name={0}
+enable-query=false
+allow-flight=false
+announce-player-achievements=true
+server-port={1}
+level-type=DEFAULT
+enable-rcon=false
+level-seed={2}
+force-gamemode=false
+server-ip=
+max-build-height=256
+spawn-npcs=true
+white-list=false
+spawn-animals=true
+hardcore=false
+snooper-enabled=true
+online-mode=true
+resource-pack=
+pvp=true
+difficulty=1
+enable-command-block=false
+gamemode=0
+player-idle-timeout=0
+max-players=20
+spawn-monsters=true
+generate-structures=true
+view-distance=10
+motd=Welcome to {0}!
+        """.format(self.world_name, self.port, self.level_seed or '')
         vanilla_server_properties_18 = """generator-settings=
 op-permission-level=4
 allow-nether=true
@@ -177,6 +216,13 @@ motd=Welcome to {0}!
         """.format(self.world_name, self.port, self.level_seed or '')
         if self.mc_version == '1.8':
             return vanilla_server_properties_18
+        elif self.mc_version == '1.7.10':
+            return vanilla_server_properties_1710
+        else:
+            raise UnsupportedVersionError(
+                "We can't generate a server.properties for "
+                "the version ov MC you are trying to use ({}).".format(self.mc_version)
+            )
 
 
 def agree_to_eula(eula_txt, force, print_pre):
@@ -246,9 +292,12 @@ def create_server(settings):
             print(print_pre + Colors.light_blue + 'Downloading {} ...'.format(jar_name), end=' ')
             sys.stdout.flush()
             dl_url = VANILLA_DL_URL.format(mc_version, jar_name)
-            local_jar = urllib.request.urlretrieve(dl_url, full_jar_path)[0]
-            jar = open(local_jar)
-            jar.close()
+            try:
+                local_jar = urllib.request.urlretrieve(dl_url, full_jar_path)[0]
+                jar = open(local_jar)
+                jar.close()
+            except urllib.error.HTTPError as e:
+                error_and_die(e.msg + ' Is your MC Version valid?')
             print('Done!' + Colors.end)
         else:
             print(print_pre + Colors.light_blue + 'Found {}!'.format(jar_name) + Colors.end)
@@ -669,6 +718,11 @@ def validate_settings(settings):
         if setting in REQUIRED and value is None:
             missing.append(setting)
 
+    # set a default world name if need be
+    if 'world_name' in missing:
+        settings.world_name = DEFAULT_WORLD_NAME
+        missing.remove('world_name')
+
     # set a default screen name if need be
     if 'screen_name' in missing:
         settings.screen_name = settings.world_name
@@ -707,8 +761,11 @@ def write_server_properties(print_pre, file, settings):
         print(print_pre + Colors.light_blue + 'Generating server.properties ...', end=' ')
         sys.stdout.flush()
         file_to_write = open(file, 'w')
-        for l in settings.as_serverproperties.split('\n'):
-            file_to_write.write(l + '\n')
+        try:
+            for l in settings.as_serverproperties.split('\n'):
+                file_to_write.write(l + '\n')
+        except UnsupportedVersionError as e:
+            error_and_die(e)
         file_to_write.close()
         print('Done!' + Colors.end)
 
@@ -758,7 +815,8 @@ def arg_parse(argz):
                           help='set the name of your screen session. Default: the same as your world')
     settings.add_argument('-v', '--mc-version', metavar='MC VERSION',
                           help='set the version of minecraft. Default: The latest stable')
-    settings.add_argument('-w', '--world', help='set the name of your Minecraft world', metavar='WORLD NAME')
+    settings.add_argument('-w', '--world', help='set the name of your Minecraft world. Default: SweetpotatoWorld',
+                          metavar='WORLD NAME')
     settings.add_argument('-z', '--compression', choices=['bz2', 'gz', 'xz'], dest='z',
                           help='select compression type. Default: gz')
 
@@ -886,7 +944,7 @@ def arg_parse(argz):
             bottle.TEMPLATE_PATH.insert(0, tpl_path)
 
             if markdown:
-                def md_to_html(md_file):
+                def readme_md_to_html(md_file):
                     """
                     Runs markdown() on a markdown-formatted README.md file to generate html.
 
@@ -905,7 +963,7 @@ def arg_parse(argz):
                 @bottle.route('/readme')
                 def readme():
                     path = bottle.request.path
-                    html = md_to_html(os.path.join(BASE_DIR, 'README.md'))
+                    html = readme_md_to_html(os.path.join(BASE_DIR, 'README.md'))
                     return bottle.template(
                         html,
                         path=path)
