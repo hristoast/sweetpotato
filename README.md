@@ -196,5 +196,5 @@ TODO
 
 ## ETC
 
-  * http://hristoast.github.io/sweetpotato
-  * https://github.com/hristoast/sweetpotato
+  * [http://hristoast.github.io/sweetpotato](http://hristoast.github.io/sweetpotato)
+  * [https://github.com/hristoast/sweetpotato](https://github.com/hristoast/sweetpotato)

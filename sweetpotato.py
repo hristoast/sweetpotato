@@ -951,13 +951,11 @@ def arg_parse(argz):
                     @param md_file:
                     @return:
                     """
-                    html = ''
+                    html = "% rebase('base.tpl', title='README.md')\n"
                     m = open(md_file, 'r')
                     for l in m.readlines():
                         html += markdown(l)
                     m.close()
-                    html += "\n% include('readme_padding.tpl')"
-                    html += "\n% rebase('base.tpl', title='README.md')"
                     return html
 
                 @bottle.route('/readme')

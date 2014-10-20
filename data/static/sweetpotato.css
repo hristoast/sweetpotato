@@ -63,9 +63,8 @@ div#container {
     margin: 0 auto;
 }
 
-div#rmpad {
-    border-top: 1px solid #000000;
-    margin-top: 200px;
+div#main {
+    margin-bottom: 110px;
 }
 
 div#server_stats {
