@@ -24,6 +24,7 @@ try:
     from markdown import markdown
 except ImportError:
     markdown = None
+from threading import Thread
 
 
 __author__ = 'Hristos N. Triantafillou <me@hristos.triantafillou.us>'
@@ -35,6 +36,7 @@ __version__ = '0.8 BETA'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
+DEFAULT_SERVER_PORT = str(25565)
 DEFAULT_WORLD_NAME = 'SweetpotatoWorld'
 DESCRIPTION = "Manage your Minecraft server on a GNU/Linux system."
 HOME_DIR = os.getenv('HOME')
@@ -113,6 +115,7 @@ class SweetpotatoConfig:
 
     def __init__(self):
         self.backup_dir = None
+        self.compression = 'gz'
         self.conf_file = None
         self.force = False
         self.forge = None
@@ -121,12 +124,11 @@ class SweetpotatoConfig:
         self.mem_max = None
         self.mem_min = None
         self.mc_version = __mcversion__
-        self.port = str(25565)
+        self.port = DEFAULT_SERVER_PORT
         self.running = False
         self.screen_name = None
         self.server_dir = None
         self.world_name = DEFAULT_WORLD_NAME
-        self.z = 'gz'
 
     def as_conf_file(self):
         print(self.header)
@@ -135,6 +137,9 @@ class SweetpotatoConfig:
             print('{0}: {1}'.format(line, value))
             for line, value in self.__dict__.items()
             if value is not None
+            and value is not __mcversion__
+            and value is not DEFAULT_SERVER_PORT
+            and value is not DEFAULT_WORLD_NAME
             and line is not 'conf_file'
             and line is not 'force'
             and line is not 'running'
@@ -626,9 +631,9 @@ def run_server_backup(print_pre, settings, offline=False):
     screen_name = settings.screen_name
     server_dir = settings.server_dir
     world_name = settings.world_name
-    z = settings.z
+    compression = settings.compression
 
-    backup_file = '{0}_{1}.tar.{2}'.format(date_stamp, world_name, z)
+    backup_file = '{0}_{1}.tar.{2}'.format(date_stamp, world_name, compression)
     full_path_to_backup_file = os.path.join(backup_dir, backup_file)
     server_running = is_server_running(server_dir)
 
@@ -658,7 +663,7 @@ def run_server_backup(print_pre, settings, offline=False):
         except FileNotFoundError:
             pass
 
-    tar = tarfile.open(full_path_to_backup_file, 'w:{}'.format(z))
+    tar = tarfile.open(full_path_to_backup_file, 'w:{}'.format(compression))
     tar.add(server_dir)
     tar.close()
 
@@ -674,7 +679,7 @@ def run_server_backup(print_pre, settings, offline=False):
         print('starting "{}" ...'.format(world_name), end=' ')
         sys.stdout.flush()
         send_command(launch_server, screen_name)
-    print('Done!')
+    print('Done!' + Colors.end)
 
 
 # def validate_port(port_num):
@@ -812,7 +817,7 @@ def arg_parse(argz):
                           help='set the version of minecraft. Default: The latest stable')
     settings.add_argument('-w', '--world', help='set the name of your Minecraft world. Default: SweetpotatoWorld',
                           metavar='WORLD NAME')
-    settings.add_argument('-z', '--compression', choices=['bz2', 'gz', 'xz'], dest='z',
+    settings.add_argument('-z', '--compression', choices=['bz2', 'gz', 'xz'], dest='compression',
                           help='select compression type. Default: gz')
 
     mem_values = settings.add_mutually_exclusive_group()
@@ -826,7 +831,7 @@ def arg_parse(argz):
 
     try:
         read_conf_file(DEFAULT_CONF_FILE, settings)
-    except ConfFileError:
+    except (configparser.NoSectionError, ConfFileError):
         pass
     # TODO: read from json input?
 
@@ -863,8 +868,8 @@ def arg_parse(argz):
         settings.mc_version = args.mc_version
     if args.world:
         settings.world_name = args.world
-    if args.z:
-        settings.z = args.z
+    if args.compression:
+        settings.compression = args.compression
 
     try:
         validate_settings(settings)
@@ -969,20 +974,27 @@ def arg_parse(argz):
                     path = bottle.request.path
                     return {'path': path}
 
-            @bottle.route('/backups')
-            @bottle.view('backups')
+            @bottle.get('/backup')
+            @bottle.post('/backup')
+            @bottle.view('backup')
             def backups():
                 path = bottle.request.path
+                request_method = bottle.request.method
                 todays_file = '{0}_{1}.tar.{2}'.format(
                     datetime.now().strftime('%Y-%m-%d'),
                     settings.world_name,
-                    settings.z
+                    settings.compression
                 )
                 # noinspection PyTypeChecker
                 backup_dir_contents = os.listdir(settings.backup_dir)
+                if bottle.request.method == 'POST':
+                    t = Thread(target=run_server_backup, args=('', settings))
+                    t.daemon = True
+                    t.start()
                 return {
                     'backup_dir_contents': backup_dir_contents,
                     'path': path,
+                    'request_method': request_method,
                     'todays_file': todays_file,
                     'world_name': settings.world_name
                 }
@@ -1014,6 +1026,11 @@ def arg_parse(argz):
                     'path': path,
                     'settings': settings
                 }
+
+            # noinspection PyUnresolvedReferences
+            @bottle.route('/backups/<file_path:path>')
+            def serve_backup(file_path):
+                return bottle.static_file(file_path, root=settings.backup_dir)
 
             # noinspection PyUnresolvedReferences
             @bottle.route('/static/<file_path:path>')
