@@ -454,9 +454,11 @@ def stop_server(print_pre, screen_name, server_dir, world_name):
     server_running = is_server_running(server_dir)
 
     if server_running:
+        server_pid = server_running[-1]
         print(print_pre + Colors.light_blue + 'Stopping "{}" ...'.format(world_name), end=' ')
         sys.stdout.flush()
-        send_command('stop', screen_name)
+        wait_for_server_shutdown(screen_name, server_pid)
+        send_command('exit', screen_name)
         print('Done!' + Colors.end)
     else:
         raise ServerNotRunningError('Cannot stop "{}" - it is not running!'.format(world_name))
@@ -482,11 +484,7 @@ def restart_server(print_pre, settings):
         server_pid = server_running[-1]
         print(print_pre + Colors.light_blue + 'Restarting {} ...'.format(world_name), end=' ')
         sys.stdout.flush()
-        send_command('stop', screen_name)
-        while os.path.exists("/proc/{0}".format(server_pid)):
-            # in case we've tried to stop before the server has fully started
-            time.sleep(0.5)
-            send_command('stop', screen_name)
+        wait_for_server_shutdown(screen_name, server_pid)
     else:
         print(print_pre + Colors.light_blue + 'Starting {} ...'.format(world_name), end=' ')
         sys.stdout.flush()
@@ -518,11 +516,7 @@ def run_server_backup(print_pre, settings, offline=False):
             server_pid = server_running[-1]
             print('Stopping "{}" ...'.format(world_name), end=' ')
             sys.stdout.flush()
-            send_command('stop', screen_name)
-            while os.path.exists("/proc/{0}".format(server_pid)):
-                # in case we've tried to stop before the server has fully started
-                time.sleep(0.5)
-                send_command('stop', screen_name)
+            wait_for_server_shutdown(screen_name, server_pid)
             print('backing up ...', end=' ')
         else:
             print('Backing up "{}" ...'.format(world_name), end=' ')
@@ -587,6 +581,19 @@ def validate_settings(settings):
         raise EmptySettingError('One or more required settings are not present: {}'.format(' '.join(missing)))
     else:
         return True
+
+
+def wait_for_server_shutdown(screen_name, server_pid):
+    """
+    In case we've tried to stop before the server has fully started.
+
+    @param screen_name:
+    @param server_pid:
+    @return:
+    """
+    while os.path.exists("/proc/{0}".format(server_pid)):
+        time.sleep(0.5)
+        send_command('stop', screen_name)
 
 
 def write_server_properties(print_pre, file, settings):
