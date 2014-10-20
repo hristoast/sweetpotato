@@ -796,29 +796,26 @@ def arg_parse(argz):
             bottle.TEMPLATE_PATH.insert(0, tpl_path)
 
             if markdown:
-                # only provide these pages if we have Markdown installed
-                # def generate_readme_tpl(readme_file, tpl):
-                def generate_readme_html(readme_file):
+                def md_to_html(md_file):
                     """
                     Runs markdown() on a markdown-formatted README.md file to generate html.
 
-                    @param readme_file:
+                    @param md_file:
                     @return:
                     """
                     html = ''
-                    r = open(readme_file, 'r')
-                    for l in r.readlines():
+                    m = open(md_file, 'r')
+                    for l in m.readlines():
                         html += markdown(l)
-                    r.close()
+                    m.close()
                     html += "\n% include('readme_padding.tpl')"
                     html += "\n% rebase('base.tpl', title='README.md')"
                     return html
 
                 @bottle.route('/readme')
-                # @bottle.view('readme')
                 def readme():
                     path = bottle.request.path
-                    html = generate_readme_html(os.path.join(BASE_DIR, 'README.md'))
+                    html = md_to_html(os.path.join(BASE_DIR, 'README.md'))
                     return bottle.template(
                         html,
                         path=path)
@@ -851,7 +848,16 @@ def arg_parse(argz):
             @bottle.view('index')
             def index():
                 path = bottle.request.path
-                return {'path': path}
+                pid = None
+                server_running = is_server_running(settings.server_dir)
+                if server_running:
+                    pid = server_running[-1]
+                return {
+                    'path': path,
+                    'pid': pid,
+                    'settings': settings,
+                    'server_running': server_running
+                }
 
             @bottle.route('/server')
             @bottle.view('server')
