@@ -797,37 +797,31 @@ def arg_parse(argz):
 
             if markdown:
                 # only provide these pages if we have Markdown installed
-                def generate_readme_tpl(readme_file, tpl):
+                # def generate_readme_tpl(readme_file, tpl):
+                def generate_readme_html(readme_file):
                     """
-                    Runs markdown() on a markdown-formatted README.md file to generate an html file.
+                    Runs markdown() on a markdown-formatted README.md file to generate html.
 
                     @param readme_file:
-                    @param tpl:
                     @return:
                     """
-                    # TODO: add logic that checks whether or not the page needs to be generated
+                    html = ''
                     r = open(readme_file, 'r')
-                    t = open(tpl, 'w')
-
-                    [t.write(markdown(l)) for l in r.readlines()]
+                    for l in r.readlines():
+                        html += markdown(l)
                     r.close()
-                    t.close()
-
-                    # Add the footer
-                    t = open(tpl, 'a')
-                    t.write("\n% include('readme_padding.tpl')")
-                    t.write("\n% rebase('base.tpl', title='README.md')")
-                    t.close()
+                    html += "\n% include('readme_padding.tpl')"
+                    html += "\n% rebase('base.tpl', title='README.md')"
+                    return html
 
                 @bottle.route('/readme')
-                @bottle.view('readme')
+                # @bottle.view('readme')
                 def readme():
                     path = bottle.request.path
-                    generate_readme_tpl(
-                        os.path.join(BASE_DIR, 'README.md'),
-                        os.path.join(tpl_path, 'readme.tpl')
-                    )
-                    return {'path': path}
+                    html = generate_readme_html(os.path.join(BASE_DIR, 'README.md'))
+                    return bottle.template(
+                        html,
+                        path=path)
             else:
                 @bottle.route('/readme')
                 @bottle.view('readme_no_md')
