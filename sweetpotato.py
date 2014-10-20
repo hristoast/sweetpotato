@@ -30,7 +30,7 @@ __forgeversion__ = '1.7.10-10.13.2.1230'
 __license__ = 'GPLv3'
 __mcversion__ = '1.8'
 __progname__ = 'sweetpotato'
-__version__ = '0.1 BETA'
+__version__ = '0.3 BETA'
 
 
 BASE_DIR = os.path.dirname(__file__)
@@ -351,6 +351,7 @@ def list_or_create_dir(d):
 
     :param d:
     """
+    # TODO: test this with a directory that we don't have permission to write
     if not os.path.isdir(d):
         os.makedirs(d)
     return os.listdir(d)
@@ -407,14 +408,14 @@ def start_screen(screen_name, server_dir):
     subprocess.Popen(cmd_args, close_fds=True, shell=False, stdin=slave, stdout=slave, stderr=slave)
 
 
-def start_server(settings):
-    # TODO: console text
+def start_server(print_pre, settings):
     jar_name = VANILLA_JAR_NAME.format(settings.mc_version)
     mem_format = settings.mem_format
     mem_max = settings.mem_max
     mem_min = settings.mem_min
     screen_name = settings.screen_name
     server_dir = settings.server_dir
+    world_name = settings.world_name
 
     screen_started = is_screen_started(screen_name)
     server_running = is_server_running(server_dir)
@@ -423,8 +424,11 @@ def start_server(settings):
         start_screen(screen_name, server_dir)
 
     if not server_running:
+        print(print_pre + 'Starting {} ...'.format(world_name), end=' ')
+        sys.stdout.flush()
         launch_server = 'java -Xms{0}{2} -Xmx{1}{2} -jar {3} nogui'.format(mem_min, mem_max, mem_format[0], jar_name)
         send_command(launch_server, screen_name)
+        print('Done!' + Colors.end)
     else:
         raise ServerAlreadyRunningError('World "{0}" already running with PID {1}'.format(
             settings.world_name,
@@ -432,12 +436,14 @@ def start_server(settings):
         ))
 
 
-def stop_server(screen_name, server_dir, world_name):
-    # TODO: console text
+def stop_server(print_pre, screen_name, server_dir, world_name):
     server_running = is_server_running(server_dir)
 
     if server_running:
+        print(print_pre + 'Stopping {} ...'.format(world_name), end=' ')
+        sys.stdout.flush()
         send_command('stop', screen_name)
+        print('Done!' + Colors.end)
     else:
         raise ServerNotRunningError('Cannot stop "{}" - it is not running!'.format(world_name))
 
@@ -677,13 +683,16 @@ def arg_parse(argz):
     elif args.restart:
         print('-r: Restart YEY!')
     elif args.start:
+        print_pre = '[' + Colors.yellow_green + 'start' + Colors.end + '] '
         try:
-            start_server(settings)
+            start_server(print_pre, settings)
         except ServerAlreadyRunningError as e:
             error_and_die(e)
     elif args.stop:
+        print_pre = '[' + Colors.yellow_green + 'stop' + Colors.end + '] '
         try:
             stop_server(
+                print_pre,
                 settings.screen_name,
                 settings.server_dir,
                 settings.world_name
