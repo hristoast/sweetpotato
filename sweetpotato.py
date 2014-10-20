@@ -32,7 +32,7 @@ __progname__ = 'sweetpotato'
 __version__ = '0.3 BETA'
 
 
-BASE_DIR = os.path.dirname(__file__)
+BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 DESCRIPTION = "Manage your Minecraft server on a GNU/Linux system."
 HOME_DIR = os.getenv('HOME')
 CONFIG_DIR = '{0}/.config/{1}'.format(HOME_DIR, __progname__)
@@ -628,7 +628,6 @@ def write_server_properties(print_pre, file, settings):
 # functions for web, if bottle.py is installed
 if bottle:
     logging.basicConfig(format='127.0.0.1 - - [%(asctime)s] %(message)s', level=logging.DEBUG)
-    # os.chdir(BASE_DIR)  # This breaks sweetpotato if you have created a symlink to run sweetpotato
 
     app = bottle.app()
     log = logging.getLogger(__name__)
