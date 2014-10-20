@@ -14,7 +14,7 @@ import shlex
 import subprocess
 import sys
 import time
-# import tarfile
+import tarfile
 import urllib.request
 
 from datetime import datetime
@@ -64,13 +64,18 @@ class SweetpotatoIOErrorBase(IOError):
         return repr(self.msg)
 
 
-class EmptySettingError(SweetpotatoIOErrorBase):
-    """Raised when a required setting value is None."""
+class BackupFileAlreadyExistsError(SweetpotatoIOErrorBase):
+    """Raised when the target backup file already exists."""
     pass
 
 
 class ConfFileError(SweetpotatoIOErrorBase):
     """Raised when a given conf file doesn't exist or have the right section."""
+    pass
+
+
+class EmptySettingError(SweetpotatoIOErrorBase):
+    """Raised when a required setting value is None."""
     pass
 
 
@@ -424,7 +429,10 @@ def start_server(print_pre, settings):
         start_screen(screen_name, server_dir)
 
     if not server_running:
-        print(print_pre + 'Starting {} ...'.format(world_name), end=' ')
+        if print_pre:
+            print(print_pre + Colors.light_blue + 'Starting "{}" ...'.format(world_name), end=' ')
+        else:
+            print('starting "{}" ...'.format(world_name), end=' ')
         sys.stdout.flush()
         launch_server = 'java -Xms{0}{2} -Xmx{1}{2} -jar {3} nogui'.format(mem_min, mem_max, mem_format[0], jar_name)
         send_command(launch_server, screen_name)
@@ -440,7 +448,7 @@ def stop_server(print_pre, screen_name, server_dir, world_name):
     server_running = is_server_running(server_dir)
 
     if server_running:
-        print(print_pre + 'Stopping {} ...'.format(world_name), end=' ')
+        print(print_pre + Colors.light_blue + 'Stopping "{}" ...'.format(world_name), end=' ')
         sys.stdout.flush()
         send_command('stop', screen_name)
         print('Done!' + Colors.end)
@@ -465,15 +473,82 @@ def restart_server(print_pre, settings):
         start_screen(screen_name, server_dir)
 
     if server_running:
-        print(print_pre + 'Restarting {} ...'.format(world_name), end=' ')
+        server_pid = server_running[-1]
+        print(print_pre + Colors.light_blue + 'Restarting {} ...'.format(world_name), end=' ')
         sys.stdout.flush()
         send_command('stop', screen_name)
-        time.sleep(RESTART_WAIT)
+        while os.path.exists("/proc/{0}".format(server_pid)):
+            # in case we've tried to stop before the server has fully started
+            time.sleep(0.5)
+            send_command('stop', screen_name)
     else:
-        print(print_pre + 'Starting {} ...'.format(world_name), end=' ')
+        print(print_pre + Colors.light_blue + 'Starting {} ...'.format(world_name), end=' ')
         sys.stdout.flush()
     send_command(launch_server, screen_name)
     print('Done!' + Colors.end)
+
+
+def run_server_backup(print_pre, settings, offline=False):
+    backup_dir = settings.backup_dir
+    date_stamp = datetime.now().strftime('%Y-%m-%d')
+    force = settings.force
+    jar_name = VANILLA_JAR_NAME.format(settings.mc_version)
+    mem_format = settings.mem_format
+    mem_max = settings.mem_max
+    mem_min = settings.mem_min
+    launch_server = 'java -Xms{0}{2} -Xmx{1}{2} -jar {3} nogui'.format(mem_min, mem_max, mem_format[0], jar_name)
+    screen_name = settings.screen_name
+    server_dir = settings.server_dir
+    world_name = settings.world_name
+    z = settings.z
+
+    backup_file = '{0}_{1}.tar.{2}'.format(date_stamp, world_name, z)
+    full_path_to_backup_file = os.path.join(backup_dir, backup_file)
+    server_running = is_server_running(server_dir)
+
+    if offline:
+        print(print_pre + Colors.light_blue, end=' ')
+        if server_running:
+            server_pid = server_running[-1]
+            print('Stopping "{}" ...'.format(world_name), end=' ')
+            sys.stdout.flush()
+            send_command('stop', screen_name)
+            while os.path.exists("/proc/{0}".format(server_pid)):
+                # in case we've tried to stop before the server has fully started
+                time.sleep(0.5)
+                send_command('stop', screen_name)
+            print('backing up ...', end=' ')
+        else:
+            print('Backing up "{}" ...'.format(world_name), end=' ')
+        sys.stdout.flush()
+    else:
+        print(print_pre + Colors.light_blue + 'Running live backup of "{}"  ...'.format(world_name), end=' ')
+        sys.stdout.flush()
+        send_command('say Server backing up now', screen_name)
+
+    if not force:
+        try:
+            with open(full_path_to_backup_file, 'rb'):
+                raise BackupFileAlreadyExistsError('File "{}" already exists!'.format(full_path_to_backup_file))
+        except FileNotFoundError:
+            pass
+
+    tar = tarfile.open(full_path_to_backup_file, 'w:{}'.format(z))
+    tar.add(server_dir)
+    tar.close()
+
+    if not offline:
+        send_command('say Backup complete', screen_name)
+
+    screen_started = is_screen_started(screen_name)
+    server_running = is_server_running(server_dir)
+    if offline and not server_running:
+        if not screen_started:
+            start_screen(screen_name, server_dir)
+        print('starting "{}" ...'.format(world_name), end=' ')
+        sys.stdout.flush()
+        send_command(launch_server, screen_name)
+    print('Done!')
 
 
 def validate_port(port_num):
@@ -639,7 +714,7 @@ def arg_parse(argz):
     settings.add_argument('-v', '--mc-version', metavar='MC VERSION',
                           help='set the version of minecraft. Default: The latest stable')
     settings.add_argument('-w', '--world', help='set the name of your Minecraft world', metavar='WORLD NAME')
-    settings.add_argument('-z', '--compression', choices=['bzip2', 'gzip', 'xz'], dest='z',
+    settings.add_argument('-z', '--compression', choices=['bz2', 'gz', 'xz'], dest='z',
                           help='select compression type. Default: gzip')
 
     mem_values = settings.add_mutually_exclusive_group()
@@ -699,7 +774,12 @@ def arg_parse(argz):
         error_and_die(e)
 
     if args.backup:
-        print('-b: Live Backup YEY!')
+        print_pre = '[' + Colors.yellow_green + 'live-backup' + Colors.end + '] '
+        try:
+            run_server_backup(print_pre, settings)
+        except BackupFileAlreadyExistsError as e:
+            send_command('say Backup Done!', settings.screen_name)
+            error_and_die(e)
     elif args.create:
         create_server(settings)
     elif args.genconf:
@@ -707,10 +787,18 @@ def arg_parse(argz):
     elif args.json:
         print(settings.as_json())
     elif args.offline:
-        print('-o: Offline Backup YEY!')
+        print_pre = '[' + Colors.yellow_green + 'offline-backup' + Colors.end + '] '
+        try:
+            run_server_backup(print_pre, settings, offline=True)
+        except BackupFileAlreadyExistsError as e:
+            start_server(None, settings)
+            error_and_die(e)
     elif args.restart:
         print_pre = '[' + Colors.yellow_green + 'restart' + Colors.end + '] '
-        restart_server(print_pre, settings)
+        try:
+            restart_server(print_pre, settings)
+        except BackupFileAlreadyExistsError as e:
+            error_and_die(e)
     elif args.start:
         print_pre = '[' + Colors.yellow_green + 'start' + Colors.end + '] '
         try:
