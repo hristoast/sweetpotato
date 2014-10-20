@@ -118,7 +118,7 @@ class SweetpotatoConfig:
         self.screen_name = DEFAULT_SCREEN_NAME
         self.server_dir = None
         self.world_name = None
-        self.z = 'gzip'
+        self.z = 'gz'
 
     def as_conf_file(self):
         print(self.header)
@@ -687,7 +687,7 @@ def arg_parse(argz):
                           help='set the version of minecraft. Default: The latest stable')
     settings.add_argument('-w', '--world', help='set the name of your Minecraft world', metavar='WORLD NAME')
     settings.add_argument('-z', '--compression', choices=['bz2', 'gz', 'xz'], dest='z',
-                          help='select compression type. Default: gzip')
+                          help='select compression type. Default: gz')
 
     mem_values = settings.add_mutually_exclusive_group()
     mem_values.add_argument('-gb', '-GB', help='set min/max memory usage (in gigabytes)',
