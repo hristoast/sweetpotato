@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <title>Sweetpotato by hristoast</title>
+  </head>
+
+  <body>
+    <div id="container">
+      <div class="inner">
+
+        <header>
+          <h1>Sweetpotato</h1>
+          <h2>Manage your Minecraft server on a GNU/Linux system.</h2>
+        </header>
+
+        <section id="downloads" class="clearfix">
+          <a href="https://github.com/hristoast/sweetpotato/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
+          <a href="https://github.com/hristoast/sweetpotato/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
+          <a href="https://github.com/hristoast/sweetpotato" id="view-on-github" class="button"><span>View on GitHub</span></a>
+        </section>
+
+        <hr>
+
+        <section id="main_content">
+          <h1>
+<a name="sweetpotato" class="anchor" href="#sweetpotato"><span class="octicon octicon-link"></span></a>sweetpotato</h1>
+
+<hr>
+
+<p><img src="http://static.blackholegate.net/i/cyark.jpeg" alt="sweetpotato logo"></p>
+
+<h2>
+<a name="what-is-it" class="anchor" href="#what-is-it"><span class="octicon octicon-link"></span></a>What is it?</h2>
+
+<hr>
+
+<p><code>sweetpotato</code> is a tool for running a Minecraft server from inside a screen session on a GNU/Linux system. It is written in Python (for Python 3), but with no external Python dependencies (except for the optional WebUI function).</p>
+
+<p>It was created as a way to simplify managing a Minecraft server by providing a simple wrapper for common tasks. It knows what your world is and where its files are via command-line options, values set in a configuration file, or a mixture of both!</p>
+
+<h2>
+<a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h2>
+
+<p>Installation is simple: git clone this repo to wherever you want it, then create a symbolic link to wherever you want it.</p>
+
+<pre><code>$ ln -s $HOME/src/sweetpotato/sweetpotato.py $HOME/bin/sweetpotato
+</code></pre>
+
+<h2>
+<a name="issues" class="anchor" href="#issues"><span class="octicon octicon-link"></span></a>Issues</h2>
+
+<p>I am sure there may be actual bugs and unintended problems in here, but this section is for known issues relating to design decisions. Things that happen, things <code>sweetpotato</code> can or can't do - things like that.</p>
+
+<ul>
+<li><p><code>sweetpotato</code> is very careful in may ways, but it will not keep your settings straight for you. Meaning, you must take care to ensure the directories you configure for backups, servers, and so forth are where you really want these things to be.</p></li>
+<li><p>At present <code>sweetpotato</code> has no way of validating the screen you have chosen. This means that if you have two servers running on the same machine, and you give them both the same screen name, <code>sweetpotato</code> is not going to be able to do anything about it and unexpected things will happen!</p></li>
+<li><p>The WebUI includes no extra security whatsoever. This is deliberate, any decent HTTP server has a way of providing SSL and authentication functions for you.</p></li>
+</ul>
+
+<h2>
+<a name="usage" class="anchor" href="#usage"><span class="octicon octicon-link"></span></a>Usage</h2>
+
+<hr>
+
+<h3>
+<a name="create-server" class="anchor" href="#create-server"><span class="octicon octicon-link"></span></a>Create Server</h3>
+
+<p>Create the configured server_dir, download the server jar for the configured mc_version, then generate a <code>server.properties</code> and agreed-to <code>eula.txt</code> file.</p>
+
+<pre><code>$ sweetpotato -d /srv/backups/minecraft -s /srv/minecraft/mc_server -gb 1 1 --create
+[create] Creating "SweetpotatoWorld" ...
+[create] Creating /srv/backups/minecraft ... Done!
+[create] Creating /srv/minecraft/mc_server ... Done!
+[create] Downloading minecraft_server.1.8.jar ... Done!
+[create] Agreeing to the eula ... Done!
+[create] Generating server.properties ... Done!
+[create] World "SweetpotatoWorld" has been created!
+</code></pre>
+
+<p>If you change a setting, like port number, the necessary files are regenerated</p>
+
+<pre><code>$ sweetpotato -d /srv/backups/minecraft -s /srv/minecraft/mc_server -gb 1 1 --port 25569 --create
+[create] Creating "SweetpotatoWorld" ...
+[create] Found /srv/backups/minecraft!
+[create] Found /srv/minecraft/mc_server!
+[create] Found minecraft_server.1.8.jar!
+[create] Eula agreed to!
+[create] Generating server.properties ... Done!
+[create] World "SweetpotatoWorld" has been created!
+</code></pre>
+
+<p>Beware when changing values! You can end up with a lost screen name, world name, or some other lost thing that I haven't yet ran into or conceived.</p>
+
+<p>Such a scenario will produce unexpected results - you have been warned to keep track of your configs!</p>
+
+<h3>
+<a name="generating-a-conf-file" class="anchor" href="#generating-a-conf-file"><span class="octicon octicon-link"></span></a>Generating A Conf File</h3>
+
+<p>It is possible to print a conf file based on passed-in settings to the stdout:</p>
+
+<pre><code>$ sweetpotato -d /srv/backups/minecraft -s /srv/minecraft/mc_server -gb 1 1 --genconf
+## Generated by sweetpotato at Mon Oct 20 15:31:24 2014
+[Settings]
+server_dir: /srv/minecraft/mc_server
+mem_format: GB
+backup_dir: /srv/backups/minecraft
+mem_max: 1
+compression: gz
+mem_min: 1
+</code></pre>
+
+<p>You can create your own file like this:</p>
+
+<pre><code>$ sweetpotato -d /srv/backups/minecraft -s /srv/minecraft/mc_server -gb 1 1 --genconf &gt; myconf.conf
+$ sweetpotato -c myconf.conf --json
+{
+    "backup_dir": "/srv/backups/minecraft",
+    "compression": "gz",
+    "conf_file": null,
+    "force": false,
+    "forge": null,
+    "level_seed": null,
+    "mc_version": "1.8",
+    "mem_format": "GB",
+    "mem_max": "1",
+    "mem_min": "1",
+    "port": "25565",
+    "running": [
+        "/srv/minecraft/mc_server",
+        "/usr/bin/java",
+        "30900"
+    ],
+    "screen_name": "SweetpotatoWorld",
+    "server_dir": "/srv/minecraft/mc_server",
+    "world_name": "SweetpotatoWorld"
+}
+</code></pre>
+
+<p>You can also make your settings the default (so you don't have to pass a conf file or command-line args) by writing them to the default conf file location, which is 
+<code>$HOME/.config/sweetpotato/sweetpotato.conf</code>:</p>
+
+<pre><code>$ sweetpotato -d /srv/backups/minecraft -s /srv/minecraft/mc_server -gb 1 1 --genconf &gt; $HOME/.config/sweetpotato/sweetpotato.conf
+$ sweetpotato --json
+{
+    "backup_dir": "/srv/backups/minecraft",
+    "compression": "gz",
+    "conf_file": null,
+    "force": false,
+    "forge": null,
+    "level_seed": null,
+    "mc_version": "1.8",
+    "mem_format": "GB",
+    "mem_max": "1",
+    "mem_min": "1",
+    "port": "25565",
+    "running": false,
+    "screen_name": "SweetpotatoWorld",
+    "server_dir": "/srv/minecraft/mc_server",
+    "world_name": "SweetpotatoWorld"
+}
+</code></pre>
+
+<h3>
+<a name="live-backup" class="anchor" href="#live-backup"><span class="octicon octicon-link"></span></a>Live Backup</h3>
+
+<p>Run a backup while the server is running. This sends a message to the in-game chat when the backup starts and finishes, then creates a backup of your configured world</p>
+
+<pre><code>$ sweetpotato -d /srv/backups/minecraft -s /srv/minecraft/mc_server -gb 1 1 --backup
+[live-backup] Running live backup of "SweetpotatoWorld"  ... Done!
+</code></pre>
+
+<p>But the backup will not be ran if the file (named after today's date) already exists:</p>
+
+<pre><code>$ sweetpotato -d /srv/backups/minecraft -s /srv/minecraft/mc_server -gb 1 1 --backup
+[live-backup] Running live backup of "SweetpotatoWorld"  ... FATAL: File "/srv/backups/minecraft/2014-10-20_SweetpotatoWorld.tar.gz" already exists!
+</code></pre>
+
+<h3>
+<a name="offline-backup" class="anchor" href="#offline-backup"><span class="octicon octicon-link"></span></a>Offline Backup</h3>
+
+<p>Ensure that the server is shut down before backing up. Once completed (or errored out) the server will be restarted:</p>
+
+<pre><code>$ sweetpotato --offline
+[offline-backup]  Stopping "SweetpotatoWorld" ... backing up ... starting "SweetpotatoWorld" ... Done!
+</code></pre>
+
+<p>As with the live backup, this will not be ran if the file (named after today's date) already exists:</p>
+
+<pre><code>$ sweetpotato --offline
+[offline-backup]  Stopping "SweetpotatoWorld" ... backing up ... starting "SweetpotatoWorld" ... Done!
+FATAL: File "/srv/backups/minecraft/2014-10-20_SweetpotatoWorld.tar.gz" already exists!
+</code></pre>
+
+<h3>
+<a name="restart" class="anchor" href="#restart"><span class="octicon octicon-link"></span></a>Restart</h3>
+
+<pre><code>$ sweetpotato --restart
+[restart] Restarting SweetpotatoWorld ... Done!
+</code></pre>
+
+<p>If the configured world is not running, is is started.</p>
+
+<pre><code>$ sweetpotato --restart
+[restart] Starting SweetpotatoWorld ... Done!
+</code></pre>
+
+<h3>
+<a name="start" class="anchor" href="#start"><span class="octicon octicon-link"></span></a>Start</h3>
+
+<pre><code>$ sweetpotato --start
+[start] Starting "SweetpotatoWorld" ... Done!
+</code></pre>
+
+<p>Fails if the configured world is already running.</p>
+
+<pre><code>$ sweetpotato --start
+FATAL: World "SweetpotatoWorld" already running with PID 30320
+</code></pre>
+
+<h3>
+<a name="stop" class="anchor" href="#stop"><span class="octicon octicon-link"></span></a>Stop</h3>
+
+<pre><code>$ sweetpotato --stop
+[stop] Stopping "SweetpotatoWorld" ... Done!
+</code></pre>
+
+<p>Fails if the configured world is not running.</p>
+
+<pre><code>$ sweetpotato --stop
+FATAL: Cannot stop "SweetpotatoWorld" - it is not running!
+</code></pre>
+
+<h3>
+<a name="webui" class="anchor" href="#webui"><span class="octicon octicon-link"></span></a>WebUI</h3>
+
+<p>This feature is experimental.</p>
+
+<pre><code>$ sweetpotato --web
+Bottle v0.12.7 server starting up (using WSGIRefServer())...
+Listening on http://127.0.0.1:8080/
+Hit Ctrl-C to quit.
+</code></pre>
+
+<p>As the output says, after launching you can then fire up the WebUI in your favorite browser at <a href="http://127.0.0.1:8080/">http://127.0.0.1:8080/</a>.</p>
+
+<h2>
+<a name="mod-forge-support" class="anchor" href="#mod-forge-support"><span class="octicon octicon-link"></span></a>Mod (Forge) support</h2>
+
+<hr>
+
+<p>TODO</p>
+
+<h2>
+<a name="installation-1" class="anchor" href="#installation-1"><span class="octicon octicon-link"></span></a>Installation</h2>
+
+<hr>
+
+<p>TODO</p>
+        </section>
+
+        <footer>
+          Sweetpotato is maintained by <a href="https://github.com/hristoast">hristoast</a><br>
+          This page was generated by <a href="http://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.
+        </footer>
+
+        
+      </div>
+    </div>
+  </body>
+</html>
