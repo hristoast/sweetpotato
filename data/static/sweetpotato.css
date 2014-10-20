@@ -1,0 +1,55 @@
+/*
+   sweetpotato WebUI style
+*/
+
+html, body {
+    font: normal 12px/18px 'Helvetica', Arial, sans-serif;
+    padding-top: 20px;
+}
+
+a {
+    color: #008000;
+}
+
+a:focus, a:hover {
+    color: #006400;
+}
+
+.center {
+    text-align: center;
+}
+
+.nav-pills > li.active > a,
+.nav-pills > li.active > a:hover,
+.nav-pills > li.active > a:focus {
+    background-color: #008000;
+}
+
+div#lower_nav {
+    padding-right: 15px;
+    padding-left: 15px;
+}
+
+div#lower_nav {
+    position: fixed;
+    width: 900px;
+    bottom: 0;
+    background-color: #e5e5e5;
+    border-radius: 10px 10px 0 0;
+    -moz-border-radius: 10px 10px 0 0;
+    -webkit-border-radius: 10px 10px 0 0;
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+div#lower_nav h3 {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-left: 20px;
+    line-height: 40px;
+}
+
+div#container {
+    width: 900px;
+    margin: 0 auto;
+}

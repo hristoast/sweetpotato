@@ -11,8 +11,8 @@ import configparser
 import json
 import logging
 import os
-# import pty
-# import shlex
+import pty
+import shlex
 import subprocess
 import sys
 # import tarfile
@@ -33,6 +33,7 @@ __progname__ = 'sweetpotato'
 __version__ = '0.1 BETA'
 
 
+BASE_DIR = os.path.dirname(__file__)
 DESCRIPTION = "Manage your Minecraft server on a GNU/Linux system."
 HOME_DIR = os.getenv('HOME')
 CONFIG_DIR = '{0}/.config/{1}'.format(HOME_DIR, __progname__)
@@ -42,7 +43,6 @@ DEFAULT_SCREEN_NAME = 'sweetpotato_mc'
 VANILLA_DL_URL = 'https://s3.amazonaws.com/Minecraft.Download/versions/{0}/{1}'
 VANILLA_JAR_NAME = 'minecraft_server.{0}.jar'
 REQUIRED = 'backup_dir mem_format mem_max mem_min port server_dir world_name'
-UWSGI_EXE = 'uwsgi'
 
 
 class Colors:
@@ -56,22 +56,37 @@ class Colors:
     end = '\033[0m'
 
 
-class EmptySettingError(Exception):
+class SweetpotatoIOErrorBase(IOError):
+    def __init__(self, msg):
+        self.msg = msg
+
+    def __str__(self):
+        return repr(self.msg)
+
+
+class EmptySettingError(SweetpotatoIOErrorBase):
     """Raised when a required setting value is None."""
-    def __init__(self, msg):
-        self.msg = msg
-
-    def __str__(self):
-        return repr(self.msg)
+    pass
 
 
-class ConfFileError(IOError):
+class ConfFileError(SweetpotatoIOErrorBase):
     """Raised when a given conf file doesn't exist or have the right section."""
-    def __init__(self, msg):
-        self.msg = msg
+    pass
 
-    def __str__(self):
-        return repr(self.msg)
+
+class MissingExeError(SweetpotatoIOErrorBase):
+    """Raised when a required executable is missing."""
+    pass
+
+
+class ServerAlreadyRunningError(SweetpotatoIOErrorBase):
+    """Raised when the configured server is already running."""
+    pass
+
+
+class ServerNotRunningError(SweetpotatoIOErrorBase):
+    """Raised when the server is not running but was expected to be."""
+    pass
 
 
 class SweetpotatoConfig:
@@ -221,16 +236,9 @@ def create_server(settings):
     print(print_pre + Colors.blue + 'World "{}" has been created!'.format(world_name) + Colors.end)
 
 
-def get_exe_path(exe):
-    """
-    Checks for exe in $PATH.
-
-    @param exe:
-    @return:
-    """
-    p = subprocess.Popen(['which', exe], stdout=subprocess.PIPE)
-    byte_output = p.communicate()[0]
-    return byte_output.decode().strip() or None
+def dependency_check(*deps):
+    if None in deps:
+        raise MissingExeError("Unable to find all dependencies. Please ensure that screen and java are installed.")
 
 
 def error_and_die(msg):
@@ -246,20 +254,21 @@ def error_and_die(msg):
     sys.exit(1)
 
 
-def list_or_create_dir(d):
+def get_exe_path(exe):
     """
-    Returns a list of config files in the config directory, creating the folder if it does not exist.
+    Checks for exe in $PATH.
 
-    :param d:
+    @param exe:
+    @return:
     """
-    if not os.path.isdir(d):
-        os.makedirs(d)
-    return os.listdir(d)
+    p = subprocess.Popen(['which', exe], stdout=subprocess.PIPE)
+    byte_output = p.communicate()[0]
+    return byte_output.decode().strip() or None
 
 
-def java_proc_check():
+def get_java_procs():
     """Checks for running Java processes and return the cwd, exe, and pid of any we find."""
-    cwd, exe, pid = False, False, False
+    cwd, exe, pid = None, None, None
     p = subprocess.Popen(['pgrep', 'java'], stdout=subprocess.PIPE)
     output = p.communicate()[0]
 
@@ -289,7 +298,62 @@ def java_proc_check():
     if cwd and exe and pid:
         return cwd, exe, pid
     else:
+        return None
+
+
+def is_screen_started(screen_name):
+    l = []
+
+    proc = subprocess.Popen(['screen', '-ls', '{0}'.format(screen_name)], stdout=subprocess.PIPE)
+    output = proc.communicate()[0]
+    new_output = output.decode().split('\n')
+    split_output = output.split()
+
+    for split_o in split_output:
+        l.append(split_o.decode())
+
+    if 'No Sockets found' in ' '.join(l[:3]):
         return False
+    elif 'There is a screen' in ' '.join(l[:4]):
+        for new_o in new_output:
+            if screen_name in new_o:
+                return new_o.split()[0]
+    elif 'There are screens' in ' '.join(l[:3]):
+        screen_list = []
+        for out in new_output:
+            if screen_name in out:
+                for part in out.split():
+                    if screen_name in part:
+                        screen_list.append(part)
+        return screen_list
+
+
+def is_server_running(server_dir_name):
+    java_procs = get_java_procs()
+    server_dir = server_dir_name.rstrip('/')
+    if isinstance(java_procs, tuple):
+        # just one java proc
+        if server_dir in java_procs:
+            return java_procs
+        else:
+            return False
+    elif isinstance(java_procs, list):
+        # multiple java procs
+        for proc in java_procs:
+            if server_dir in proc[0]:
+                return proc
+    return False
+
+
+def list_or_create_dir(d):
+    """
+    Returns a list of config files in the config directory, creating the folder if it does not exist.
+
+    :param d:
+    """
+    if not os.path.isdir(d):
+        os.makedirs(d)
+    return os.listdir(d)
 
 
 def read_conf_file(file, settings):
@@ -320,6 +384,62 @@ def read_conf_file(file, settings):
     for o in options:
         options_dict[o] = c.get(section, o)
     return settings.__dict__.update(**options_dict)
+
+
+def send_command(command, screen_name):
+    """
+    Send a command to the server.
+
+    @param command:
+    @param screen_name:
+    @return:
+    """
+    cmd_line = 'screen -S {0} -X eval \'stuff "{1}"\015\''.format(screen_name, command)
+    cmd_list = shlex.split(cmd_line)
+    subprocess.call(cmd_list)
+
+
+def start_screen(screen_name, server_dir):
+    command = 'screen -dmS {0}'.format(screen_name)
+    os.chdir(server_dir)
+    master, slave = pty.openpty()
+    cmd_args = shlex.split(command)
+    subprocess.Popen(cmd_args, close_fds=True, shell=False, stdin=slave, stdout=slave, stderr=slave)
+
+
+def start_server(settings):
+    # TODO: console text
+    jar_name = VANILLA_JAR_NAME.format(settings.mc_version)
+    mem_format = settings.mem_format
+    mem_max = settings.mem_max
+    mem_min = settings.mem_min
+    screen_name = settings.screen_name
+    server_dir = settings.server_dir
+
+    screen_started = is_screen_started(screen_name)
+    server_running = is_server_running(server_dir)
+
+    if not screen_started:
+        start_screen(screen_name, server_dir)
+
+    if not server_running:
+        launch_server = 'java -Xms{0}{2} -Xmx{1}{2} -jar {3} nogui'.format(mem_min, mem_max, mem_format[0], jar_name)
+        send_command(launch_server, screen_name)
+    else:
+        raise ServerAlreadyRunningError('World "{0}" already running with PID {1}'.format(
+            settings.world_name,
+            server_running[-1]
+        ))
+
+
+def stop_server(screen_name, server_dir, world_name):
+    # TODO: console text
+    server_running = is_server_running(server_dir)
+
+    if server_running:
+        send_command('stop', screen_name)
+    else:
+        raise ServerNotRunningError('Cannot stop "{}" - it is not running!'.format(world_name))
 
 
 def validate_port(port_num):
@@ -386,14 +506,18 @@ def write_server_properties(print_pre, file, settings):
         do_the_write()
 
 
-# functions for web, if bottle.py and uWSGI are installed
-if bottle and get_exe_path(UWSGI_EXE):
-    logging.basicConfig(format='localhost - - [%(asctime)s] %(message)s', level=logging.DEBUG)
-    log = logging.getLogger(__name__)
-    bottle.debug(True)
-    bottle.TEMPLATE_PATH.insert(0, 'data/views/')  # TODO: create or change this
-    os.chdir(os.path.dirname(__file__))
+# functions for web, if bottle.py is installed
+if bottle:
+    logging.basicConfig(format='127.0.0.1 - - [%(asctime)s] %(message)s', level=logging.DEBUG)
+    os.chdir(BASE_DIR)
+
     app = bottle.app()
+    log = logging.getLogger(__name__)
+    static_path = os.path.join(BASE_DIR, 'data/static')
+    tpl_path = os.path.join(BASE_DIR, 'data/tpl')
+
+    bottle.debug(True)  # TODO: disable
+    bottle.TEMPLATE_PATH.insert(0, tpl_path)
 
     if markdown:
         # only provide these pages if we have Markdown installed
@@ -424,23 +548,31 @@ if bottle and get_exe_path(UWSGI_EXE):
             generate_readme_tpl('README.md', 'data/views/readme.tpl')
             return {}
     else:
-        # TODO: /readme page that explains the Markdown requirement
-        pass
+        @bottle.route('/readme')
+        @bottle.view('readme_no_md')
+        def readme_page():
+            return {}
 
     @bottle.route('/')
     @bottle.view('index')
     def index_page():
-        return {}
+        ip = bottle.request.environ.get('REMOTE_ADDR')
+        return {'ip': ip}
+
+    # noinspection PyUnresolvedReferences
+    @bottle.route('/static/<file_path:path>')
+    def serve_static(file_path):
+        return bottle.static_file(file_path, root=static_path)
 
     @bottle.error(404)
     @bottle.view('404')
     def error404(error):
-        return {'error': error, }
+        return {'error': error}
 
     @bottle.error(500)
     @bottle.view('500')
     def error500(error):
-        return {'error': error, }
+        return {'error': error}
 
 
 def arg_parse(argz):
@@ -545,20 +677,40 @@ def arg_parse(argz):
     elif args.restart:
         print('-r: Restart YEY!')
     elif args.start:
-        print('--start: Start YEY!')
+        try:
+            start_server(settings)
+        except ServerAlreadyRunningError as e:
+            error_and_die(e)
     elif args.stop:
-        print('--stop: Stop YEY!')
+        try:
+            stop_server(
+                settings.screen_name,
+                settings.server_dir,
+                settings.world_name
+            )
+        except ServerNotRunningError as e:
+            error_and_die(e)
     elif args.web:
-        if bottle and get_exe_path(UWSGI_EXE):
-            print('--web: Web UI YEY!')
+        if bottle:
+            bottle.run(app=app, host='127.0.0.1', quiet=False, reloader=True)
         else:
-            error_and_die('The web component requires both bottle.py and uWSGI to function, '
+            error_and_die('The web component requires both bottle.py to function, '
                           'with python-markdown2 as an optional dependency.')
     else:
         parser.print_usage()
 
 
 def main():
+    # ensure dependencies are here
+    try:
+        dependency_check(
+            get_exe_path('java'),
+            get_exe_path('screen')
+        )
+    except MissingExeError as e:
+        error_and_die(e)
+
+    # process cli args and do our stuff
     argz = sys.argv[1:]
     arg_parse(argz)
 
