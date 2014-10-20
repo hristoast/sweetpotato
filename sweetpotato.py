@@ -125,7 +125,7 @@ class SweetpotatoConfig:
         self.running = False
         self.screen_name = None
         self.server_dir = None
-        self.world_name = None
+        self.world_name = DEFAULT_WORLD_NAME
         self.z = 'gz'
 
     def as_conf_file(self):
@@ -718,11 +718,6 @@ def validate_settings(settings):
         if setting in REQUIRED and value is None:
             missing.append(setting)
 
-    # set a default world name if need be
-    if 'world_name' in missing:
-        settings.world_name = DEFAULT_WORLD_NAME
-        missing.remove('world_name')
-
     # set a default screen name if need be
     if 'screen_name' in missing:
         settings.screen_name = settings.world_name
@@ -879,7 +874,7 @@ def arg_parse(argz):
     try:
         validate_directories(settings.backup_dir, settings.server_dir)
     except NoDirFoundError as e:
-        if not args.create:
+        if not args.create and not args.genconf:
             error_and_die(e)
 
     # validate_port(settings.port)
