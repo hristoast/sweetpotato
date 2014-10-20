@@ -10,6 +10,20 @@
 
 It was created as a way to simplify managing a Minecraft server by providing a simple wrapper for common tasks. It knows what your world is and where its files are via command-line options, values set in a configuration file, or a mixture of both!
 
+## Installation
+
+Installation is simple: git clone this repo to wherever you want it, then create a symbolic link to wherever you want it.
+
+    $ ln -s $HOME/src/sweetpotato/sweetpotato.py $HOME/bin/sweetpotato
+
+## Issues
+
+I am sure there may be actual bugs and unintended problems in here, but this section is for known issues relating to design decisions. Things that happen, things we can or can't do - things like that.
+
+  * `sweetpotato` is very careful in may ways, but it will not keep your settings straight for you. Meaning, you must take care to ensure the directories you configure for backups, servers, and so forth are where you really want these things to be.
+
+  * At present we have no way of validating the screen you have chosen. This means that if you have two servers running on the same machine, and you give them both the same screen name, `sweetpotato` is not going to be able to do anything about it!
+
 ## Usage
 ----
 

@@ -2,27 +2,32 @@
                     % if path == '/':
                     <li class="active"><a href="/">Home</a></li>
                     <li><a href="/backups">Backups</a></li>
+                    <li><a href="/json">JSON</a></li>
                     <li><a href="/readme">README</a></li>
                     <li><a href="/server">Server Control</a></li>
                     % elif path == '/backups':
                     <li><a href="/">Home</a></li>
                     <li class="active"><a href="/backups">Backups</a></li>
+                    <li><a href="/json">JSON</a></li>
                     <li><a href="/readme">README</a></li>
                     <li><a href="/server">Server Control</a></li>
                     % elif path == '/readme':
                     <li><a href="/">Home</a></li>
                     <li><a href="/backups">Backups</a></li>
+                    <li><a href="/json">JSON</a></li>
                     <li class="active"><a href="/readme">README</a></li>
                     <li><a href="/server">Server Control</a></li>
                     % elif path == '/server':
                     <li><a href="/">Home</a></li>
                     <li><a href="/backups">Backups</a></li>
+                    <li><a href="/json">JSON</a></li>
                     <li><a href="/readme">README</a></li>
                     <li class="active"><a href="/server">Server Control</a></li>
                     % else:
                     <li><a href="/">Home</a></li>
                     <li><a href="/readme">README</a></li>
                     <li><a href="/backups">Backups</a></li>
+                    <li><a href="/json">JSON</a></li>
                     <li><a href="/server">Server Control</a></li>
                     % end
                 </ul>
