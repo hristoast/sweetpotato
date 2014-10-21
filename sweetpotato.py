@@ -710,6 +710,27 @@ def validate_directories(*dirs):
             )
 
 
+def validate_mem_values(min_mem, max_mem):
+    """
+    Ensure that the given mem values are numbers
+    and that the min is less than the max
+
+    @param min_mem:
+    @param max_mem:
+    @return:
+    """
+    min_value = None
+    max_value = None
+    try:
+        min_value = int(min_mem)
+        max_value = int(max_mem)
+    except ValueError:
+        error_and_die('The memory values you provided are invalid!')
+
+    if min_value > max_value:
+        raise ValueError
+
+
 def validate_settings(settings):
     """
     Ensures that all required settings have a value.
@@ -881,6 +902,11 @@ def arg_parse(argz):
     except NoDirFoundError as e:
         if not args.create and not args.genconf:
             error_and_die(e)
+
+    try:
+        validate_mem_values(settings.mem_min, settings.mem_max)
+    except ValueError:
+        error_and_die('The maximum memory value must be greater than the minimum!')
 
     # validate_port(settings.port)
 
