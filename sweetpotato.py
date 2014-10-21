@@ -847,6 +847,7 @@ def arg_parse(argz):
         settings.force = args.force
     if args.forge:
         settings.forge = args.forge
+    # TODO: ensure that min mem is not greater than the max mem value
     if args.mb:
         settings.mem_format = 'MB'
         settings.mem_max = args.mb[1]

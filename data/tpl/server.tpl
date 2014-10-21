@@ -11,16 +11,15 @@
                 % end
                 % else:
                 % if not server_running:
-                    <h2>Please select an action.</h2>
                     <form action="/server" method="post">
                         <button class="btn btn-lg btn-success srvctl" name="start" type="submit">Start {{world_name}}</button>
                     </form>
                 % else:
                     <form action="/server" method="post">
-                        <button class="btn btn-lg btn-success srvctl" name="stop" type="submit">Stop {{world_name}}</button>
+                        <button class="btn btn-lg btn-danger srvctl" name="stop" type="submit">Stop {{world_name}}</button>
                     </form>
                     <form action="/server" method="post">
-                        <button class="btn btn-lg btn-success srvctl" name="restart" type="submit">Restart {{world_name}}</button>
+                        <button class="btn btn-lg btn-warning srvctl" name="restart" type="submit">Restart {{world_name}}</button>
                     </form>
                 % end
                 % end

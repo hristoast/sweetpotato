@@ -29,6 +29,10 @@ a:focus, a:hover {
     background-color: #008000;
 }
 
+a.bakfile {
+    font-size: 1.3em;
+}
+
 button.srvctl {
     margin-top: 20px;
 }
