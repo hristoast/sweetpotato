@@ -10,7 +10,6 @@ import json
 import os
 import pty
 import shlex
-# import socket
 import subprocess
 import sys
 import time
@@ -116,7 +115,6 @@ class SweetpotatoConfig:
         self.backup_dir = None
         self.compression = 'gz'
         self.conf_file = None
-        self.force = False
         self.forge = None
         self.level_seed = None
         self.mem_format = None
@@ -266,10 +264,14 @@ def create_server(settings):
     """
     print_pre = '[' + Colors.yellow_green + 'create' + Colors.end + '] '
     backup_dir = settings.backup_dir
-    force = settings.force
+    force = is_forced(settings)
     mc_version = settings.mc_version
     server_dir = settings.server_dir
     world_name = settings.world_name
+
+    is_running = is_server_running(settings.server_dir)
+    if is_running:
+        raise ServerAlreadyRunningError("Can't create '{}' - it's already running!".format(world_name))
 
     print(print_pre + Colors.blue + 'Creating "{}" ...'.format(world_name) + Colors.end)
 
@@ -380,6 +382,14 @@ def get_java_procs():
         return cwd, exe, pid
     else:
         return None
+
+
+def is_forced(settings):
+    try:
+        force = settings.force
+    except AttributeError:
+        force = None
+    return force
 
 
 def is_screen_started(screen_name):
@@ -621,7 +631,7 @@ def run_server_backup(print_pre, settings, offline=False):
     """
     backup_dir = settings.backup_dir
     date_stamp = datetime.now().strftime('%Y-%m-%d')
-    force = settings.force
+    force = is_forced(settings)
     jar_name = VANILLA_JAR_NAME.format(settings.mc_version)
     mem_format = settings.mem_format
     mem_max = settings.mem_max
@@ -841,21 +851,6 @@ def run_webui(settings):
                       'with Python-Markdown as an optional dependency.')
 
 
-# def validate_port(port_num):
-#     """
-#     Ensure that the provided port is usable.
-#
-#     @param port_num:
-#     @return:
-#     """
-#     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#     try:
-#         s.bind(('127.0.0.1', int(port_num)))
-#     except (OSError, PermissionError) as e:
-#         error_and_die(e)
-#     s.close()
-
-
 def validate_directories(*dirs):
     """
     Ensures that the passed-in directories exist.
@@ -1068,8 +1063,6 @@ def arg_parse(argz):
     except ValueError:
         error_and_die('The maximum memory value must be greater than the minimum!')
 
-    # validate_port(settings.port)
-
     running = is_server_running(settings.server_dir)
 
     if args.backup:
@@ -1080,7 +1073,10 @@ def arg_parse(argz):
             send_command('say Backup Done!', settings.screen_name)
             error_and_die(e)
     elif args.create:
-        create_server(settings)
+        try:
+            create_server(settings)
+        except ServerAlreadyRunningError as e:
+            error_and_die(e.msg.strip('"'))
     elif args.genconf:
         settings.as_conf_file()
     elif args.json:
