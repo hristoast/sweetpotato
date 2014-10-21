@@ -681,6 +681,166 @@ def run_server_backup(print_pre, settings, offline=False):
     print('Done!' + Colors.end)
 
 
+def run_webui(settings):
+    """
+    Run the WebUI or print a message about why not.
+
+    @param settings:
+    @return:
+    """
+    if bottle:
+        app = bottle.app()
+        static_path = os.path.join(BASE_DIR, 'data/static')
+        tpl_path = os.path.join(BASE_DIR, 'data/tpl')
+
+        bottle.debug(False)
+        bottle.TEMPLATE_PATH.insert(0, tpl_path)
+
+        if markdown:
+            def readme_md_to_html(md_file):
+                """
+                Runs markdown() on a markdown-formatted README.md file to generate html.
+
+                @param md_file:
+                @return:
+                """
+                html = "% rebase('base.tpl', title='{}')\n".format(md_file)
+                m = open(md_file, 'r')
+                for l in m.readlines():
+                    html += markdown(l)
+                m.close()
+                return html
+
+            @bottle.route('/readme')
+            def readme():
+                path = bottle.request.path
+                html = readme_md_to_html(os.path.join(BASE_DIR, 'README.md'))
+                return bottle.template(
+                    html,
+                    path=path)
+        else:
+            @bottle.route('/readme')
+            @bottle.view('readme_no_md')
+            def readme():
+                path = bottle.request.path
+                return {'path': path}
+
+        @bottle.get('/backup')
+        @bottle.post('/backup')
+        @bottle.view('backup')
+        def backups():
+            path = bottle.request.path
+            request_method = bottle.request.method
+            todays_file = '{0}_{1}.tar.{2}'.format(
+                datetime.now().strftime('%Y-%m-%d'),
+                settings.world_name,
+                settings.compression
+            )
+            # noinspection PyTypeChecker
+            backup_dir_contents = os.listdir(settings.backup_dir)
+            if bottle.request.method == 'POST':
+                t = Thread(target=run_server_backup, args=('', settings))
+                t.daemon = True
+                t.start()
+            return {
+                'backup_dir_contents': backup_dir_contents,
+                'path': path,
+                'request_method': request_method,
+                'todays_file': todays_file,
+                'world_name': settings.world_name
+            }
+
+        @bottle.route('/')
+        @bottle.view('index')
+        def index():
+            is_running = is_server_running(settings.server_dir)
+            path = bottle.request.path
+            pid = None
+            if is_running:
+                pid = is_running[-1]
+            return {
+                'path': path,
+                'pid': pid,
+                'settings': settings,
+                'server_running': is_running
+            }
+
+        @bottle.route('/json')
+        def as_json():
+            settings.running = is_server_running(settings.server_dir)
+            return settings.__dict__
+
+        @bottle.get('/server')
+        @bottle.post('/server')
+        @bottle.view('server')
+        def server():
+            is_running = is_server_running(settings.server_dir)
+            path = bottle.request.path
+            request_method = bottle.request.method
+            restart = None
+            start = None
+            stop = None
+            if bottle.request.method == 'POST':
+                postdata = bottle.request.POST
+                restart = postdata.get('restart')
+                start = postdata.get('start')
+                stop = postdata.get('stop')
+                if restart is not None:
+                    t = Thread(target=restart_server, args=('', settings))
+                    t.daemon = True
+                    t.start()
+                elif start is not None:
+                    t = Thread(target=start_server, args=('', settings))
+                    t.daemon = True
+                    t.start()
+                elif stop is not None:
+                    t = Thread(target=stop_server,
+                               args=('', settings.screen_name, settings.server_dir, settings.world_name))
+                    t.daemon = True
+                    t.start()
+            return {
+                'path': path,
+                'request_method': request_method,
+                'restart': restart,
+                'start': start,
+                'stop': stop,
+                'server_running': is_running,
+                'world_name': settings.world_name
+            }
+
+        # noinspection PyUnresolvedReferences
+        @bottle.route('/backups/<file_path:path>')
+        def serve_backup(file_path):
+            return bottle.static_file(file_path, root=settings.backup_dir)
+
+        # noinspection PyUnresolvedReferences
+        @bottle.route('/static/<file_path:path>')
+        def serve_static(file_path):
+            return bottle.static_file(file_path, root=static_path)
+
+        @bottle.error(404)
+        @bottle.view('404')
+        def error404(error):
+            path = bottle.request.path
+            return {
+                'error': error,
+                'path': path
+            }
+
+        @bottle.error(500)
+        @bottle.view('500')
+        def error500(error):
+            path = bottle.request.path
+            return {
+                'error': error,
+                'path': path
+            }
+        bottle.run(app=app, quiet=False, reloader=True)
+    else:
+        error_and_die('The web component requires both bottle.py to function, '
+                      'with Python-Markdown as an optional dependency.')
+
+
 # def validate_port(port_num):
 #     """
 #     Ensure that the provided port is usable.
@@ -818,7 +978,8 @@ def arg_parse(argz):
     actions.add_argument('-r', '--restart', action='store_true', help='restart the server')
     actions.add_argument('--start', action='store_true', help='start the server in a screen session')
     actions.add_argument('--stop', action='store_true', help='stop the server')
-    actions.add_argument('-W', '--web', action='store_true', help='run the web UI')
+    actions.add_argument('-W', '--web', action='store_true', help='run the WebUI')
+    # TODO: some sort of --fork option for the WebUI, to run it in the background
 
     settings = parser.add_argument_group('Settings', 'Config options for %(prog)s')
     settings.add_argument('-c', '--conf', help='config file containing your settings', metavar='CONF FILE')
@@ -868,7 +1029,6 @@ def arg_parse(argz):
         settings.force = args.force
     if args.forge:
         settings.forge = args.forge
-    # TODO: ensure that min mem is not greater than the max mem value
     if args.mb:
         settings.mem_format = 'MB'
         settings.mem_max = args.mb[1]
@@ -958,157 +1118,7 @@ def arg_parse(argz):
         except ServerNotRunningError as e:
             error_and_die(e)
     elif args.web:
-        if bottle:
-            app = bottle.app()
-            static_path = os.path.join(BASE_DIR, 'data/static')
-            tpl_path = os.path.join(BASE_DIR, 'data/tpl')
-
-            bottle.debug(False)
-            bottle.TEMPLATE_PATH.insert(0, tpl_path)
-
-            if markdown:
-                def readme_md_to_html(md_file):
-                    """
-                    Runs markdown() on a markdown-formatted README.md file to generate html.
-
-                    @param md_file:
-                    @return:
-                    """
-                    html = "% rebase('base.tpl', title='README.md')\n"
-                    m = open(md_file, 'r')
-                    for l in m.readlines():
-                        html += markdown(l)
-                    m.close()
-                    return html
-
-                @bottle.route('/readme')
-                def readme():
-                    path = bottle.request.path
-                    html = readme_md_to_html(os.path.join(BASE_DIR, 'README.md'))
-                    return bottle.template(
-                        html,
-                        path=path)
-            else:
-                @bottle.route('/readme')
-                @bottle.view('readme_no_md')
-                def readme():
-                    path = bottle.request.path
-                    return {'path': path}
-
-            @bottle.get('/backup')
-            @bottle.post('/backup')
-            @bottle.view('backup')
-            def backups():
-                path = bottle.request.path
-                request_method = bottle.request.method
-                todays_file = '{0}_{1}.tar.{2}'.format(
-                    datetime.now().strftime('%Y-%m-%d'),
-                    settings.world_name,
-                    settings.compression
-                )
-                # noinspection PyTypeChecker
-                backup_dir_contents = os.listdir(settings.backup_dir)
-                if bottle.request.method == 'POST':
-                    t = Thread(target=run_server_backup, args=('', settings))
-                    t.daemon = True
-                    t.start()
-                return {
-                    'backup_dir_contents': backup_dir_contents,
-                    'path': path,
-                    'request_method': request_method,
-                    'todays_file': todays_file,
-                    'world_name': settings.world_name
-                }
-
-            @bottle.route('/')
-            @bottle.view('index')
-            def index():
-                is_running = is_server_running(settings.server_dir)
-                path = bottle.request.path
-                pid = None
-                if is_running:
-                    pid = is_running[-1]
-                return {
-                    'path': path,
-                    'pid': pid,
-                    'settings': settings,
-                    'server_running': is_running
-                }
-
-            @bottle.route('/json')
-            def as_json():
-                settings.running = running
-                return settings.__dict__
-
-            @bottle.get('/server')
-            @bottle.post('/server')
-            @bottle.view('server')
-            def server():
-                is_running = is_server_running(settings.server_dir)
-                path = bottle.request.path
-                request_method = bottle.request.method
-                restart = None
-                start = None
-                stop = None
-                if bottle.request.method == 'POST':
-                    postdata = bottle.request.POST
-                    restart = postdata.get('restart')
-                    start = postdata.get('start')
-                    stop = postdata.get('stop')
-                    if restart is not None:
-                        t = Thread(target=restart_server, args=('', settings))
-                        t.daemon = True
-                        t.start()
-                    elif start is not None:
-                        t = Thread(target=start_server, args=('', settings))
-                        t.daemon = True
-                        t.start()
-                    elif stop is not None:
-                        t = Thread(target=stop_server,
-                                   args=('', settings.screen_name, settings.server_dir, settings.world_name))
-                        t.daemon = True
-                        t.start()
-                return {
-                    'path': path,
-                    'request_method': request_method,
-                    'restart': restart,
-                    'start': start,
-                    'stop': stop,
-                    'server_running': is_running,
-                    'world_name': settings.world_name
-                }
-
-            # noinspection PyUnresolvedReferences
-            @bottle.route('/backups/<file_path:path>')
-            def serve_backup(file_path):
-                return bottle.static_file(file_path, root=settings.backup_dir)
-
-            # noinspection PyUnresolvedReferences
-            @bottle.route('/static/<file_path:path>')
-            def serve_static(file_path):
-                return bottle.static_file(file_path, root=static_path)
-
-            @bottle.error(404)
-            @bottle.view('404')
-            def error404(error):
-                path = bottle.request.path
-                return {
-                    'error': error,
-                    'path': path
-                }
-
-            @bottle.error(500)
-            @bottle.view('500')
-            def error500(error):
-                path = bottle.request.path
-                return {
-                    'error': error,
-                    'path': path
-                }
-            bottle.run(app=app, host='127.0.0.1', quiet=False, reloader=True)
-        else:
-            error_and_die('The web component requires both bottle.py to function, '
-                          'with Python-Markdown as an optional dependency.')
+            run_webui(settings)
     else:
         parser.print_usage()
 
