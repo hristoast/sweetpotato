@@ -649,7 +649,7 @@ def run_server_backup(print_pre, settings, offline=False):
         sys.stdout.flush()
     else:
         send_command('save-all', screen_name)
-        send_command('save-on', screen_name)
+        send_command('save-off', screen_name)
         print(print_pre + Colors.light_blue + 'Running live backup of "{}"  ...'.format(world_name), end=' ')
         sys.stdout.flush()
         send_command('say Server backing up now', screen_name)
