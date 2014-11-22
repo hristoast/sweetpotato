@@ -669,7 +669,7 @@ def run_server_backup(print_pre, settings, offline=False):
         try:
             with open(full_path_to_backup_file, 'rb'):
                 raise BackupFileAlreadyExistsError('File "{}" already exists!'.format(full_path_to_backup_file))
-        except FileNotFoundError:
+        except IOError:
             pass
 
     tar = tarfile.open(full_path_to_backup_file, 'w:{}'.format(compression))
