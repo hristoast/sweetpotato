@@ -26,7 +26,6 @@ from threading import Thread
 
 
 __author__ = 'Hristos N. Triantafillou <me@hristos.triantafillou.us>'
-__forgeversion__ = '1.7.10-10.13.2.1230'
 __license__ = 'GPLv3'
 __mcversion__ = '1.8'
 __progname__ = 'sweetpotato'
@@ -42,8 +41,10 @@ CONFIG_DIR = '{0}/.config/{1}'.format(HOME_DIR, __progname__)
 DEFAULT_CONF_FILE = '{0}/{1}.conf'.format(CONFIG_DIR, __progname__)
 REQUIRED = 'backup_dir mem_format mem_max mem_min port screen_name server_dir world_name'
 SERVER_WAIT_TIME = 0.5
+FORGE_DL_URL = 'http://files.minecraftforge.net/maven/net/minecraftforge/forge/{0}/{1}'
+FORGE_JAR_NAME = 'forge-{}-universal.jar'
 VANILLA_DL_URL = 'https://s3.amazonaws.com/Minecraft.Download/versions/{0}/{1}'
-VANILLA_JAR_NAME = 'minecraft_server.{0}.jar'
+VANILLA_JAR_NAME = 'minecraft_server.{}.jar'
 
 
 class Colors:
@@ -265,9 +266,17 @@ def create_server(settings):
     print_pre = '[' + Colors.yellow_green + 'create' + Colors.end + '] '
     backup_dir = settings.backup_dir
     force = is_forced(settings)
-    mc_version = settings.mc_version
     server_dir = settings.server_dir
     world_name = settings.world_name
+
+    if settings.forge:
+        forge_version = settings.forge
+        jar_name = FORGE_JAR_NAME.format(forge_version)
+        dl_url = FORGE_DL_URL.format(forge_version, jar_name)
+    else:
+        mc_version = settings.mc_version
+        jar_name = VANILLA_JAR_NAME.format(mc_version)
+        dl_url = VANILLA_DL_URL.format(mc_version, jar_name)
 
     is_running = is_server_running(settings.server_dir)
     if is_running:
@@ -291,24 +300,19 @@ def create_server(settings):
     else:
         print(print_pre + Colors.light_blue + 'Found {}!'.format(server_dir) + Colors.end)
 
-    if not settings.forge:
-        jar_name = VANILLA_JAR_NAME.format(mc_version)
-        full_jar_path = os.path.join(server_dir, jar_name)
-        if not os.path.isfile(full_jar_path) or force:
-            print(print_pre + Colors.light_blue + 'Downloading {} ...'.format(jar_name), end=' ')
-            sys.stdout.flush()
-            dl_url = VANILLA_DL_URL.format(mc_version, jar_name)
-            try:
-                local_jar = urllib.request.urlretrieve(dl_url, full_jar_path)[0]
-                jar = open(local_jar)
-                jar.close()
-            except urllib.error.HTTPError as e:
-                error_and_die(e.msg + ' Is your MC Version valid?')
-            print('Done!' + Colors.end)
-        else:
-            print(print_pre + Colors.light_blue + 'Found {}!'.format(jar_name) + Colors.end)
+    full_jar_path = os.path.join(server_dir, jar_name)
+    if not os.path.isfile(full_jar_path) or force:
+        print(print_pre + Colors.light_blue + 'Downloading {} ...'.format(jar_name), end=' ')
+        sys.stdout.flush()
+        try:
+            local_jar = urllib.request.urlretrieve(dl_url, full_jar_path)[0]
+            jar = open(local_jar)
+            jar.close()
+        except urllib.error.HTTPError as e:
+            error_and_die(e.msg + ' Is your version valid?')
+        print('Done!' + Colors.end)
     else:
-        print('DO FORGE THINGS!')
+        print(print_pre + Colors.light_blue + 'Found {}!'.format(jar_name) + Colors.end)
 
     eula_txt = os.path.join(server_dir, 'eula.txt')
     agree_to_eula(eula_txt, force, print_pre)
@@ -384,12 +388,34 @@ def get_java_procs():
         return None
 
 
+def get_jar(settings):
+    """
+    Returns the name of our server's jar, be it vanilla or forge.
+
+    @param settings:
+    @return:
+    """
+    if settings.forge:
+        forge_version = settings.forge
+        jar_name = FORGE_JAR_NAME.format(forge_version)
+    else:
+        mc_version = settings.mc_version
+        jar_name = VANILLA_JAR_NAME.format(mc_version)
+    if jar_name in os.listdir(settings.server_dir):
+        return jar_name
+    else:
+        return False
+
+
 def is_forced(settings):
     try:
         force = settings.force
     except AttributeError:
         force = None
     return force
+
+
+# def is_forge(settings):
 
 
 def is_screen_started(screen_name):
@@ -532,7 +558,8 @@ def start_server(print_pre, settings):
     @param settings:
     @return:
     """
-    jar_name = VANILLA_JAR_NAME.format(settings.mc_version)
+    # jar_name = VANILLA_JAR_NAME.format(settings.mc_version)
+    jar_name = get_jar(settings)
     mem_format = settings.mem_format
     mem_max = settings.mem_max
     mem_min = settings.mem_min
@@ -593,7 +620,8 @@ def restart_server(print_pre, settings):
     @param settings:
     @return:
     """
-    jar_name = VANILLA_JAR_NAME.format(settings.mc_version)
+    # jar_name = VANILLA_JAR_NAME.format(settings.mc_version)
+    jar_name = get_jar(settings)
     mem_format = settings.mem_format
     mem_max = settings.mem_max
     mem_min = settings.mem_min
@@ -968,7 +996,7 @@ def arg_parse(argz):
     actions.add_argument('-b', '--backup', action='store_true', help='back up your Minecraft server (live)')
     actions.add_argument('-C', '--create', action='store_true', help='create a server from settings')
     actions.add_argument('-g', '--genconf', action='store_true', help='generate conf file from passed-in CLI arguments')
-    actions.add_argument('-j', '--json', action='store_true', help='Output settings as json')
+    actions.add_argument('-j', '--json', action='store_true', help='output settings as json')
     actions.add_argument('-o', '--offline', action='store_true', help='make an offline backup (stops the server)')
     actions.add_argument('-r', '--restart', action='store_true', help='restart the server')
     actions.add_argument('--start', action='store_true', help='start the server in a screen session')
@@ -980,10 +1008,10 @@ def arg_parse(argz):
     settings.add_argument('-c', '--conf', help='config file containing your settings', metavar='CONF FILE')
     settings.add_argument('-d', '--backup-dir', help='the FULL path to your backups folder',
                           metavar='/path/to/backups')
-    settings.add_argument('--force', help='forces writing of server files, even when they already exist',
+    settings.add_argument('-F', '--force', help='forces writing of server files, even when they already exist',
                           action='store_true')
-    settings.add_argument('--forge', help='does this server use Forge?', action='store_true')
-    settings.add_argument('--level-seed', '--seed', help='Optional and only applied during world creation')
+    settings.add_argument('-f', '--forge', help='version of Forge you are using.', metavar='FORGE VERSION')
+    settings.add_argument('--level-seed', '--seed', help='optional and only applied during world creation')
     settings.add_argument('-p', '--port', help='port you wish to run your server on. Default: 25565')
     settings.add_argument('-s', '--server-dir', metavar='/path/to/server',
                           help='set the FULL path to the directory containing your server files')
