@@ -33,7 +33,8 @@ __version__ = '0.11 BETA'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
-DEFAULT_SERVER_PORT = str(25565)
+DEFAULT_PERMGEN = '256'
+DEFAULT_SERVER_PORT = '25565'
 DEFAULT_WORLD_NAME = 'SweetpotatoWorld'
 DESCRIPTION = "Manage your Minecraft server on a GNU/Linux system."
 HOME_DIR = os.getenv('HOME')
@@ -122,6 +123,7 @@ class SweetpotatoConfig:
         self.mem_max = None
         self.mem_min = None
         self.mc_version = __mcversion__
+        self.permgen = DEFAULT_PERMGEN
         self.port = DEFAULT_SERVER_PORT
         self.running = False
         self.screen_name = None
@@ -1004,13 +1006,18 @@ def arg_parse(argz):
     actions.add_argument('-W', '--web', action='store_true', help='run the WebUI')
     # TODO: some sort of --fork option for the WebUI, to run it in the background
 
-    settings = parser.add_argument_group('Settings', 'Config options for %(prog)s')
+    settings = parser.add_argument_group('Settings', 'config options for %(prog)s')
     settings.add_argument('-c', '--conf', help='config file containing your settings', metavar='CONF FILE')
     settings.add_argument('-d', '--backup-dir', help='the FULL path to your backups folder',
                           metavar='/path/to/backups')
     settings.add_argument('-F', '--force', help='forces writing of server files, even when they already exist',
                           action='store_true')
-    settings.add_argument('-f', '--forge', help='version of Forge you are using.', metavar='FORGE VERSION')
+
+    forge_settings = settings.add_mutually_exclusive_group()
+    forge_settings.add_argument('-f', '--forge', help='version of Forge you are using.', metavar='FORGE VERSION')
+    forge_settings.add_argument('-P', '--permgen',
+                                help='Amount of permgen to use in MB. Default: {}'.format(DEFAULT_PERMGEN))
+
     settings.add_argument('--level-seed', '--seed', help='optional and only applied during world creation')
     settings.add_argument('-p', '--port', help='port you wish to run your server on. Default: 25565')
     settings.add_argument('-s', '--server-dir', metavar='/path/to/server',
@@ -1062,6 +1069,8 @@ def arg_parse(argz):
         settings.mem_min = args.gb[0]
     if args.level_seed:
         settings.level_seed = args.level_seed
+    if args.permgen:
+        settings.permgen = args.permgen
     if args.port:
         settings.port = args.port
     if args.server_dir:
