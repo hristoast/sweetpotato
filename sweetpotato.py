@@ -27,7 +27,7 @@ from threading import Thread
 
 __author__ = 'Hristos N. Triantafillou <me@hristos.triantafillou.us>'
 __license__ = 'GPLv3'
-__mcversion__ = '1.8'
+__mcversion__ = '1.8.1'
 __progname__ = 'sweetpotato'
 __version__ = '0.15 BETA'
 
