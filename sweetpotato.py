@@ -29,7 +29,7 @@ __author__ = 'Hristos N. Triantafillou <me@hristos.triantafillou.us>'
 __license__ = 'GPLv3'
 __mcversion__ = '1.8.1'
 __progname__ = 'sweetpotato'
-__version__ = '0.18 BETA'
+__version__ = '0.19 BETA'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -517,8 +517,6 @@ def read_conf_file(file, settings):
     :param file:
     :param settings:
     """
-    # TODO: handle multiple servers by using their world name as a section header name
-    # TODO: come up with a system for this
     if len(file.split('/')) == 1:
         file_path = os.path.join(os.getcwd(), file)
     else:
@@ -1093,7 +1091,6 @@ def arg_parse(argz):
         read_conf_file(DEFAULT_CONF_FILE, settings)
     except (configparser.NoSectionError, ConfFileError):
         pass
-    # TODO: read from json input?
 
     args = parser.parse_args(argz)
     if args.conf:
