@@ -715,7 +715,7 @@ def run_server_backup(print_pre, settings, offline=False):
 
     tar = tarfile.open(full_path_to_backup_file, 'w:{}'.format(compression))
     if forge:
-        tar.add(server_dir, exclude='dynmap')
+        tar.add(server_dir, exclude=lambda x: 'dynmap' in x)
     else:
         tar.add(server_dir)
     tar.close()
@@ -1018,6 +1018,7 @@ def arg_parse(argz):
     actions.add_argument('--start', action='store_true', help='start the server in a screen session')
     actions.add_argument('--stop', action='store_true', help='stop the server')
     actions.add_argument('-W', '--web', action='store_true', help='run the WebUI')
+    # TODO: port option for web ui
     # TODO: some sort of --fork option for the WebUI, to run it in the background
 
     settings = parser.add_argument_group('Settings', 'config options for %(prog)s')
