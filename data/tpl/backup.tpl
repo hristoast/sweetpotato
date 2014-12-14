@@ -8,10 +8,10 @@
                     <h2>"{{world_name}}" has been backed up today. Great Job!</h2>
                     % else:
                     <form action="/backup" method="post">
-                        <button class="btn btn-lg btn-primary srvctl">Online Backup {{world_name}} now</button>
+                        <button class="btn btn-lg btn-primary srvctl"><span class="fa fa-upload"></span> Online Backup {{world_name}} now</button>
                     </form>
                     <form action="/backup" method="post">
-                        <button class="btn btn-lg btn-warning srvctl">Offline Backup {{world_name}} now</button>
+                        <button class="btn btn-lg btn-warning srvctl"><span class="fa fa-download"></span> Offline Backup {{world_name}} now</button>
                     </form>
                     % end
                     % if backup_dir_contents:
