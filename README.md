@@ -12,9 +12,25 @@ It was created as a way to simplify managing a Minecraft server by providing a s
 
 ## Installation
 
-Installation is simple: git clone this repo to wherever you want it (or download an archive and extract it), then create a symbolic link to wherever you want it.
+With `make` installed and `sudo` access:
 
-    $ ln -s $HOME/src/sweetpotato/sweetpotato.py $HOME/bin/sweetpotato
+ 1. Download or `git clone https://github.com/hristoast/sweetpotato.git`
+ 1. Extract (if downloaded)
+ 1. `cd sweetpotato`
+ 1. `sudo make install`
+
+## Uninstallation
+
+With `sudo` access:
+
+ 1. `cd` into your git-cloned source directory
+ 1. `sudo make uninstall`
+
+__OR__
+
+ 1. `sudo rm -fr /opt/sweetpotato /usr/bin/sweetpotato`
+
+Which are essentially the same thing.
 
 ## Issues
 
@@ -181,18 +197,17 @@ Fails if the configured world is not running.
 
 `sweetpotato` supports using Forge, and defaults to the latest Recommended 1.7.10 build. You can set a specific Forge version with the `-f` or `--forge` option. The extra `-P` or `--permgen` option is available for Forge, by default it is set to 256MB.
 
-Both your Forge version and permgen setting can be stored in a conf file or passed in as arguments.
+ * Both your Forge version and permgen setting can be stored in a conf file or passed in as arguments.
+ * You can use the `-C` or `--create` option to download your Forge jar, just as you would with a vanilla server, however don't expect to be able to run it as you'll be missing external dependencies.
 
 ### WebUI
 
+A simple web-based interface for many of the functions offered by `sweetpotato`. By default it binds to port `8080`, but this can be changed with the `--web-port` flag or a conf file setting.
+
     $ sweetpotato --web
     Bottle v0.12.7 server starting up (using WSGIRefServer())...
-    Listening on http://127.0.0.1:8080/
+    Listening on http://127.0.0.1:3434/
     Hit Ctrl-C to quit.
-
-As the output says, after launching you can then fire up the WebUI in your favorite browser at http://127.0.0.1:8080/.
-
-There is presently no way to bind to a different port.
 
 ## ETC
 
