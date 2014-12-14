@@ -922,7 +922,10 @@ def run_webui(settings):
                 'path': path,
                 '__version__': __version__
             }
-        bottle.run(app=app, port=settings.webui_port, quiet=False)
+        try:
+            bottle.run(app=app, port=settings.webui_port, quiet=False)
+        except OSError:
+            error_and_die('Port {} is already in use! Exiting ...\n'.format(settings.webui_port))
     else:
         error_and_die('The web component requires both bottle.py to function, '
                       'with Python-Markdown as an optional dependency.')
@@ -940,13 +943,6 @@ def validate_directories(*dirs):
             raise NoDirFoundError(
                 'The configured directory "{}" does not exist. Do you need to run --create?'.format(d)
             )
-
-
-# def validate_server_jar(jar):
-#     if not os.path.isfile(jar):
-#         raise NoJarFoundError(
-#             'The configured server jar file "{}" does not exist. Do you need to run --create?'.format(jar)
-#         )
 
 
 def validate_mem_values(min_mem, max_mem):
