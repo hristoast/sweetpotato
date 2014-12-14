@@ -261,6 +261,13 @@ def agree_to_eula(eula_txt, force, print_pre):
     return True
 
 
+def can_xz():
+    if sys.version_info[1] < 3:
+        return False
+    else:
+        return True
+
+
 def create_server(settings):
     """
     Check for or create the configured backup_dir and server_dir, check for or
@@ -730,7 +737,9 @@ def run_server_backup(print_pre, settings, offline=False):
 
     list_or_create_dir(backup_dir)
 
-    # TODO: need to disable usage of xz if python version is < 3.3
+    if not can_xz():
+        compression = 'gz'
+
     tar = tarfile.open(full_path_to_backup_file, 'w:{}'.format(compression))
     if forge:
         tar.add(server_dir, exclude=lambda x: 'dynmap' in x)
