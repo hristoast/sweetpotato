@@ -699,7 +699,16 @@ def run_server_backup(print_pre, settings, offline=False):
 
     backup_file = '{0}_{1}.tar.{2}'.format(date_stamp, world_name, compression)
     full_path_to_backup_file = os.path.join(backup_dir, backup_file)
+    backup_made_today = os.path.isfile(full_path_to_backup_file)
     server_running = is_server_running(server_dir)
+
+    if backup_made_today and not force:
+        sys.stdout.flush()
+        try:
+            with open(full_path_to_backup_file, 'rb'):
+                error_and_die('File "{}" already exists!'.format(full_path_to_backup_file))
+        except IOError:
+            pass
 
     if offline:
         print(print_pre + Colors.light_blue, end=' ')
@@ -720,13 +729,8 @@ def run_server_backup(print_pre, settings, offline=False):
         send_command('say Server backing up now', screen_name)
 
     list_or_create_dir(backup_dir)
-    if not force:
-        try:
-            with open(full_path_to_backup_file, 'rb'):
-                raise BackupFileAlreadyExistsError('File "{}" already exists!'.format(full_path_to_backup_file))
-        except IOError:
-            pass
 
+    # TODO: need to disable usage of xz if python version is < 3.3
     tar = tarfile.open(full_path_to_backup_file, 'w:{}'.format(compression))
     if forge:
         tar.add(server_dir, exclude=lambda x: 'dynmap' in x)
