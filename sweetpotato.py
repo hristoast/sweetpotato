@@ -128,7 +128,7 @@ class SweetpotatoConfig:
         self.mem_max = None
         self.mem_min = None
         self.mc_version = __mcversion__
-        self.permgen = DEFAULT_PERMGEN
+        self.permgen = None
         self.port = DEFAULT_SERVER_PORT
         self.running = False
         self.screen_name = None
@@ -1132,6 +1132,7 @@ def arg_parse(argz):
 
     if settings.forge:
         settings.mc_version = settings.forge.split('-')[0]
+        settings.permgen = DEFAULT_PERMGEN
 
     try:
         validate_settings(settings)
