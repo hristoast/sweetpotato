@@ -400,11 +400,13 @@ def get_jar(settings):
     if settings.forge:
         forge_version = settings.forge
         jar_name = FORGE_JAR_NAME.format(forge_version)
+        launch_cmd = 'java -Xms{0}{2} -Xmx{1}{2} -XX:MaxPermSize={3}M -jar {4} nogui'
     else:
         mc_version = settings.mc_version
         jar_name = VANILLA_JAR_NAME.format(mc_version)
+        launch_cmd = 'java -Xms{0}{2} -Xmx{1}{2} -jar {3} nogui'
     if jar_name in os.listdir(settings.server_dir):
-        return jar_name
+        return jar_name, launch_cmd
     else:
         return False
 
@@ -560,8 +562,7 @@ def start_server(print_pre, settings):
     @param settings:
     @return:
     """
-    # jar_name = VANILLA_JAR_NAME.format(settings.mc_version)
-    jar_name = get_jar(settings)
+    jar_name, launch_cmd = get_jar(settings)
     mem_format = settings.mem_format
     mem_max = settings.mem_max
     mem_min = settings.mem_min
@@ -572,6 +573,12 @@ def start_server(print_pre, settings):
     screen_started = is_screen_started(screen_name)
     server_running = is_server_running(server_dir)
 
+    if settings.forge:
+        permgen = settings.permgen
+        launch_server = launch_cmd.format(mem_min, mem_max, mem_format[0], permgen, jar_name)
+    else:
+        launch_server = launch_cmd.format(mem_min, mem_max, mem_format[0], jar_name)
+
     if not screen_started:
         start_screen(screen_name, server_dir)
 
@@ -581,7 +588,6 @@ def start_server(print_pre, settings):
         else:
             print('starting "{}" ...'.format(world_name), end=' ')
         sys.stdout.flush()
-        launch_server = 'java -Xms{0}{2} -Xmx{1}{2} -jar {3} nogui'.format(mem_min, mem_max, mem_format[0], jar_name)
         send_command(launch_server, screen_name)
         print('Done!' + Colors.end)
     else:
@@ -622,18 +628,22 @@ def restart_server(print_pre, settings):
     @param settings:
     @return:
     """
-    # jar_name = VANILLA_JAR_NAME.format(settings.mc_version)
-    jar_name = get_jar(settings)
+    jar_name, launch_cmd = get_jar(settings)
     mem_format = settings.mem_format
     mem_max = settings.mem_max
     mem_min = settings.mem_min
-    launch_server = 'java -Xms{0}{2} -Xmx{1}{2} -jar {3} nogui'.format(mem_min, mem_max, mem_format[0], jar_name)
     screen_name = settings.screen_name
     server_dir = settings.server_dir
     world_name = settings.world_name
 
     screen_started = is_screen_started(screen_name)
     server_running = is_server_running(server_dir)
+
+    if settings.forge:
+        permgen = settings.permgen
+        launch_server = launch_cmd.format(mem_min, mem_max, mem_format[0], permgen, jar_name)
+    else:
+        launch_server = launch_cmd.format(mem_min, mem_max, mem_format[0], jar_name)
 
     if not screen_started:
         start_screen(screen_name, server_dir)
@@ -1083,6 +1093,9 @@ def arg_parse(argz):
         settings.world_name = args.world
     if args.compression:
         settings.compression = args.compression
+
+    if settings.forge:
+        settings.mc_version = settings.forge.split('-')[0]
 
     try:
         validate_settings(settings)
