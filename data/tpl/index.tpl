@@ -7,7 +7,7 @@
                     <h2>World "{{settings.world_name}}" is not presently running.</h2>
                     % end
                     <div id="server_stats" class="well">
-                    <h2 class="center">Loaded Settings</h2>
+                    <h2 class="center"><span class="fa fa-cogs"></span> Loaded Settings</h2>
                         <div class="divider"></div>
                         % for k, v in settings.__dict__.items():
                         % if v is not None:
