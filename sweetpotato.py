@@ -35,6 +35,7 @@ __version__ = '0.20b'
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 DEFAULT_PERMGEN = '256'
 DEFAULT_SERVER_PORT = '25565'
+DEFAULT_WEBUI_PORT = 8080
 DEFAULT_WORLD_NAME = 'SweetpotatoWorld'
 DESCRIPTION = "Manage your Minecraft server on a GNU/Linux system."
 HOME_DIR = os.getenv('HOME')
@@ -133,6 +134,7 @@ class SweetpotatoConfig:
         self.running = False
         self.screen_name = None
         self.server_dir = None
+        self.webui_port = DEFAULT_WEBUI_PORT
         self.world_name = DEFAULT_WORLD_NAME
 
     def as_conf_file(self):
@@ -920,7 +922,7 @@ def run_webui(settings):
                 'path': path,
                 '__version__': __version__
             }
-        bottle.run(app=app, quiet=False, reloader=True)
+        bottle.run(app=app, port=settings.webui_port, quiet=False)
     else:
         error_and_die('The web component requires both bottle.py to function, '
                       'with Python-Markdown as an optional dependency.')
@@ -1072,15 +1074,18 @@ def arg_parse(argz):
                                 help='Amount of permgen to use in MB. Default: {}'.format(DEFAULT_PERMGEN))
 
     settings.add_argument('--level-seed', '--seed', help='optional and only applied during world creation')
-    settings.add_argument('-p', '--port', help='port you wish to run your server on. Default: 25565')
+    settings.add_argument('-p', '--port',
+                          help='port you wish to run your server on. Default: {}'.format(DEFAULT_SERVER_PORT))
     settings.add_argument('-s', '--server-dir', metavar='/path/to/server',
                           help='set the FULL path to the directory containing your server files')
     settings.add_argument('-S', '--screen', metavar='SCREEN NAME',
                           help='set the name of your screen session. Default: the same as your world')
     settings.add_argument('-v', '--mc-version', metavar='MC VERSION',
                           help='set the version of minecraft. Default: The latest stable')
-    settings.add_argument('-w', '--world', help='set the name of your Minecraft world. Default: SweetpotatoWorld',
-                          metavar='WORLD NAME')
+    settings.add_argument('--web-port', dest='webui_port',
+                          help='Port to bind to for the WebUI. Default: {}'.format(DEFAULT_WEBUI_PORT))
+    settings.add_argument('-w', '--world', metavar='WORLD NAME',
+                          help='set the name of your Minecraft world. Default: {}'.format(DEFAULT_WORLD_NAME))
     settings.add_argument('-z', '--compression', choices=['bz2', 'gz', 'xz'], dest='compression',
                           help='select compression type. Default: gz')
 
@@ -1131,6 +1136,8 @@ def arg_parse(argz):
         settings.screen_name = args.screen
     if args.mc_version:
         settings.mc_version = args.mc_version
+    if args.webui_port:
+        settings.webui_port = args.webui_port
     if args.world:
         settings.world_name = args.world
     if args.compression:
