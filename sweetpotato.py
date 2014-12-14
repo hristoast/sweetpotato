@@ -758,7 +758,7 @@ def run_webui(settings):
                 @param md_file:
                 @return:
                 """
-                html = "% rebase('base.tpl', title='{}')\n".format(md_file)
+                html = "% rebase('base.tpl', title='README.md')\n"
                 m = open(md_file, 'r')
                 for l in m.readlines():
                     html += markdown(l)
