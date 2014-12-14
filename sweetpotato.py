@@ -29,7 +29,7 @@ __author__ = 'Hristos N. Triantafillou <me@hristos.triantafillou.us>'
 __license__ = 'GPLv3'
 __mcversion__ = '1.8.1'
 __progname__ = 'sweetpotato'
-__version__ = '0.20b'
+__version__ = '0.22b'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -1058,8 +1058,6 @@ def arg_parse(argz):
     actions.add_argument('--start', action='store_true', help='start the server in a screen session')
     actions.add_argument('--stop', action='store_true', help='stop the server')
     actions.add_argument('-W', '--web', action='store_true', help='run the WebUI')
-    # TODO: port option for web ui
-    # TODO: some sort of --fork option for the WebUI, to run it in the background
 
     settings = parser.add_argument_group('Settings', 'config options for %(prog)s')
     settings.add_argument('-c', '--conf', help='config file containing your settings', metavar='CONF FILE')
