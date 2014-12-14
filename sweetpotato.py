@@ -29,7 +29,7 @@ __author__ = 'Hristos N. Triantafillou <me@hristos.triantafillou.us>'
 __license__ = 'GPLv3'
 __mcversion__ = '1.8.1'
 __progname__ = 'sweetpotato'
-__version__ = '0.19 BETA'
+__version__ = '0.20b'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -796,13 +796,14 @@ def run_webui(settings):
                 html = readme_md_to_html(os.path.join(BASE_DIR, 'README.md'))
                 return bottle.template(
                     html,
-                    path=path)
+                    path=path,
+                    __version__=__version__)
         else:
             @bottle.route('/readme')
             @bottle.view('readme_no_md')
             def readme():
                 path = bottle.request.path
-                return {'path': path}
+                return {'path': path, '__version__': __version__}
 
         @bottle.get('/backup')
         @bottle.post('/backup')
@@ -826,7 +827,8 @@ def run_webui(settings):
                 'path': path,
                 'request_method': request_method,
                 'todays_file': todays_file,
-                'world_name': settings.world_name
+                'world_name': settings.world_name,
+                '__version__': __version__
             }
 
         @bottle.route('/')
@@ -841,7 +843,8 @@ def run_webui(settings):
                 'path': path,
                 'pid': pid,
                 'settings': settings,
-                'server_running': is_running
+                'server_running': is_running,
+                '__version__': __version__
             }
 
         @bottle.route('/json')
@@ -884,7 +887,8 @@ def run_webui(settings):
                 'start': start,
                 'stop': stop,
                 'server_running': is_running,
-                'world_name': settings.world_name
+                'world_name': settings.world_name,
+                '__version__': __version__
             }
 
         # noinspection PyUnresolvedReferences
@@ -903,7 +907,8 @@ def run_webui(settings):
             path = bottle.request.path
             return {
                 'error': error,
-                'path': path
+                'path': path,
+                '__version__': __version__
             }
 
         @bottle.error(500)
@@ -912,7 +917,8 @@ def run_webui(settings):
             path = bottle.request.path
             return {
                 'error': error,
-                'path': path
+                'path': path,
+                '__version__': __version__
             }
         bottle.run(app=app, quiet=False, reloader=True)
     else:

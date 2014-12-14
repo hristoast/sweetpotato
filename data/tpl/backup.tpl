@@ -1,6 +1,6 @@
                 % rebase('base.tpl', title='Backup')
 <div class="center">
-                    <h1>Backup</h1>
+                    <h1><span class="fa fa-file-archive-o"></span> Backup</h1>
                     % if request_method == 'POST':
                     <h1>Backup Started!</h1>
                     % else:
