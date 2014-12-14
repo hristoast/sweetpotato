@@ -672,6 +672,7 @@ def run_server_backup(print_pre, settings, offline=False):
     backup_dir = settings.backup_dir
     date_stamp = datetime.now().strftime('%Y-%m-%d')
     force = is_forced(settings)
+    forge = settings.forge
     jar_name = VANILLA_JAR_NAME.format(settings.mc_version)
     mem_format = settings.mem_format
     mem_max = settings.mem_max
@@ -713,7 +714,10 @@ def run_server_backup(print_pre, settings, offline=False):
             pass
 
     tar = tarfile.open(full_path_to_backup_file, 'w:{}'.format(compression))
-    tar.add(server_dir)
+    if forge:
+        tar.add(server_dir, exclude='dynmap')
+    else:
+        tar.add(server_dir)
     tar.close()
 
     if not offline:
