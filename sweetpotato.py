@@ -1067,7 +1067,7 @@ def arg_parse(argz):
             read_conf_file(args.conf, settings)
         except ConfFileError as e:
             error_and_die(e)
-        settings.conf_file = args.conf
+        settings.conf_file = os.path.realpath(args.conf)
     if args.backup_dir:
         settings.backup_dir = args.backup_dir
     if args.force:
