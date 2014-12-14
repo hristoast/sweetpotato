@@ -92,6 +92,11 @@ class NoDirFoundError(SweetpotatoIOErrorBase):
     pass
 
 
+class NoJarFoundError(SweetpotatoIOErrorBase):
+    """Raised when a given jar file does not exist."""
+    pass
+
+
 class ServerAlreadyRunningError(SweetpotatoIOErrorBase):
     """Raised when the configured server is already running."""
     pass
@@ -408,7 +413,9 @@ def get_jar(settings):
     if jar_name in os.listdir(settings.server_dir):
         return jar_name, launch_cmd
     else:
-        return False
+        raise NoJarFoundError(
+            'The configured server jar file "{}" does not exist. Do you need to run --create?'.format(jar_name)
+        )
 
 
 def is_forced(settings):
@@ -562,7 +569,14 @@ def start_server(print_pre, settings):
     @param settings:
     @return:
     """
-    jar_name, launch_cmd = get_jar(settings)
+    jar_name = None
+    launch_cmd = None
+
+    try:
+        jar_name, launch_cmd = get_jar(settings)
+    except NoJarFoundError as e:
+        error_and_die(e)
+
     mem_format = settings.mem_format
     mem_max = settings.mem_max
     mem_min = settings.mem_min
@@ -907,6 +921,13 @@ def validate_directories(*dirs):
             raise NoDirFoundError(
                 'The configured directory "{}" does not exist. Do you need to run --create?'.format(d)
             )
+
+
+# def validate_server_jar(jar):
+#     if not os.path.isfile(jar):
+#         raise NoJarFoundError(
+#             'The configured server jar file "{}" does not exist. Do you need to run --create?'.format(jar)
+#         )
 
 
 def validate_mem_values(min_mem, max_mem):
