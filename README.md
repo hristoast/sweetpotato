@@ -202,7 +202,7 @@ Fails if the configured world is not running.
 
 ### WebUI
 
-A simple web-based interface for many of the functions offered by `sweetpotato`. By default it binds to port `8080`, but this can be changed with the `--web-port` flag or a conf file setting.
+A simple web-based interface for many of the functions offered by `sweetpotato`. By default it binds to port `8080`, but this can be changed with the `--web-port` option or a conf file setting.
 
     $ sweetpotato --web
     Bottle v0.12.7 server starting up (using WSGIRefServer())...
