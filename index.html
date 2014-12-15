@@ -23,10 +23,8 @@
         </header>
 
         <section id="downloads" class="clearfix">
-          <!-- <a href="https://github.com/hristoast/sweetpotato/zipball/master" id="download-zip" class="button"><span>Download .zip (master)</span></a> -->
-          <a href="https://github.com/hristoast/sweetpotato/zipball/dev" id="download-zip" class="button"><span>Download .zip (dev)</span></a>
-          <!-- <a href="https://github.com/hristoast/sweetpotato/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz (master)</span></a> -->
-          <a href="https://github.com/hristoast/sweetpotato/tarball/dev" id="download-tar-gz" class="button"><span>Download .tar.gz (dev)</span></a>
+          <a href="https://github.com/hristoast/sweetpotato/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
+          <a href="https://github.com/hristoast/sweetpotato/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
           <a href="https://github.com/hristoast/sweetpotato" id="view-on-github" class="button"><span>View on GitHub</span></a>
         </section>
 
@@ -34,14 +32,14 @@
 
         <section id="main_content">
           <h1>
-<a name="sweetpotato" class="anchor" href="#sweetpotato"><span class="octicon octicon-link"></span></a>sweetpotato</h1>
+<a id="sweetpotato" class="anchor" href="#sweetpotato" aria-hidden="true"><span class="octicon octicon-link"></span></a>sweetpotato</h1>
 
 <hr>
 
 <p><img src="http://static.blackholegate.net/i/cyark.jpeg" alt="sweetpotato logo"></p>
 
 <h2>
-<a name="what-is-it" class="anchor" href="#what-is-it"><span class="octicon octicon-link"></span></a>What is it?</h2>
+<a id="what-is-it" class="anchor" href="#what-is-it" aria-hidden="true"><span class="octicon octicon-link"></span></a>What is it?</h2>
 
 <hr>
 
@@ -50,15 +48,39 @@
 <p>It was created as a way to simplify managing a Minecraft server by providing a simple wrapper for common tasks. It knows what your world is and where its files are via command-line options, values set in a configuration file, or a mixture of both!</p>
 
 <h2>
-<a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h2>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installation</h2>
 
-<p>Installation is simple: git clone this repo to wherever you want it (or download an archive and extract it), then create a symbolic link to wherever you want it.</p>
+<p>With <code>make</code> installed and <code>sudo</code> access:</p>
 
-<pre><code>$ ln -s $HOME/src/sweetpotato/sweetpotato.py $HOME/bin/sweetpotato
-</code></pre>
+<ol>
+<li>Download or <code>git clone https://github.com/hristoast/sweetpotato.git</code>
+</li>
+<li>Extract (if downloaded)</li>
+<li><code>cd sweetpotato</code></li>
+<li><code>sudo make install</code></li>
+</ol>
 
 <h2>
-<a name="issues" class="anchor" href="#issues"><span class="octicon octicon-link"></span></a>Issues</h2>
+<a id="uninstallation" class="anchor" href="#uninstallation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Uninstallation</h2>
+
+<p>With <code>sudo</code> access:</p>
+
+<ol>
+<li>
+<code>cd</code> into your git-cloned source directory</li>
+<li><code>sudo make uninstall</code></li>
+</ol>
+
+<p><strong>OR</strong></p>
+
+<ol>
+<li><code>sudo rm -fr /opt/sweetpotato /usr/bin/sweetpotato</code></li>
+</ol>
+
+<p>Which are essentially the same thing.</p>
+
+<h2>
+<a id="issues" class="anchor" href="#issues" aria-hidden="true"><span class="octicon octicon-link"></span></a>Issues</h2>
 
 <p>I am sure there may be actual bugs and unintended problems in here, but this section is for known issues relating to design decisions. Things that happen, things <code>sweetpotato</code> can or can't do - things like that.</p>
 
@@ -69,12 +91,12 @@
 </ul>
 
 <h2>
-<a name="usage" class="anchor" href="#usage"><span class="octicon octicon-link"></span></a>Usage</h2>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Usage</h2>
 
 <hr>
 
 <h3>
-<a name="create-server" class="anchor" href="#create-server"><span class="octicon octicon-link"></span></a>Create Server</h3>
+<a id="create-server" class="anchor" href="#create-server" aria-hidden="true"><span class="octicon octicon-link"></span></a>Create Server</h3>
 
 <p>Create the configured server_dir, download the server jar for the configured mc_version, then generate a <code>server.properties</code> and agreed-to <code>eula.txt</code> file.</p>
 
@@ -105,19 +127,20 @@
 <p>Such a scenario will produce unexpected results - you have been warned to keep track of your configs!</p>
 
 <h3>
-<a name="generating-a-conf-file" class="anchor" href="#generating-a-conf-file"><span class="octicon octicon-link"></span></a>Generating A Conf File</h3>
+<a id="generating-a-conf-file" class="anchor" href="#generating-a-conf-file" aria-hidden="true"><span class="octicon octicon-link"></span></a>Generating A Conf File</h3>
 
 <p>It is possible to print a conf file based on passed-in settings to the stdout:</p>
 
 <pre><code>$ sweetpotato -d /srv/backups/minecraft -s /srv/minecraft/mc_server -gb 1 1 --genconf
-## Generated by sweetpotato at Mon Oct 20 15:31:24 2014
+## Generated by sweetpotato at Sat Dec 13 23:42:13 2014
 [Settings]
-server_dir: /srv/minecraft/mc_server
-mem_format: GB
 backup_dir: /srv/backups/minecraft
+mem_min: 1
+permgen: 256
 mem_max: 1
 compression: gz
-mem_min: 1
+mem_format: GB
+server_dir: /srv/minecraft/mc_server
 </code></pre>
 
 <p>You can create your own file like this:</p>
@@ -172,7 +195,7 @@ $ sweetpotato --json
 </code></pre>
 
 <h3>
-<a name="live-backup" class="anchor" href="#live-backup"><span class="octicon octicon-link"></span></a>Live Backup</h3>
+<a id="live-backup" class="anchor" href="#live-backup" aria-hidden="true"><span class="octicon octicon-link"></span></a>Live Backup</h3>
 
 <p>Run a backup while the server is running. This sends a message to the in-game chat when the backup starts and finishes, then creates a backup of your configured world</p>
 
@@ -187,7 +210,7 @@ $ sweetpotato --json
 </code></pre>
 
 <h3>
-<a name="offline-backup" class="anchor" href="#offline-backup"><span class="octicon octicon-link"></span></a>Offline Backup</h3>
+<a id="offline-backup" class="anchor" href="#offline-backup" aria-hidden="true"><span class="octicon octicon-link"></span></a>Offline Backup</h3>
 
 <p>Ensure that the server is shut down before backing up. Once completed (or errored out) the server will be restarted:</p>
 
@@ -203,7 +226,7 @@ FATAL: File "/srv/backups/minecraft/2014-10-20_SweetpotatoWorld.tar.gz" already 
 </code></pre>
 
 <h3>
-<a name="restart" class="anchor" href="#restart"><span class="octicon octicon-link"></span></a>Restart</h3>
+<a id="restart" class="anchor" href="#restart" aria-hidden="true"><span class="octicon octicon-link"></span></a>Restart</h3>
 
 <pre><code>$ sweetpotato --restart
 [restart] Restarting SweetpotatoWorld ... Done!
@@ -216,7 +239,7 @@ FATAL: File "/srv/backups/minecraft/2014-10-20_SweetpotatoWorld.tar.gz" already 
 </code></pre>
 
 <h3>
-<a name="start" class="anchor" href="#start"><span class="octicon octicon-link"></span></a>Start</h3>
+<a id="start" class="anchor" href="#start" aria-hidden="true"><span class="octicon octicon-link"></span></a>Start</h3>
 
 <pre><code>$ sweetpotato --start
 [start] Starting "SweetpotatoWorld" ... Done!
@@ -229,7 +252,7 @@ FATAL: World "SweetpotatoWorld" already running with PID 30320
 </code></pre>
 
 <h3>
-<a name="stop" class="anchor" href="#stop"><span class="octicon octicon-link"></span></a>Stop</h3>
+<a id="stop" class="anchor" href="#stop" aria-hidden="true"><span class="octicon octicon-link"></span></a>Stop</h3>
 
 <pre><code>$ sweetpotato --stop
 [stop] Stopping "SweetpotatoWorld" ... Done!
@@ -241,32 +264,39 @@ FATAL: World "SweetpotatoWorld" already running with PID 30320
 FATAL: Cannot stop "SweetpotatoWorld" - it is not running!
 </code></pre>
 
-<h3>
-<a name="webui" class="anchor" href="#webui"><span class="octicon octicon-link"></span></a>WebUI</h3>
-
-<p>This feature is experimental.</p>
-
-<pre><code>$ sweetpotato --web
-Bottle v0.12.7 server starting up (using WSGIRefServer())...
-Listening on http://127.0.0.1:8080/
-Hit Ctrl-C to quit.
-</code></pre>
-
-<p>As the output says, after launching you can then fire up the WebUI in your favorite browser at <a href="http://127.0.0.1:8080/">http://127.0.0.1:8080/</a>.</p>
-
 <h2>
-<a name="mod-forge-support" class="anchor" href="#mod-forge-support"><span class="octicon octicon-link"></span></a>Mod (Forge) support</h2>
+<a id="forge-support" class="anchor" href="#forge-support" aria-hidden="true"><span class="octicon octicon-link"></span></a>Forge support</h2>
 
 <hr>
 
-<p>TODO</p>
+<p><code>sweetpotato</code> supports using Forge, and defaults to the latest Recommended 1.7.10 build. You can set a specific Forge version with the <code>-f</code> or <code>--forge</code> option. The extra <code>-P</code> or <code>--permgen</code> option is available for Forge, by default it is set to 256MB.</p>
+
+<ul>
+<li>Both your Forge version and permgen setting can be stored in a conf file or passed in as arguments.</li>
+<li>You can use the <code>-C</code> or <code>--create</code> option to download your Forge jar, just as you would with a vanilla server, however don't expect to be able to run it as you'll be missing external dependencies.</li>
+</ul>
+
+<h3>
+<a id="webui" class="anchor" href="#webui" aria-hidden="true"><span class="octicon octicon-link"></span></a>WebUI</h3>
+
+<p>A simple web-based interface for many of the functions offered by <code>sweetpotato</code>. By default it binds to port <code>8080</code>, but this can be changed with the <code>--web-port</code> option or a conf file setting.</p>
+
+<pre><code>$ sweetpotato --web
+Bottle v0.12.7 server starting up (using WSGIRefServer())...
+Listening on http://127.0.0.1:3434/
+Hit Ctrl-C to quit.
+</code></pre>
 
 <h2>
-<a name="etc" class="anchor" href="#etc"><span class="octicon octicon-link"></span></a>ETC</h2>
+<a id="etc" class="anchor" href="#etc" aria-hidden="true"><span class="octicon octicon-link"></span></a>ETC</h2>
 
 <ul>
 <li><a href="http://hristoast.github.io/sweetpotato">http://hristoast.github.io/sweetpotato</a></li>
-<li><a href="https://github.com/hristoast/sweetpotato">https://github.com/hristoast/sweetpotato</a></li>
+<li>
+<p><a href="https://github.com/hristoast/sweetpotato">https://github.com/hristoast/sweetpotato</a></p>
+
+<p><em>Thanks for reading!</em></p>
+</li>
 </ul>
         </section>
 
