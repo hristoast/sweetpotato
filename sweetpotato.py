@@ -1185,6 +1185,8 @@ def arg_parse(argz):
         except BackupFileAlreadyExistsError as e:
             start_server(None, settings)
             error_and_die(e)
+    elif args.send:
+        send_command(args.send, settings.screen_name)
     elif args.restart:
         print_pre = '[' + Colors.yellow_green + 'restart' + Colors.end + '] '
         try:
