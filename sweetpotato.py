@@ -1051,6 +1051,7 @@ def arg_parse(argz):
     actions.add_argument('-j', '--json', action='store_true', help='output settings as json')
     actions.add_argument('-o', '--offline', action='store_true', help='make an offline backup (stops the server)')
     actions.add_argument('-r', '--restart', action='store_true', help='restart the server')
+    actions.add_argument('--send', help=argparse.SUPPRESS)
     actions.add_argument('--start', action='store_true', help='start the server in a screen session')
     actions.add_argument('--stop', action='store_true', help='stop the server')
     actions.add_argument('-W', '--web', action='store_true', help='run the WebUI')
@@ -1070,7 +1071,6 @@ def arg_parse(argz):
     settings.add_argument('--level-seed', '--seed', help='optional and only applied during world creation')
     settings.add_argument('-p', '--port',
                           help='port you wish to run your server on. Default: {}'.format(DEFAULT_SERVER_PORT))
-    settings.add_argument('--send', help=argparse.SUPPRESS)
     settings.add_argument('-s', '--server-dir', metavar='/path/to/server',
                           help='set the FULL path to the directory containing your server files')
     settings.add_argument('-S', '--screen', metavar='SCREEN NAME',
