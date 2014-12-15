@@ -1051,7 +1051,7 @@ def arg_parse(argz):
     actions.add_argument('-j', '--json', action='store_true', help='output settings as json')
     actions.add_argument('-o', '--offline', action='store_true', help='make an offline backup (stops the server)')
     actions.add_argument('-r', '--restart', action='store_true', help='restart the server')
-    actions.add_argument('--send', help=argparse.SUPPRESS)
+    actions.add_argument('--say', help=argparse.SUPPRESS)
     actions.add_argument('--start', action='store_true', help='start the server in a screen session')
     actions.add_argument('--stop', action='store_true', help='stop the server')
     actions.add_argument('-W', '--web', action='store_true', help='run the WebUI')
@@ -1185,8 +1185,8 @@ def arg_parse(argz):
         except BackupFileAlreadyExistsError as e:
             start_server(None, settings)
             error_and_die(e)
-    elif args.send:
-        send_command(args.send, settings.screen_name)
+    elif args.say:
+        send_command('say ' + args.say, settings.screen_name)
     elif args.restart:
         print_pre = '[' + Colors.yellow_green + 'restart' + Colors.end + '] '
         try:
