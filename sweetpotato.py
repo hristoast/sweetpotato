@@ -144,9 +144,6 @@ class SweetpotatoConfig:
             print('{0}: {1}'.format(line, value))
             for line, value in self.__dict__.items()
             if value is not None
-            and value is not __mcversion__
-            and value is not DEFAULT_SERVER_PORT
-            and value is not DEFAULT_WORLD_NAME
             and line is not 'conf_file'
             and line is not 'force'
             and line is not 'running'
