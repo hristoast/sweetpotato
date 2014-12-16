@@ -29,14 +29,15 @@ __author__ = 'Hristos N. Triantafillou <me@hristos.triantafillou.us>'
 __license__ = 'GPLv3'
 __mcversion__ = '1.8.1'
 __progname__ = 'sweetpotato'
-__version__ = '0.22b'
+__version__ = '0.24b'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 DEFAULT_PERMGEN = '256'
+DEFAULT_SCREEN_NAME = 'SweetpotatoWorld'
 DEFAULT_SERVER_PORT = '25565'
 DEFAULT_WEBUI_PORT = 8080
-DEFAULT_WORLD_NAME = 'SweetpotatoWorld'
+DEFAULT_WORLD_NAME = DEFAULT_SCREEN_NAME
 DESCRIPTION = "Manage your Minecraft server on a GNU/Linux system."
 HOME_DIR = os.getenv('HOME')
 CONFIG_DIR = '{0}/.config/{1}'.format(HOME_DIR, __progname__)
@@ -132,7 +133,7 @@ class SweetpotatoConfig:
         self.permgen = None
         self.port = DEFAULT_SERVER_PORT
         self.running = False
-        self.screen_name = None
+        self.screen_name = DEFAULT_SCREEN_NAME
         self.server_dir = None
         self.webui_port = DEFAULT_WEBUI_PORT
         self.world_name = DEFAULT_WORLD_NAME
@@ -243,7 +244,6 @@ def agree_to_eula(eula_txt, force, print_pre):
     @param print_pre:
     @return:
     """
-    # TODO: not do this if the MC version is low enough
     if os.path.isfile(eula_txt) and not force:
         f = open(eula_txt, 'r')
         if 'eula=true' in f.read():
@@ -430,9 +430,6 @@ def is_forced(settings):
     except AttributeError:
         force = None
     return force
-
-
-# def is_forge(settings):
 
 
 def is_screen_started(screen_name):
@@ -658,8 +655,7 @@ def restart_server(print_pre, settings):
     server_running = is_server_running(server_dir)
 
     if settings.forge:
-        permgen = settings.permgen
-        launch_server = launch_cmd.format(mem_min, mem_max, mem_format[0], permgen, jar_name)
+        launch_server = launch_cmd.format(mem_min, mem_max, mem_format[0], settings.permgen, jar_name)
     else:
         launch_server = launch_cmd.format(mem_min, mem_max, mem_format[0], jar_name)
 
@@ -975,11 +971,6 @@ def validate_settings(settings):
         if setting in REQUIRED and value is None:
             missing.append(setting)
 
-    # set a default screen name if need be
-    if 'screen_name' in missing:
-        settings.screen_name = settings.world_name
-        missing.remove('screen_name')
-
     if missing:
         raise EmptySettingError('One or more required settings are not present: {}'.format(' '.join(missing)))
     else:
@@ -1092,6 +1083,7 @@ def arg_parse(argz):
 
     try:
         read_conf_file(DEFAULT_CONF_FILE, settings)
+        settings.conf_file = DEFAULT_CONF_FILE
     except (configparser.NoSectionError, ConfFileError):
         pass
 
