@@ -29,7 +29,7 @@ __author__ = 'Hristos N. Triantafillou <me@hristos.triantafillou.us>'
 __license__ = 'GPLv3'
 __mcversion__ = '1.8.1'
 __progname__ = 'sweetpotato'
-__version__ = '0.28b'
+__version__ = '0.29b'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -804,6 +804,7 @@ def run_webui(settings):
         @bottle.post('/backup')
         @bottle.view('backup')
         def backups():
+            offline = 'JAJA'
             is_running = is_server_running(settings.server_dir)
             path = bottle.request.path
             request_method = bottle.request.method
@@ -829,14 +830,19 @@ def run_webui(settings):
             backup_file_list = sorted(unsorted_backup_file_list, key=lambda k: k['size'], reverse=True)
 
             if bottle.request.method == 'POST':
-                # TODO: know if we are doing an offline or online backup here!
-                t = Thread(target=run_server_backup, args=('', settings))
+                postdata = bottle.request.POST
+                offline = 'offline' in postdata
+                t = Thread(
+                    target=run_server_backup,
+                    args=('', settings),
+                    kwargs={'offline': offline})
                 t.daemon = True
                 t.start()
 
             return {
                 'backup_dir_contents': backup_dir_contents,
                 'backup_file_list': backup_file_list,
+                'offline': offline,
                 'path': path,
                 'request_method': request_method,
                 'server_running': is_running,
