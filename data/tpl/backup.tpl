@@ -2,14 +2,16 @@
 <div class="center">
                     <h1><span class="fa fa-file-archive-o"></span> Backup</h1>
                     % if request_method == 'POST':
-                    <h1><span class="fa fa-spin fa-spinner"></span> Backup Started!</h1>
+                    <h1><span class="fa fa-spin fa-spinner"></span> "{{world_name}}" is now backing up!</h1>
                     % else:
                     % if todays_file in backup_dir_contents:
                     <h2>"{{world_name}}" has been backed up today. Great Job!</h2>
                     % else:
+                    % if server_running:
                     <form action="/backup" method="post">
                         <button class="btn btn-lg btn-primary srvctl"><span class="fa fa-upload"></span> Online Backup {{world_name}} now</button>
                     </form>
+                    % end
                     <form action="/backup" method="post">
                         <button class="btn btn-lg btn-warning srvctl"><span class="fa fa-download"></span> Offline Backup {{world_name}} now</button>
                     </form>
@@ -26,7 +28,7 @@
                             <dt><a href="/backups/{{file_name}}" title="{{file_name}}">{{file_name}}</a></dt>
                             <dd>Size: <span class="bold">{{file_size}} {{file_bit}}</span></dd>
                         % end
-                        % end
                         </dl>
                     </div>
+                    % end
                 </div>

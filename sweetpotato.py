@@ -804,6 +804,7 @@ def run_webui(settings):
         @bottle.post('/backup')
         @bottle.view('backup')
         def backups():
+            is_running = is_server_running(settings.server_dir)
             path = bottle.request.path
             request_method = bottle.request.method
             todays_file = '{0}_{1}.tar.{2}'.format(
@@ -828,6 +829,7 @@ def run_webui(settings):
             backup_file_list = sorted(unsorted_backup_file_list, key=lambda k: k['size'], reverse=True)
 
             if bottle.request.method == 'POST':
+                # TODO: know if we are doing an offline or online backup here!
                 t = Thread(target=run_server_backup, args=('', settings))
                 t.daemon = True
                 t.start()
@@ -837,6 +839,7 @@ def run_webui(settings):
                 'backup_file_list': backup_file_list,
                 'path': path,
                 'request_method': request_method,
+                'server_running': is_running,
                 'todays_file': todays_file,
                 'world_name': settings.world_name,
                 '__version__': __version__
