@@ -1,4 +1,4 @@
-                % rebase('base.tpl', title='Home')
+                % rebase('base.tpl', title=settings.world_name)
 <div class="center">
                     <h1>Welcome to the <span class="text-muted">sweetpotato WebUI</span>!</h1>
                     % if server_running:
