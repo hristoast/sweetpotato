@@ -1,7 +1,14 @@
+INSTALL_TARGET_DIR = /opt
+COPY = /bin/cp -fr ../sweetpotato $(INSTALL_TARGET_DIR)/
+REMOVE = /bin/rm -fr $(INSTALL_TARGET_DIR)/sweetpotato /usr/bin/sweetpotato
+SYMLINK = ln -s $(INSTALL_TARGET_DIR)/sweetpotato/sweetpotato.py /usr/bin/sweetpotato
+
 
 install:
-	/bin/cp -fr ../sweetpotato /opt/ && ln -s /opt/sweetpotato/sweetpotato.py /usr/bin/sweetpotato
+	$(COPY) && $(SYMLINK)
+
+reinstall:
+	$(REMOVE) && $(COPY) && $(SYMLINK)
 
 uninstall:
-	/bin/rm -fr /opt/sweetpotato /usr/bin/sweetpotato
-
+	$(REMOVE)

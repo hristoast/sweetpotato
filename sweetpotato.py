@@ -29,7 +29,7 @@ __author__ = 'Hristos N. Triantafillou <me@hristos.triantafillou.us>'
 __license__ = 'GPLv3'
 __mcversion__ = '1.8.1'
 __progname__ = 'sweetpotato'
-__version__ = '0.25b'
+__version__ = '0.28b'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -812,13 +812,29 @@ def run_webui(settings):
                 settings.compression
             )
             # noinspection PyTypeChecker
+
             backup_dir_contents = os.listdir(settings.backup_dir)
+            unsorted_backup_file_list = []
+            for backup_file in backup_dir_contents:
+                full_path_to_backup_file = os.path.join(settings.backup_dir, backup_file)
+                raw_backup_file_size = os.path.getsize(full_path_to_backup_file)
+                if not os.path.isdir(full_path_to_backup_file):
+                    backup_file_size = raw_backup_file_size / 1000000
+                    unsorted_backup_file_list.append({
+                        'bit': 'MB',
+                        'file': backup_file,
+                        'size': backup_file_size
+                    })
+            backup_file_list = sorted(unsorted_backup_file_list, key=lambda k: k['size'], reverse=True)
+
             if bottle.request.method == 'POST':
                 t = Thread(target=run_server_backup, args=('', settings))
                 t.daemon = True
                 t.start()
+
             return {
                 'backup_dir_contents': backup_dir_contents,
+                'backup_file_list': backup_file_list,
                 'path': path,
                 'request_method': request_method,
                 'todays_file': todays_file,
@@ -1215,6 +1231,7 @@ def main():
     except MissingExeError as e:
         error_and_die(e)
 
+    # TODO: better webui logging and logging in general
     # process cli args and do our stuff
     argz = sys.argv[1:]
     arg_parse(argz)

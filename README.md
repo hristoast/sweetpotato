@@ -14,14 +14,21 @@ It was created as a way to simplify managing a Minecraft server by providing a s
 
 With `make` installed and `sudo` access:
 
- 1. Download or `git clone https://github.com/hristoast/sweetpotato.git`
+ 1. [Download](https://github.com/hristoast/sweetpotato/tarball/dev) or `git clone https://github.com/hristoast/sweetpotato.git`
  1. Extract (if downloaded)
  1. `cd sweetpotato`
  1. `sudo make install`
 
+## Re-installation
+
+With `sweetpotato` already installed, `make` installed, and `sudo` access:
+
+ 1. `cd` into your git-cloned or downloaded `sweetpotato` source directory
+ 1. `sudo make reinstall`
+
 ## Uninstallation
 
-With `sudo` access:
+With `make` installed and `sudo` access:
 
  1. `cd` into your git-cloned source directory
  1. `sudo make uninstall`

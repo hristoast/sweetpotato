@@ -2,7 +2,7 @@
 <div class="center">
                     <h1><span class="fa fa-file-archive-o"></span> Backup</h1>
                     % if request_method == 'POST':
-                    <h1>Backup Started!</h1>
+                    <h1><span class="fa fa-spin fa-spinner"></span> Backup Started!</h1>
                     % else:
                     % if todays_file in backup_dir_contents:
                     <h2>"{{world_name}}" has been backed up today. Great Job!</h2>
@@ -16,11 +16,17 @@
                     % end
                     % if backup_dir_contents:
                     <h3>Click any of the below filenames to download them</h3>
-                    <ul>
                     % end
-                    % for backup in backup_dir_contents:
-                    <li class="bold"><a class="bakfile" href="/backups/{{backup}}">{{backup}}</a></li>
-                    % end
-                    % end
-                    </ul>
+                    <div id="backup_files" class="well">
+                        <dl class="dl-horizontal">
+                        % for file_dict in backup_file_list:
+                        % file_bit = file_dict['bit']
+                        % file_name = file_dict['file']
+                        % file_size = file_dict['size']
+                            <dt><a href="/backups/{{file_name}}" title="{{file_name}}">{{file_name}}</a></dt>
+                            <dd>Size: <span class="bold">{{file_size}} {{file_bit}}</span></dd>
+                        % end
+                        % end
+                        </dl>
+                    </div>
                 </div>

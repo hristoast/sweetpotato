@@ -14,7 +14,7 @@
                                 % if v is not None:
                                 % if v is not False:
                                 % if k is not 'running':
-                                <dt>{{k}}</dt>
+                                <dt>{{k}}:</dt>
                                 <dd>{{v}}</dd>
                                 % end
                                 % end

@@ -29,10 +29,6 @@ a:focus, a:hover {
     background-color: #008000;
 }
 
-a.bakfile {
-    font-size: 1.3em;
-}
-
 button.srvctl {
     margin-top: 20px;
 }
@@ -40,6 +36,37 @@ button.srvctl {
 div.divider {
     border-bottom: 1px dotted #000000;
     margin-bottom: 10px;
+}
+
+div#backup_files {
+    font-size: 1.2em;
+    width: 700px;
+    margin-left: 105px;
+}
+
+div#backup_files a {
+    font-weight: normal;
+}
+
+div#backup_files dd {
+    text-align: left;
+}
+
+div#backup_files dt {
+    margin-left: 60px;
+    padding-left: 10px;
+    text-align: left;
+    width: 400px;
+}
+
+div#backup_files dt:hover {
+    font-weight: bold;
+    background: #cdcdcd;
+    border-radius: 2px;
+}
+
+div#backup_files dt:hover a {
+    font-weight: bold;
 }
 
 div#lower_nav {
@@ -80,6 +107,20 @@ div#server_stats {
     text-align: left;
     width: 700px;
     margin-left: 105px;
+}
+
+div#server_stats dd {
+    padding-left: 20px;
+}
+
+div#server_stats dd:hover {
+    font-weight: bold;
+    background: #cdcdcd;
+    border-radius: 2px;
+}
+
+div#server_stats dt {
+    margin-left: 20px;
 }
 
 div#server_stats h2 {
