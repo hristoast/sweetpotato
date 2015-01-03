@@ -1,13 +1,13 @@
                 % rebase('base.tpl', title='Server Control')
 <div class="center">
-                    <h1><span class="fa fa-cog"></span> Server Control</h1>
+                    <h1><span class="fa fa-spin fa-cog"></span> Server Control</h1>
                 % if request_method == 'POST':
                 % if restart is not None:
-                    <h3>"{{world_name}}" has been restarted!</h3>
+                    <h3><span class="fa fa-spin fa-spinner"></span> "{{world_name}}" has been restarted!</h3>
                 % elif start is not None:
-                    <h3>"{{world_name}}" has been started!</h3>
+                    <h3><span class="fa fa-spin fa-spinner"></span> "{{world_name}}" has been started!</h3>
                 % elif stop is not None:
-                    <h3>"{{world_name}}" has been stopped!</h3>
+                    <h3><span class="fa fa-spin fa-spinner"></span> "{{world_name}}" has been stopped!</h3>
                 % end
                 % else:
                 % if not server_running:
@@ -19,7 +19,7 @@
                         <button class="btn btn-lg btn-danger srvctl" name="stop" type="submit"><span class="fa fa-power-off"></span> Stop {{world_name}}</button>
                     </form>
                     <form action="/server" method="post">
-                        <button class="btn btn-lg btn-warning srvctl" name="restart" type="submit"><span class="fa fa-refresh"></span> Restart {{world_name}}</button>
+                        <button class="btn btn-lg btn-warning srvctl" name="restart" type="submit"><span class="fa fa-spin fa-refresh"></span> Restart {{world_name}}</button>
                     </form>
                 % end
                 % end

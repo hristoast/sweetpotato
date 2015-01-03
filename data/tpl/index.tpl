@@ -9,15 +9,17 @@
                     <div id="server_stats" class="well">
                     <h2 class="center"><span class="fa fa-cogs"></span> Loaded Settings</h2>
                         <div class="divider"></div>
-                        % for k, v in settings.__dict__.items():
-                        % if v is not None:
-                        % if v is not False:
-                        % if k is not 'running':
-                        <p class="bold setting_values"><span style="float:left;">{{k}}</span>: <span style="float: right">{{v}}</span></p>
-                        <div class="divider"></div>
-                        % end
-                        % end
-                        % end
-                        % end
+                            <dl class="dl-horizontal">
+                                % for k, v in settings.__dict__.items():
+                                % if v is not None:
+                                % if v is not False:
+                                % if k is not 'running':
+                                <dt>{{k}}</dt>
+                                <dd>{{v}}</dd>
+                                % end
+                                % end
+                                % end
+                                % end
+                            </dl>
                     </div>
                 </div>
