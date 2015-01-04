@@ -6,6 +6,18 @@
 ## What is it?
 ----
 
+`ssh minecraft@mycoolserver.net`
+
+`screen -x mcserver`
+
+`stop`
+
+`java -Xms1G -Xmx2G -XX:MaxPermSize=256M -jar forge-1.7.10-10.13.2.1272-universal.jar nogui`
+
+The above might be pretty close to the normal commands you'd use to restart a Minecraft server 'by hand'.
+
+But what if you could do it with just one command, like this: `sweetpotato -r`
+
 `sweetpotato` is a tool for running a Minecraft server from inside a screen session on a GNU/Linux system. It is written in Python (for Python 3), but with no external Python dependencies (except for the optional WebUI function).
 
 It was created as a way to simplify managing a Minecraft server by providing a simple wrapper for common tasks. It knows what your world is and where its files are via command-line options, values set in a configuration file, or a mixture of both!
@@ -202,6 +214,13 @@ Fails if the configured world is not running.
 
     $ sweetpotato --stop
     FATAL: Cannot stop "SweetpotatoWorld" - it is not running!
+    
+### Uptime
+
+See your server's uptime if it's running:
+
+    $ sweetpotato --uptime
+    LarrylandX has been up for 0.97 hours
 
 ### WebUI
 

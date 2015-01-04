@@ -431,6 +431,11 @@ def get_uptime(settings):
 
     If the server is not running, return False.
 
+    Run it like this to get a nicely formatted uptime in hours:
+
+    uptime = round(get_uptime(settings), 2)
+    print('{0} has been up for {1} hours'.format(settings.world_name, uptime))
+
     @param settings:
     @return:
     """
@@ -1100,8 +1105,7 @@ def arg_parse(argz):
     actions.add_argument('--say', help=argparse.SUPPRESS)
     actions.add_argument('--start', action='store_true', help='start the server in a screen session')
     actions.add_argument('--stop', action='store_true', help='stop the server')
-    actions.add_argument('-U', '--uptime', action='store_true',
-                         help='Show server uptime in hours (H) or minutes (M). Default: H')
+    actions.add_argument('-U', '--uptime', action='store_true', help='Show server uptime in hours')
     actions.add_argument('-W', '--web', action='store_true', help='run the WebUI')
 
     settings = parser.add_argument_group('Settings', 'config options for %(prog)s')
@@ -1262,7 +1266,12 @@ def arg_parse(argz):
     elif args.uptime:
         uptime = round(get_uptime(settings), 2)
         if uptime:
-            print('{0} has been up for {1} hours'.format(settings.world_name, uptime))
+            print(
+                Colors.green + '{}'.format(settings.world_name) +
+                Colors.blue + ' has been up for ' +
+                Colors.yellow_green + '{}'.format(uptime) +
+                Colors.blue + ' hours' + Colors.end
+            )
         else:
             print('{} is not running.'.format(settings.world_name))
     elif args.web:
