@@ -789,6 +789,7 @@ def run_webui(settings):
     @param settings:
     @return:
     """
+    # TODO: decorator for view context
     # TODO: POST routes for control functions
     # TODO: /status route
     if bottle:
@@ -885,6 +886,7 @@ def run_webui(settings):
             is_running = is_server_running(settings.server_dir)
             path = bottle.request.path
             pid = None
+            uptime = round(get_uptime(settings), 2)
             if is_running:
                 pid = is_running[-1]
             return {
@@ -892,6 +894,7 @@ def run_webui(settings):
                 'pid': pid,
                 'settings': settings,
                 'server_running': is_running,
+                'uptime': uptime,
                 '__version__': __version__
             }
 
