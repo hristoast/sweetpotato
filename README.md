@@ -21,6 +21,8 @@ With `make` installed and `sudo` access:
 
 ## Re-installation
 
+You might do this when you want to update your installed version of `sweetpotato`.
+
 With `sweetpotato` already installed, `make` installed, and `sudo` access:
 
  1. `cd` into your git-cloned or downloaded `sweetpotato` source directory

@@ -29,7 +29,7 @@ __author__ = 'Hristos N. Triantafillou <me@hristos.triantafillou.us>'
 __license__ = 'GPLv3'
 __mcversion__ = '1.8.1'
 __progname__ = 'sweetpotato'
-__version__ = '0.29b'
+__version__ = '0.30b'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -424,6 +424,33 @@ def get_jar(settings):
         )
 
 
+def get_uptime(settings):
+    """
+    If the configured server is running, read the server.properties file
+    to get the start time, and return an uptime in hours based on that.
+
+    If the server is not running, return False.
+
+    @param settings:
+    @return:
+    """
+    fmt = '%a %b %d %H:%M:%S %Z %Y'
+    now = datetime.now()
+    server_running = is_server_running(settings.server_dir)
+    if server_running:
+        server_properties = os.path.join(settings.server_dir, 'server.properties')
+        with open(server_properties, 'r') as sp:
+            spl = sp.readlines()
+            sp.close()
+        server_start_time_string = spl[1].strip().strip('#')
+        server_start_time = datetime.strptime(server_start_time_string, fmt)
+        uptime_raw = now - server_start_time
+        uptime = uptime_raw.seconds / 60 / 60
+        return uptime
+    else:
+        return False
+
+
 def is_forced(settings):
     try:
         force = settings.force
@@ -762,6 +789,8 @@ def run_webui(settings):
     @param settings:
     @return:
     """
+    # TODO: POST routes for control functions
+    # TODO: /status route
     if bottle:
         app = bottle.app()
         static_path = os.path.join(BASE_DIR, 'data/static')
@@ -804,7 +833,7 @@ def run_webui(settings):
         @bottle.post('/backup')
         @bottle.view('backup')
         def backups():
-            offline = 'JAJA'
+            offline = None
             is_running = is_server_running(settings.server_dir)
             path = bottle.request.path
             request_method = bottle.request.method
@@ -813,7 +842,6 @@ def run_webui(settings):
                 settings.world_name,
                 settings.compression
             )
-            # noinspection PyTypeChecker
 
             backup_dir_contents = os.listdir(settings.backup_dir)
             unsorted_backup_file_list = []
@@ -941,6 +969,8 @@ def run_webui(settings):
                 '__version__': __version__
             }
         try:
+            print(Colors.green + '{0} {1} - launching webUI now!'.format(__progname__, __version__))
+            sys.stdout.flush()
             bottle.run(app=app, port=settings.webui_port, quiet=False)
         except OSError:
             error_and_die('Port {} is already in use! Exiting ...\n'.format(settings.webui_port))
@@ -1067,6 +1097,8 @@ def arg_parse(argz):
     actions.add_argument('--say', help=argparse.SUPPRESS)
     actions.add_argument('--start', action='store_true', help='start the server in a screen session')
     actions.add_argument('--stop', action='store_true', help='stop the server')
+    actions.add_argument('-U', '--uptime', action='store_true',
+                         help='Show server uptime in hours (H) or minutes (M). Default: H')
     actions.add_argument('-W', '--web', action='store_true', help='run the WebUI')
 
     settings = parser.add_argument_group('Settings', 'config options for %(prog)s')
@@ -1224,6 +1256,12 @@ def arg_parse(argz):
             )
         except ServerNotRunningError as e:
             error_and_die(e)
+    elif args.uptime:
+        uptime = round(get_uptime(settings), 2)
+        if uptime:
+            print('{0} has been up for {1} hours'.format(settings.world_name, uptime))
+        else:
+            print('{} is not running.'.format(settings.world_name))
     elif args.web:
             run_webui(settings)
     else:
