@@ -3,7 +3,7 @@
                     <h1>Welcome to the <span class="text-muted">sweetpotato WebUI</span>!</h1>
                     % if server_running:
                     <h2>World "{{settings.world_name}}" is running with PID {{pid}}</h2>
-                    <h3>It has been running for {{uptime}} hours.</h3>
+                    <h3>Up for {{uptime}} hours.</h3>
                     % else:
                     <h2>World "{{settings.world_name}}" is not presently running.</h2>
                     % end
