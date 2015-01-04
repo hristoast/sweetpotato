@@ -1273,7 +1273,10 @@ def arg_parse(argz):
                 Colors.blue + ' hours' + Colors.end
             )
         else:
-            print('{} is not running.'.format(settings.world_name))
+            print(
+                Colors.red + '{}'.format(settings.world_name) +
+                Colors.light_red + ' is not running! Exiting ...' + Colors.end
+            )
     elif args.web:
             run_webui(settings)
     else:
