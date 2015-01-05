@@ -152,6 +152,7 @@ class SweetpotatoConfig:
 
     @property
     def as_json(self):
+        self.__dict__.update(uptime=get_uptime(self))
         return json.dumps(self.__dict__, sort_keys=True, indent=4)
 
     @property
@@ -431,11 +432,6 @@ def get_uptime(settings):
 
     If the server is not running, return False.
 
-    Run it like this to get a nicely formatted uptime in hours:
-
-    uptime = round(get_uptime(settings), 2)
-    print('{0} has been up for {1} hours'.format(settings.world_name, uptime))
-
     @param settings:
     @return:
     """
@@ -453,7 +449,7 @@ def get_uptime(settings):
         uptime = uptime_raw.seconds / 60 / 60
         return uptime
     else:
-        return False
+        return None
 
 
 def is_forced(settings):
