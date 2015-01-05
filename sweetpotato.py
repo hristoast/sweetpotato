@@ -29,7 +29,7 @@ __author__ = 'Hristos N. Triantafillou <me@hristos.triantafillou.us>'
 __license__ = 'GPLv3'
 __mcversion__ = '1.8.1'
 __progname__ = 'sweetpotato'
-__version__ = '0.31b'
+__version__ = '0.32b'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -161,9 +161,7 @@ class SweetpotatoConfig:
                 'minutes': u[2],
                 'seconds': u[3]
             }
-        else:
-            uptime = None
-        self.__dict__.update(uptime=uptime)
+            self.__dict__['running'].update(uptime=uptime)
         return json.dumps(self.__dict__, sort_keys=True, indent=4)
 
     @property
@@ -580,8 +578,13 @@ def is_server_running(server_dir_name):
             return False
     elif isinstance(java_procs, list):
         # multiple java procs
-        for proc in java_procs:
-            if server_dir in proc[0]:
+        for p in java_procs:
+            if server_dir in p[0]:
+                proc = {
+                    'cwd': p[0],
+                    'exe': p[1],
+                    'pid': p[2]
+                }
                 return proc
     return False
 
@@ -705,7 +708,7 @@ def start_server(print_pre, settings):
     else:
         raise ServerAlreadyRunningError('World "{0}" already running with PID {1}'.format(
             settings.world_name,
-            server_running[-1]
+            server_running.get('pid')
         ))
 
 
@@ -722,7 +725,7 @@ def stop_server(print_pre, screen_name, server_dir, world_name):
     server_running = is_server_running(server_dir)
 
     if server_running:
-        server_pid = server_running[-1]
+        server_pid = server_running.get('pid')
         print(print_pre + Colors.light_blue + 'Stopping "{}" ...'.format(world_name), end=' ')
         sys.stdout.flush()
         wait_for_server_shutdown(screen_name, server_pid)
@@ -760,7 +763,7 @@ def restart_server(print_pre, settings):
         start_screen(screen_name, server_dir)
 
     if server_running:
-        server_pid = server_running[-1]
+        server_pid = server_running.get('pid')
         print(print_pre + Colors.light_blue + 'Restarting {} ...'.format(world_name), end=' ')
         sys.stdout.flush()
         wait_for_server_shutdown(screen_name, server_pid)
@@ -810,7 +813,7 @@ def run_server_backup(print_pre, settings, offline=False):
     if offline:
         print(print_pre + Colors.light_blue, end=' ')
         if server_running:
-            server_pid = server_running[-1]
+            server_pid = server_running.get('pid')
             print('Stopping "{}" ...'.format(world_name), end=' ')
             sys.stdout.flush()
             wait_for_server_shutdown(screen_name, server_pid)
@@ -861,7 +864,6 @@ def run_webui(settings):
     """
     # TODO: decorator for view context
     # TODO: POST routes for control functions
-    # TODO: /status route
     if bottle:
         app = bottle.app()
         static_path = os.path.join(BASE_DIR, 'data/static')
@@ -963,7 +965,7 @@ def run_webui(settings):
             else:
                 uptime = None
             if is_running:
-                pid = is_running[-1]
+                pid = is_running.get('pid')
             return {
                 'path': path,
                 'pid': pid,
