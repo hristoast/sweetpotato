@@ -153,13 +153,16 @@ class SweetpotatoConfig:
     @property
     def as_json(self):
         raw = get_uptime_raw(self)
-        u = get_uptime(raw)
-        uptime = {
-            'days': u[0],
-            'hours': u[1],
-            'minutes': u[2],
-            'seconds': u[3]
-        }
+        if raw:
+            u = get_uptime(raw)
+            uptime = {
+                'days': u[0],
+                'hours': u[1],
+                'minutes': u[2],
+                'seconds': u[3]
+            }
+        else:
+            uptime = None
         self.__dict__.update(uptime=uptime)
         return json.dumps(self.__dict__, sort_keys=True, indent=4)
 
@@ -973,7 +976,7 @@ def run_webui(settings):
         @bottle.route('/json')
         def as_json():
             settings.running = is_server_running(settings.server_dir)
-            return settings.__dict__
+            return settings.as_json
 
         @bottle.get('/server')
         @bottle.post('/server')
