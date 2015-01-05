@@ -1036,7 +1036,7 @@ def run_webui(settings):
                 '__version__': __version__
             }
         try:
-            print(Colors.green + '{0} {1} - launching webUI now!'.format(__progname__, __version__))
+            print(Colors.green + '{0} {1} - launching WebUI now!'.format(__progname__, __version__))
             sys.stdout.flush()
             bottle.run(app=app, port=settings.webui_port, quiet=False)
         except OSError:

@@ -220,13 +220,14 @@ Fails if the configured world is not running.
 See your server's uptime if it's running:
 
     $ sweetpotato --uptime
-    LarrylandX has been up for 0.97 hours
+    LarrylandX has been up for 0 days, 5 hours, 23 minutes, and 40 seconds
 
 ### WebUI
 
 A simple web-based interface for many of the functions offered by `sweetpotato`. By default it binds to port `8080`, but this can be changed with the `--web-port` option or a conf file setting.
 
     $ sweetpotato --web
+    sweetpotato 0.31b - launching WebUI now!
     Bottle v0.12.7 server starting up (using WSGIRefServer())...
     Listening on http://127.0.0.1:3434/
     Hit Ctrl-C to quit.
