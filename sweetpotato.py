@@ -29,7 +29,7 @@ __author__ = 'Hristos N. Triantafillou <me@hristos.triantafillou.us>'
 __license__ = 'GPLv3'
 __mcversion__ = '1.8.1'
 __progname__ = 'sweetpotato'
-__version__ = '0.30b'
+__version__ = '0.31b'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -152,7 +152,15 @@ class SweetpotatoConfig:
 
     @property
     def as_json(self):
-        self.__dict__.update(uptime=get_uptime(self))
+        raw = get_uptime_raw(self)
+        u = get_uptime(raw)
+        uptime = {
+            'days': u[0],
+            'hours': u[1],
+            'minutes': u[2],
+            'seconds': u[3]
+        }
+        self.__dict__.update(uptime=uptime)
         return json.dumps(self.__dict__, sort_keys=True, indent=4)
 
     @property
@@ -425,7 +433,7 @@ def get_jar(settings):
         )
 
 
-def get_uptime(settings):
+def get_uptime_raw(settings):
     """
     If the configured server is running, read the server.properties file
     to get the start time, and return an uptime in hours based on that.
@@ -445,11 +453,64 @@ def get_uptime(settings):
             sp.close()
         server_start_time_string = spl[1].strip().strip('#')
         server_start_time = datetime.strptime(server_start_time_string, fmt)
-        uptime_raw = now - server_start_time
-        uptime = uptime_raw.seconds / 60 / 60
+        uptime = now - server_start_time
         return uptime
     else:
         return None
+
+
+def get_uptime(raw_uptime):
+    """
+    Takes a raw datetime.timedelta object and returns the total
+    days, hours, minutes, and seconds.
+
+    @param raw_uptime:
+    @return:
+    """
+    days = raw_uptime.days
+    hours = raw_uptime.seconds // 60 // 60
+    if hours:
+        total_minutes = raw_uptime.seconds // 60
+        minutes = total_minutes - hours * 60
+        seconds = raw_uptime.seconds - (minutes * 60) - (hours * 60 * 60)
+    else:
+        minutes = raw_uptime.seconds // 60
+        if minutes:
+            seconds = raw_uptime.seconds - minutes * 60
+        else:
+            seconds = raw_uptime.seconds
+    return days, hours, minutes, seconds
+
+
+def get_uptime_string(uptime):
+    d = uptime[0]
+    h = uptime[1]
+    m = uptime[2]
+    s = uptime[3]
+
+    # get the right pluralization
+    if d == 1:
+        ds = 'day'
+    else:
+        ds = 'days'
+    if h == 1:
+        hs = 'hour'
+    else:
+        hs = 'hours'
+    if m == 1:
+        ms = 'minute'
+    else:
+        ms = 'minutes'
+    if s == 1:
+        ss = 'second'
+    else:
+        ss = 'seconds'
+    return '{0} {1}, {2} {3}, {4} {5}, and {6} {7}'.format(
+        d, ds,
+        h, hs,
+        m, ms,
+        s, ss
+    )
 
 
 def is_forced(settings):
@@ -887,7 +948,9 @@ def run_webui(settings):
             is_running = is_server_running(settings.server_dir)
             path = bottle.request.path
             pid = None
-            uptime = round(get_uptime(settings), 2)
+            raw = get_uptime_raw(settings)
+            u = get_uptime(raw)
+            uptime = get_uptime_string(u)
             if is_running:
                 pid = is_running[-1]
             return {
@@ -1260,13 +1323,14 @@ def arg_parse(argz):
         except ServerNotRunningError as e:
             error_and_die(e)
     elif args.uptime:
-        uptime = round(get_uptime(settings), 2)
-        if uptime:
+        raw_uptime = get_uptime_raw(settings)
+        if raw_uptime:
+            u = get_uptime(raw_uptime)
+            uptime_string = get_uptime_string(u)
             print(
                 Colors.green + '{}'.format(settings.world_name) +
                 Colors.blue + ' has been up for ' +
-                Colors.yellow_green + '{}'.format(uptime) +
-                Colors.blue + ' hours' + Colors.end
+                Colors.yellow_green + uptime_string + Colors.end
             )
         else:
             print(
