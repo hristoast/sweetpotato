@@ -573,7 +573,12 @@ def is_server_running(server_dir_name):
     if isinstance(java_procs, tuple):
         # just one java proc
         if server_dir in java_procs:
-            return java_procs
+            proc = {
+                'cwd': java_procs[0],
+                'exe': java_procs[1],
+                'pid': java_procs[2]
+            }
+            return proc
         else:
             return False
     elif isinstance(java_procs, list):
