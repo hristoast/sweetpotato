@@ -438,6 +438,11 @@ def get_uptime_raw(settings):
     If the configured server is running, read the server.properties file
     to get the start time, and return an uptime in hours based on that.
 
+    The time will be slightly inaccurate because the server writes the new date
+    string to your server.properties file towards the end of the startup sequence.
+    On vanilla servers this duration should be slight, but on modded servers
+    the difference might be closer to a minute because the startup is longer.
+
     If the server is not running, return False.
 
     @param settings:
@@ -949,8 +954,11 @@ def run_webui(settings):
             path = bottle.request.path
             pid = None
             raw = get_uptime_raw(settings)
-            u = get_uptime(raw)
-            uptime = get_uptime_string(u)
+            if raw:
+                u = get_uptime(raw)
+                uptime = get_uptime_string(u)
+            else:
+                uptime = None
             if is_running:
                 pid = is_running[-1]
             return {
