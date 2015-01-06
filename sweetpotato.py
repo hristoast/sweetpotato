@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """A tool for managing Minecraft servers on GNU/Linux."""
+# TODO: better webui logging and logging in general
+# TODO: get actual level seed
+# TODO: get player count
+# TODO: -q --quiet options
 import argparse
 try:
     import bottle
@@ -17,6 +21,7 @@ import tarfile
 import urllib.error
 import urllib.request
 
+from collections import OrderedDict
 from datetime import datetime
 try:
     from markdown import markdown
@@ -29,7 +34,7 @@ __author__ = 'Hristos N. Triantafillou <me@hristos.triantafillou.us>'
 __license__ = 'GPLv3'
 __mcversion__ = '1.8.1'
 __progname__ = 'sweetpotato'
-__version__ = '0.32b'
+__version__ = '0.34b'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -124,6 +129,7 @@ class SweetpotatoConfig:
         self.backup_dir = None
         self.compression = 'gz'
         self.conf_file = None
+        self.force = False
         self.forge = None
         self.level_seed = None
         self.mem_format = None
@@ -152,7 +158,7 @@ class SweetpotatoConfig:
 
     @property
     def as_json(self):
-        raw = get_uptime_raw(self)
+        raw = get_uptime_raw(self.server_dir, self.world_name, False)
         if raw:
             u = get_uptime(raw)
             uptime = {
@@ -162,6 +168,8 @@ class SweetpotatoConfig:
                 'seconds': u[3]
             }
             self.__dict__['running'].update(uptime=uptime)
+        # We don't care to show force
+        self.__dict__.pop('force')
         return json.dumps(self.__dict__, sort_keys=True, indent=4)
 
     @property
@@ -234,7 +242,7 @@ generate-structures=true
 view-distance=10
 motd=Welcome to {0}!
         """.format(self.world_name, self.port, self.level_seed or '')
-        if self.mc_version == '1.8':
+        if '1.8' in self.mc_version:
             return vanilla_server_properties_18
         elif self.mc_version == '1.7.10':
             return vanilla_server_properties_1710
@@ -245,7 +253,7 @@ motd=Welcome to {0}!
             )
 
 
-def agree_to_eula(eula_txt, force, print_pre):
+def agree_to_eula(eula_txt, force, print_pre, quiet):
     """
     Checks for a eula.txt file in server, and verifies it contains 'eula=true'.
 
@@ -258,15 +266,18 @@ def agree_to_eula(eula_txt, force, print_pre):
         f = open(eula_txt, 'r')
         if 'eula=true' in f.read():
             f.close()
-            print(print_pre + Colors.light_blue + 'Eula agreed to!' + Colors.end)
+            if not quiet:
+                print(print_pre + Colors.light_blue + 'Eula agreed to!' + Colors.end)
             return True
         else:
             f.close()
-    print(print_pre + Colors.light_blue + 'Agreeing to the eula ...', end=' ')
+    if not quiet:
+        print(print_pre + Colors.light_blue + 'Agreeing to the eula ...', end=' ')
     f = open(eula_txt, 'w')
     f.write('eula=true\n')
     f.close()
-    print('Done!' + Colors.end)
+    if not quiet:
+        print('Done!' + Colors.end)
     return True
 
 
@@ -277,13 +288,14 @@ def can_xz():
         return True
 
 
-def create_server(settings):
+def create_server(settings, quiet):
     """
     Check for or create the configured backup_dir and server_dir, check for or
     download the server jar for the configured mc_version, then ensure that
     server.properties matches what our desired configurations are.
 
     @param settings:
+    @param quiet:
     @return:
     """
     print_pre = '[' + Colors.yellow_green + 'create' + Colors.end + '] '
@@ -303,28 +315,38 @@ def create_server(settings):
 
     is_running = is_server_running(settings.server_dir)
     if is_running:
-        raise ServerAlreadyRunningError("Can't create '{}' - it's already running!".format(world_name))
+        if not quiet:
+            raise ServerAlreadyRunningError("Can't create '{}' - it's already running!".format(world_name))
+        else:
+            die_silently()
 
-    print(print_pre + Colors.blue + 'Creating "{}" ...'.format(world_name) + Colors.end)
+    if not quiet:
+        print(print_pre + Colors.blue + 'Creating "{}" ...'.format(world_name) + Colors.end)
 
-    if os.path.isdir(backup_dir):
+    if os.path.isdir(backup_dir) and not quiet:
         print(print_pre + Colors.light_blue + 'Found {}!'.format(backup_dir) + Colors.end)
     else:
-        print(print_pre + Colors.light_blue + 'Creating {} ...'.format(backup_dir), end=' ')
-        sys.stdout.flush()
-        list_or_create_dir(backup_dir)
-        print('Done!' + Colors.end)
+        if not quiet:
+            print(print_pre + Colors.light_blue + 'Creating {} ...'.format(backup_dir), end=' ')
+            sys.stdout.flush()
+            list_or_create_dir(backup_dir)
+            print('Done!' + Colors.end)
+        else:
+            list_or_create_dir(backup_dir)
 
     if not os.path.isdir(server_dir):
-        print(print_pre + Colors.light_blue + 'Creating {} ...'.format(server_dir), end=' ')
-        sys.stdout.flush()
-        list_or_create_dir(server_dir)
-        print('Done!' + Colors.end)
-    else:
-        print(print_pre + Colors.light_blue + 'Found {}!'.format(server_dir) + Colors.end)
+        if not quiet:
+            print(print_pre + Colors.light_blue + 'Creating {} ...'.format(server_dir), end=' ')
+            sys.stdout.flush()
+            list_or_create_dir(server_dir)
+            print('Done!' + Colors.end)
+        else:
+            list_or_create_dir(server_dir)
+    elif not quiet:
+            print(print_pre + Colors.light_blue + 'Found {}!'.format(server_dir) + Colors.end)
 
     full_jar_path = os.path.join(server_dir, jar_name)
-    if not os.path.isfile(full_jar_path) or force:
+    if not os.path.isfile(full_jar_path) or force and not quiet:
         print(print_pre + Colors.light_blue + 'Downloading {} ...'.format(jar_name), end=' ')
         sys.stdout.flush()
         try:
@@ -332,23 +354,37 @@ def create_server(settings):
             jar = open(local_jar)
             jar.close()
         except urllib.error.HTTPError as e:
-            error_and_die(e.msg + ' Is your version valid?')
-        print('Done!' + Colors.end)
-    else:
+            if not quiet:
+                error_and_die(e.msg + ' Is your version valid?')
+            else:
+                die_silently()
+        if not quiet:
+            print('Done!' + Colors.end)
+    elif not quiet:
         print(print_pre + Colors.light_blue + 'Found {}!'.format(jar_name) + Colors.end)
 
     eula_txt = os.path.join(server_dir, 'eula.txt')
-    agree_to_eula(eula_txt, force, print_pre)
+    agree_to_eula(eula_txt, force, print_pre, quiet)
 
     server_properties = os.path.join(server_dir, 'server.properties')
-    write_server_properties(print_pre, server_properties, settings)
+    write_server_properties(print_pre, server_properties, settings, quiet)
 
-    print(print_pre + Colors.blue + 'World "{}" has been created!'.format(world_name) + Colors.end)
+    if not quiet:
+        print(print_pre + Colors.blue + 'World "{}" has been created!'.format(world_name) + Colors.end)
 
 
 def dependency_check(*deps):
     if None in deps:
         raise MissingExeError("Unable to find all dependencies. Please ensure that screen and java are installed.")
+
+
+def die_silently():
+    """
+    For when we need to die quietly.
+
+    @return:
+    """
+    sys.exit(1)
 
 
 def error_and_die(msg):
@@ -434,7 +470,7 @@ def get_jar(settings):
         )
 
 
-def get_uptime_raw(settings):
+def get_uptime_raw(server_dir, world_name, quiet):
     """
     If the configured server is running, read the server.properties file
     to get the start time, and return an uptime in hours based on that.
@@ -446,14 +482,15 @@ def get_uptime_raw(settings):
 
     If the server is not running, return False.
 
-    @param settings:
+    @param server_dir:
+    @param world_name:
     @return:
     """
     fmt = '%a %b %d %H:%M:%S %Z %Y'
     now = datetime.now()
-    server_running = is_server_running(settings.server_dir)
+    server_running = is_server_running(server_dir)
     if server_running:
-        server_properties = os.path.join(settings.server_dir, 'server.properties')
+        server_properties = os.path.join(server_dir, 'server.properties')
         with open(server_properties, 'r') as sp:
             spl = sp.readlines()
             sp.close()
@@ -461,8 +498,12 @@ def get_uptime_raw(settings):
         server_start_time = datetime.strptime(server_start_time_string, fmt)
         uptime = now - server_start_time
         return uptime
+    elif not quiet:
+        raise ServerNotRunningError(
+            '{} is not running'.format(world_name)
+        )
     else:
-        return None
+        die_silently()
 
 
 def get_uptime(raw_uptime):
@@ -717,7 +758,7 @@ def start_server(print_pre, settings):
         ))
 
 
-def stop_server(print_pre, screen_name, server_dir, world_name):
+def stop_server(print_pre, screen_name, server_dir, world_name, quiet):
     """
     Stops a configured server.
 
@@ -725,19 +766,26 @@ def stop_server(print_pre, screen_name, server_dir, world_name):
     @param screen_name:
     @param server_dir:
     @param world_name:
+    @param quiet:
     @return:
     """
     server_running = is_server_running(server_dir)
 
     if server_running:
         server_pid = server_running.get('pid')
-        print(print_pre + Colors.light_blue + 'Stopping "{}" ...'.format(world_name), end=' ')
+        if not quiet:
+            print(print_pre + Colors.light_blue + 'Stopping "{}" ...'.format(world_name), end=' ')
         sys.stdout.flush()
         wait_for_server_shutdown(screen_name, server_pid)
         send_command('exit', screen_name)
-        print('Done!' + Colors.end)
+        if not quiet:
+            print('Done!' + Colors.end)
+    elif not quiet:
+        raise ServerNotRunningError(
+            'Cannot stop "{}" - it is not running!'.format(world_name)
+        )
     else:
-        raise ServerNotRunningError('Cannot stop "{}" - it is not running!'.format(world_name))
+        die_silently()
 
 
 def restart_server(print_pre, settings):
@@ -867,7 +915,7 @@ def run_webui(settings):
     @param settings:
     @return:
     """
-    # TODO: decorator for view context
+    # TODO: decorator for DRY view context
     # TODO: POST routes for control functions
     if bottle:
         app = bottle.app()
@@ -963,20 +1011,23 @@ def run_webui(settings):
             is_running = is_server_running(settings.server_dir)
             path = bottle.request.path
             pid = None
-            raw = get_uptime_raw(settings)
-            if raw:
+            try:
+                raw = get_uptime_raw(settings.server_dir, settings.world_name, False)
                 u = get_uptime(raw)
                 uptime = get_uptime_string(u)
-            else:
+                if is_running:
+                    pid = is_running.get('pid')
+            except ServerNotRunningError:
                 uptime = None
-            if is_running:
-                pid = is_running.get('pid')
+            sorted_settings = OrderedDict(sorted(settings.__dict__.items()))
+
             return {
                 'path': path,
                 'pid': pid,
-                'settings': settings,
                 'server_running': is_running,
+                'sorted_settings': sorted_settings,
                 'uptime': uptime,
+                'world_name': settings.world_name,
                 '__version__': __version__
             }
 
@@ -1130,7 +1181,7 @@ def wait_for_server_shutdown(screen_name, server_pid):
         send_command('stop', screen_name)
 
 
-def write_server_properties(print_pre, file, settings):
+def write_server_properties(print_pre, file, settings, quiet):
     """
     Checks for a server.properties for the specified server_dir
     and world_name, and writes if need be (or forced)
@@ -1141,16 +1192,21 @@ def write_server_properties(print_pre, file, settings):
     @return:
     """
     def do_the_write():
-        print(print_pre + Colors.light_blue + 'Generating server.properties ...', end=' ')
-        sys.stdout.flush()
+        if not quiet:
+            print(print_pre + Colors.light_blue + 'Generating server.properties ...', end=' ')
+            sys.stdout.flush()
         file_to_write = open(file, 'w')
         try:
             for l in settings.as_serverproperties.split('\n'):
                 file_to_write.write(l + '\n')
         except UnsupportedVersionError as e:
-            error_and_die(e)
+            if not quiet:
+                error_and_die(e)
+            else:
+                die_silently()
         file_to_write.close()
-        print('Done!' + Colors.end)
+        if not quiet:
+            print('Done!' + Colors.end)
 
     found_msg = print_pre + Colors.light_blue + 'Found server.properties!' + Colors.end
     if os.path.isfile(file):
@@ -1162,7 +1218,7 @@ def write_server_properties(print_pre, file, settings):
             or not 'level-seed={}\n'.format(settings.level_seed or '') in f_readlines \
                 or settings.force:
             do_the_write()
-        else:
+        elif not quiet:
             print(found_msg)
         f.close()
     else:
@@ -1200,13 +1256,14 @@ def arg_parse(argz):
     settings.add_argument('--level-seed', '--seed', help='optional and only applied during world creation')
     settings.add_argument('-p', '--port',
                           help='port you wish to run your server on. Default: {}'.format(DEFAULT_SERVER_PORT))
+    settings.add_argument('-q', '--quiet', action='store_true', help='Silence all output')
     settings.add_argument('-s', '--server-dir', metavar='/path/to/server',
                           help='set the FULL path to the directory containing your server files')
     settings.add_argument('-S', '--screen', metavar='SCREEN NAME',
                           help='set the name of your screen session. Default: the same as your world')
     settings.add_argument('-v', '--mc-version', metavar='MC VERSION',
                           help='set the version of minecraft. Default: The latest stable')
-    settings.add_argument('--web-port', dest='webui_port',
+    settings.add_argument('--webui-port', dest='webui_port',
                           help='Port to bind to for the WebUI. Default: {}'.format(DEFAULT_WEBUI_PORT))
     settings.add_argument('-w', '--world', metavar='WORLD NAME',
                           help='set the name of your Minecraft world. Default: {}'.format(DEFAULT_WORLD_NAME))
@@ -1220,113 +1277,121 @@ def arg_parse(argz):
                             metavar=('MIN', 'MAX'), nargs=2)
     parser.add_argument('-V', '--version', action='version', version='%(prog)s {0}'.format(__version__))
 
-    settings = SweetpotatoConfig()
-
-    try:
-        read_conf_file(DEFAULT_CONF_FILE, settings)
-        settings.conf_file = DEFAULT_CONF_FILE
-    except (configparser.NoSectionError, ConfFileError):
-        pass
-
     args = parser.parse_args(argz)
+    s = SweetpotatoConfig()
+
+    # Read a passed-in conf file
     if args.conf:
         try:
-            read_conf_file(args.conf, settings)
+            read_conf_file(args.conf, s)
         except ConfFileError as e:
             error_and_die(e)
-        settings.conf_file = os.path.realpath(args.conf)
+        s.conf_file = os.path.realpath(args.conf)
+    # Or try to read the default conf file
+    elif not args.conf:
+        try:
+            read_conf_file(DEFAULT_CONF_FILE, s)
+            s.conf_file = DEFAULT_CONF_FILE
+        except (configparser.NoSectionError, ConfFileError):
+            pass
     if args.backup_dir:
-        settings.backup_dir = args.backup_dir
+        s.backup_dir = args.backup_dir
     if args.force:
-        settings.force = args.force
+        s.force = args.force
     if args.forge:
-        settings.forge = args.forge
+        s.forge = args.forge
     if args.mb:
-        settings.mem_format = 'MB'
-        settings.mem_max = args.mb[1]
-        settings.mem_min = args.mb[0]
+        s.mem_format = 'MB'
+        s.mem_max = args.mb[1]
+        s.mem_min = args.mb[0]
     elif args.gb:
-        settings.mem_format = 'GB'
-        settings.mem_max = args.gb[1]
-        settings.mem_min = args.gb[0]
+        s.mem_format = 'GB'
+        s.mem_max = args.gb[1]
+        s.mem_min = args.gb[0]
     if args.level_seed:
-        settings.level_seed = args.level_seed
+        s.level_seed = args.level_seed
     if args.permgen:
-        settings.permgen = args.permgen
+        s.permgen = args.permgen
     if args.port:
-        settings.port = args.port
+        s.port = args.port
+    if args.quiet:
+        quiet = True
+    else:
+        quiet = False
     if args.server_dir:
-        settings.server_dir = args.server_dir
+        s.server_dir = args.server_dir
     if args.screen:
-        settings.screen_name = args.screen
+        s.screen_name = args.screen
     if args.mc_version:
-        settings.mc_version = args.mc_version
+        s.mc_version = args.mc_version
     if args.webui_port:
-        settings.webui_port = args.webui_port
+        s.webui_port = args.webui_port
     if args.world:
-        settings.world_name = args.world
+        s.world_name = args.world
     if args.compression:
-        settings.compression = args.compression
+        s.compression = args.compression
 
-    if settings.forge:
-        settings.mc_version = settings.forge.split('-')[0]
-        settings.permgen = DEFAULT_PERMGEN
+    if s.forge:
+        s.mc_version = s.forge.split('-')[0]
+        s.permgen = DEFAULT_PERMGEN
 
     try:
-        validate_settings(settings)
+        validate_settings(s)
+        if s.world_name != DEFAULT_WORLD_NAME and not args.screen:
+            s.screen_name = s.world_name
     except EmptySettingError as e:
         error_and_die(e)
 
     try:
-        validate_directories(settings.backup_dir, settings.server_dir)
+        validate_directories(s.backup_dir, s.server_dir)
     except NoDirFoundError as e:
         if not args.create and not args.genconf:
             error_and_die(e)
 
     try:
-        validate_mem_values(settings.mem_min, settings.mem_max)
+        validate_mem_values(s.mem_min, s.mem_max)
     except ValueError:
         error_and_die('The maximum memory value must be greater than the minimum!')
 
-    running = is_server_running(settings.server_dir)
+    running = is_server_running(s.server_dir)
 
     if args.backup:
         print_pre = '[' + Colors.yellow_green + 'live-backup' + Colors.end + '] '
         try:
-            run_server_backup(print_pre, settings)
+            run_server_backup(print_pre, s)
         except BackupFileAlreadyExistsError as e:
-            send_command('say Backup Done!', settings.screen_name)
+            send_command('say Backup Done!', s.screen_name)
             error_and_die(e)
     elif args.create:
         try:
-            create_server(settings)
+            create_server(s, quiet)
         except ServerAlreadyRunningError as e:
             error_and_die(e.msg.strip('"'))
     elif args.genconf:
-        settings.as_conf_file()
+        s.as_conf_file()
     elif args.json:
         if running:
-            settings.running = running
-        print(settings.as_json)
+            s.running = running
+        print(s.as_json)
     elif args.offline:
         print_pre = '[' + Colors.yellow_green + 'offline-backup' + Colors.end + '] '
         try:
-            run_server_backup(print_pre, settings, offline=True)
+            run_server_backup(print_pre, s, offline=True)
         except BackupFileAlreadyExistsError as e:
-            start_server(None, settings)
+            start_server(None, s)
             error_and_die(e)
     elif args.say:
-        send_command('say ' + args.say, settings.screen_name)
+        send_command('say ' + args.say, s.screen_name)
     elif args.restart:
         print_pre = '[' + Colors.yellow_green + 'restart' + Colors.end + '] '
         try:
-            restart_server(print_pre, settings)
+            restart_server(print_pre, s)
         except BackupFileAlreadyExistsError as e:
             error_and_die(e)
     elif args.start:
         print_pre = '[' + Colors.yellow_green + 'start' + Colors.end + '] '
         try:
-            start_server(print_pre, settings)
+            start_server(print_pre, s)
         except ServerAlreadyRunningError as e:
             error_and_die(e)
     elif args.stop:
@@ -1334,29 +1399,27 @@ def arg_parse(argz):
         try:
             stop_server(
                 print_pre,
-                settings.screen_name,
-                settings.server_dir,
-                settings.world_name
+                s.screen_name,
+                s.server_dir,
+                s.world_name,
+                quiet
             )
         except ServerNotRunningError as e:
             error_and_die(e)
     elif args.uptime:
-        raw_uptime = get_uptime_raw(settings)
-        if raw_uptime:
+        try:
+            raw_uptime = get_uptime_raw(s.server_dir, s.world_name, quiet)
             u = get_uptime(raw_uptime)
             uptime_string = get_uptime_string(u)
             print(
-                Colors.green + '{}'.format(settings.world_name) +
+                Colors.green + '{}'.format(s.world_name) +
                 Colors.blue + ' has been up for ' +
                 Colors.yellow_green + uptime_string + Colors.end
             )
-        else:
-            print(
-                Colors.red + '{}'.format(settings.world_name) +
-                Colors.light_red + ' is not running! Exiting ...' + Colors.end
-            )
+        except ServerNotRunningError as e:
+            error_and_die(e)
     elif args.web:
-            run_webui(settings)
+            run_webui(s)
     else:
         parser.print_usage()
 
@@ -1371,7 +1434,6 @@ def main():
     except MissingExeError as e:
         error_and_die(e)
 
-    # TODO: better webui logging and logging in general
     # process cli args and do our stuff
     argz = sys.argv[1:]
     arg_parse(argz)

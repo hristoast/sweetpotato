@@ -227,14 +227,14 @@ See your server's uptime if it's running:
 A simple web-based interface for many of the functions offered by `sweetpotato`. By default it binds to port `8080`, but this can be changed with the `--web-port` option or a conf file setting.
 
     $ sweetpotato --web
-    sweetpotato 0.31b - launching WebUI now!
+    sweetpotato 0.34b - launching WebUI now!
     Bottle v0.12.7 server starting up (using WSGIRefServer())...
     Listening on http://127.0.0.1:3434/
     Hit Ctrl-C to quit.
 
 ### Forge
 
-`sweetpotato` supports using Forge, and defaults to the latest Recommended 1.7.10 build. You can set a specific Forge version with the `-f` or `--forge` option. The extra `-P` or `--permgen` option is available for Forge, by default it is set to 256MB.
+`sweetpotato` supports using Forge. You can set a specific Forge version with the `-f` or `--forge` option. The extra `-P` or `--permgen` option is available for Forge, by default it is set to 256MB.
 
  * Both your Forge version and permgen setting can be stored in a conf file or passed in as arguments.
  * You can use the `-C` or `--create` option to download your Forge jar, just as you would with a vanilla server, however don't expect to be able to run it as you'll be missing external dependencies.
