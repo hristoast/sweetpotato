@@ -158,8 +158,8 @@ class SweetpotatoConfig:
 
     @property
     def as_json(self):
-        raw = get_uptime_raw(self.server_dir, self.world_name, False)
-        if raw:
+        try:
+            raw = get_uptime_raw(self.server_dir, self.world_name, False)
             u = get_uptime(raw)
             uptime = {
                 'days': u[0],
@@ -168,6 +168,8 @@ class SweetpotatoConfig:
                 'seconds': u[3]
             }
             self.__dict__['running'].update(uptime=uptime)
+        except ServerNotRunningError:
+            pass
         # We don't care to show force
         self.__dict__.pop('force')
         return json.dumps(self.__dict__, sort_keys=True, indent=4)
@@ -1337,7 +1339,7 @@ def arg_parse(argz):
 
     try:
         validate_settings(s)
-        if s.world_name != DEFAULT_WORLD_NAME and not args.screen:
+        if s.world_name != DEFAULT_WORLD_NAME and not args.screen and s.screen_name == DEFAULT_WORLD_NAME:
             s.screen_name = s.world_name
     except EmptySettingError as e:
         error_and_die(e)
