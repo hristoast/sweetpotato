@@ -31,6 +31,8 @@
                             <dt>Max Server Memory:</dt>
                             % elif k is 'mem_min':
                             <dt>Min Server Memory:</dt>
+                            % elif k is 'permgen':
+                            <dt>Permgen:</dt>
                             % elif k is 'port':
                             <dt>Server Port:</dt>
                             % elif k is 'screen_name':
