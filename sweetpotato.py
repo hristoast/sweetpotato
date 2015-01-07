@@ -3,7 +3,7 @@
 # TODO: better webui logging and logging in general
 # TODO: get actual level seed
 # TODO: get player count
-# TODO: -q --quiet options
+# TODO: --save
 import argparse
 try:
     import bottle
@@ -144,17 +144,14 @@ class SweetpotatoConfig:
         self.webui_port = DEFAULT_WEBUI_PORT
         self.world_name = DEFAULT_WORLD_NAME
 
+    @property
     def as_conf_file(self):
-        print(self.header)
-        print('[Settings]')
-        return [
-            print('{0}: {1}'.format(line, value))
-            for line, value in self.__dict__.items()
-            if value is not None
-            and line is not 'conf_file'
-            and line is not 'force'
-            and line is not 'running'
-        ]
+        conf = self.header + '\n'
+        conf += '[Settings]\n'
+        for k, v in self.__dict__.items():
+            if v is not None and k is not 'conf_file' and k is not 'force' and k is not 'running':
+                conf += '{0}: {1}\n'.format(k, v)
+        return conf.strip()
 
     @property
     def as_json(self):
@@ -171,7 +168,8 @@ class SweetpotatoConfig:
         except ServerNotRunningError:
             pass
         # We don't care to show force
-        self.__dict__.pop('force')
+        if 'force' in self.__dict__.keys():
+            self.__dict__.pop('force')
         return json.dumps(self.__dict__, sort_keys=True, indent=4)
 
     @property
@@ -829,7 +827,7 @@ def restart_server(print_pre, settings):
     print('Done!' + Colors.end)
 
 
-def run_server_backup(print_pre, settings, offline=False):
+def run_server_backup(print_pre, settings, quiet, offline=False):
     """
     Runs the configured backup on the configured server.
 
@@ -921,6 +919,7 @@ def run_webui(settings):
     # TODO: POST routes for control functions
     if bottle:
         app = bottle.app()
+        # TODO: bail if one of the below don't exist
         static_path = os.path.join(BASE_DIR, 'data/static')
         tpl_path = os.path.join(BASE_DIR, 'data/tpl')
 
@@ -1250,7 +1249,7 @@ def arg_parse(argz):
     settings.add_argument('-F', '--force', help='forces writing of server files, even when they already exist',
                           action='store_true')
 
-    forge_settings = settings.add_mutually_exclusive_group()
+    forge_settings = parser.add_argument_group('Mods', 'Options for Forge users')
     forge_settings.add_argument('-f', '--forge', help='version of Forge you are using.', metavar='FORGE VERSION')
     forge_settings.add_argument('-P', '--permgen',
                                 help='Amount of permgen to use in MB. Default: {}'.format(DEFAULT_PERMGEN))
@@ -1335,7 +1334,8 @@ def arg_parse(argz):
 
     if s.forge:
         s.mc_version = s.forge.split('-')[0]
-        s.permgen = DEFAULT_PERMGEN
+        if not s.permgen:
+            s.permgen = DEFAULT_PERMGEN
 
     try:
         validate_settings(s)
@@ -1360,7 +1360,7 @@ def arg_parse(argz):
     if args.backup:
         print_pre = '[' + Colors.yellow_green + 'live-backup' + Colors.end + '] '
         try:
-            run_server_backup(print_pre, s)
+            run_server_backup(print_pre, s, quiet)
         except BackupFileAlreadyExistsError as e:
             send_command('say Backup Done!', s.screen_name)
             error_and_die(e)
@@ -1370,7 +1370,7 @@ def arg_parse(argz):
         except ServerAlreadyRunningError as e:
             error_and_die(e.msg.strip('"'))
     elif args.genconf:
-        s.as_conf_file()
+        print(s.as_conf_file)
     elif args.json:
         if running:
             s.running = running
@@ -1378,7 +1378,7 @@ def arg_parse(argz):
     elif args.offline:
         print_pre = '[' + Colors.yellow_green + 'offline-backup' + Colors.end + '] '
         try:
-            run_server_backup(print_pre, s, offline=True)
+            run_server_backup(print_pre, s, quiet, offline=True)
         except BackupFileAlreadyExistsError as e:
             start_server(None, s)
             error_and_die(e)

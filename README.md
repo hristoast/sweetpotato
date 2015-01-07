@@ -22,6 +22,17 @@ But what if you could do it with just one command, like this: `sweetpotato -r`
 
 It was created as a way to simplify managing a Minecraft server by providing a simple wrapper for common tasks. It knows what your world is and where its files are via command-line options, values set in a configuration file, or a mixture of both!
 
+## Simple Installation
+
+Just grab the file and run it:
+
+    wget https://raw.githubusercontent.com/hristoast/sweetpotato/dev/sweetpotato.py
+    chmod +x sweetpotato.py
+    ./sweetpotato.py --version
+    sweetpotato 0.34b
+
+A modern distro should have python3, if not make sure you install that first! Note that this would be a *very* minimal install, with command-line capabilities only.
+
 ## Installation
 
 With `make` installed and `sudo` access:
@@ -53,15 +64,76 @@ __OR__
 
 Which are essentially the same thing.
 
-## Issues
+## Getting Started
+----
 
-I am sure there may be actual bugs and unintended problems in here, but this section is for known issues relating to design decisions. Things that happen, things `sweetpotato` can or can't do - things like that.
+Let's set up a server at `/home/hristos/minecraft` and configure it to back up to `/home/hristos/backups`. We'll also set a custom port and level seed too.
 
-  * `sweetpotato` is very careful in may ways, but it will not keep your settings straight for you. Meaning, you must take care to ensure the directories you configure for backups, servers, and so forth are where you really want these things to be.
+    $ sweetpotato --server-dir /home/hristos/minecraft --backup-dir /home/hristos/backups --port 25566 --level-seed AwesomeSeedYo -gb 1 2 --json
+    FATAL: The configured directory "/home/hristos/backups" does not exist. Do you need to run --create?
 
-  * At present `sweetpotato` has no way of validating the screen you have chosen. This means that if you have two servers running on the same machine, and you give them both the same screen name, `sweetpotato` is not going to be able to do anything about it and unexpected things will happen!
+Not to worry, as the message suggests we will run the create command:
 
-  * The WebUI includes no extra security whatsoever. This is deliberate, any decent HTTP server has a way of providing SSL and authentication functions for you.
+    $ sweetpotato --server-dir /home/hristos/minecraft --backup-dir /home/hristos/backups --port 25566 --level-seed AwesomeSeedYo -gb 1 2 --create
+    [create] Creating "SweetpotatoWorld" ...
+    [create] Creating /home/hristos/backups ... Done!
+    [create] Creating /home/hristos/minecraft ... Done!
+    [create] Downloading minecraft_server.1.8.1.jar ... Done!
+    [create] Agreeing to the eula ... Done!
+    [create] Generating server.properties ... Done!
+    [create] World "SweetpotatoWorld" has been created!
+
+Now we've got a server that we can use, but it is a little annoying to pass all of these options each time. Let's capture our configuration in a file that we can read from:
+
+    $ sweetpotato --server-dir /home/hristos/minecraft --backup-dir /home/hristos/backups --port 25566 --level-seed AwesomeSeedYo -gb 1 2 --genconf > sweetpotato.conf
+
+Just use the `-c` or `--conf` option to configure `sweetpotato`:
+
+    $ sweetpotato --conf sweetpotato.conf --json
+    {
+        "backup_dir": "/home/hristos/backups",
+        "compression": "gz",
+        "conf_file": "/home/hristos/sweetpotato.conf",
+        "forge": null,
+        "level_seed": "AwesomeSeedYo",
+        "mc_version": "1.8.1",
+        "mem_format": "GB",
+        "mem_max": "2",
+        "mem_min": "1",
+        "permgen": null,
+        "port": "25566",
+        "running": false,
+        "screen_name": "SweetpotatoWorld",
+        "server_dir": "/home/hristos/minecraft",
+        "webui_port": "8080",
+        "world_name": "SweetpotatoWorld"
+    }
+
+That's better, but we could save even more keystrokes if we wanted to by putting our conf file into the default location as expected by `sweetpotato`, which is `$HOME/.config/sweetpotato/sweetpotato.conf`:
+
+    $ mv sweetpotato.conf .config/sweetpotato/
+    $ sweetpotato --start
+    [start] Starting "SweetpotatoWorld" ... Done!
+
+Success! Using explicit conf files makes managing multiple servers under one user much easier, but if you are only running one server using the default conf file makes the most sense.
+
+Now that you've got a working Minecraft server configured with `sweetpotato`, you may want to check out the WebUI:
+
+    sweetpotato --web
+    sweetpotato 0.34b - launching WebUI now!
+    Bottle v0.12.7 server starting up (using WSGIRefServer())...
+    Listening on http://127.0.0.1:8080/
+    Hit Ctrl-C to quit.
+
+Open `http://127.0.0.1:8080/` in your favorite web browser and rock & roll!
+
+Or, you can set up a cron job to run a live backup every day at a set time (or other fun things):
+
+    $ crontab -l
+    # m h  dom mon dow   command
+    @reboot (sleep 30s && sweetpotato --start)
+    45 23 * * * sweetpotato --backup
+    00 12 * * * sweetpotato --say "`ddate`"
 
 ## Usage
 ----
