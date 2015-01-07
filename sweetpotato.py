@@ -170,6 +170,9 @@ class SweetpotatoConfig:
         # We don't care to show force
         if 'force' in self.__dict__.keys():
             self.__dict__.pop('force')
+        if not self.forge:
+            self.__dict__.pop('forge')
+            self.__dict__.pop('permgen')
         return json.dumps(self.__dict__, sort_keys=True, indent=4)
 
     @property

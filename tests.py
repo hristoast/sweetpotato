@@ -100,7 +100,7 @@ motd=Welcome to SweetpotatoWorld!
         """
         self.assertEqual(config.as_serverproperties, server_properties)
 
-    def test_json(self):
+    def test_json(self):  # TODO: test if forge and if not forge
         config = sweetpotato.SweetpotatoConfig()
         config.backup_dir = TEST_BACKUP_DIR
         config.mem_format = TEST_MEM_FORMAT
