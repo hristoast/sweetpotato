@@ -23,8 +23,8 @@
         </header>
 
         <section id="downloads" class="clearfix">
-          <a href="https://github.com/hristoast/sweetpotato/zipball/dev" id="download-zip" class="button"><span>Download .zip</span></a>
-          <a href="https://github.com/hristoast/sweetpotato/tarball/dev" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
+          <a href="https://github.com/hristoast/sweetpotato/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
+          <a href="https://github.com/hristoast/sweetpotato/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
           <a href="https://github.com/hristoast/sweetpotato" id="view-on-github" class="button"><span>View on GitHub</span></a>
         </section>
 
@@ -58,6 +58,19 @@
 <p><code>sweetpotato</code> is a tool for running a Minecraft server from inside a screen session on a GNU/Linux system. It is written in Python (for Python 3), but with no external Python dependencies (except for the optional WebUI function).</p>
 
 <p>It was created as a way to simplify managing a Minecraft server by providing a simple wrapper for common tasks. It knows what your world is and where its files are via command-line options, values set in a configuration file, or a mixture of both!</p>
+
+<h2>
+<a id="simple-installation" class="anchor" href="#simple-installation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Simple Installation</h2>
+
+<p>Just grab the file and run it:</p>
+
+<pre><code>wget https://raw.githubusercontent.com/hristoast/sweetpotato/dev/sweetpotato.py
+chmod +x sweetpotato.py
+./sweetpotato.py --version
+sweetpotato 0.34b
+</code></pre>
+
+<p>A modern distro should have python3, if not make sure you install that first! Note that this would be a <em>very</em> minimal install, with command-line capabilities only.</p>
 
 <h2>
 <a id="installation" class="anchor" href="#installation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installation</h2>
@@ -106,15 +119,84 @@
 <p>Which are essentially the same thing.</p>
 
 <h2>
-<a id="issues" class="anchor" href="#issues" aria-hidden="true"><span class="octicon octicon-link"></span></a>Issues</h2>
+<a id="getting-started" class="anchor" href="#getting-started" aria-hidden="true"><span class="octicon octicon-link"></span></a>Getting Started</h2>
 
-<p>I am sure there may be actual bugs and unintended problems in here, but this section is for known issues relating to design decisions. Things that happen, things <code>sweetpotato</code> can or can't do - things like that.</p>
+<hr>
 
-<ul>
-<li><p><code>sweetpotato</code> is very careful in may ways, but it will not keep your settings straight for you. Meaning, you must take care to ensure the directories you configure for backups, servers, and so forth are where you really want these things to be.</p></li>
-<li><p>At present <code>sweetpotato</code> has no way of validating the screen you have chosen. This means that if you have two servers running on the same machine, and you give them both the same screen name, <code>sweetpotato</code> is not going to be able to do anything about it and unexpected things will happen!</p></li>
-<li><p>The WebUI includes no extra security whatsoever. This is deliberate, any decent HTTP server has a way of providing SSL and authentication functions for you.</p></li>
-</ul>
+<p>Let's set up a server at <code>/home/hristos/minecraft</code> and configure it to back up to <code>/home/hristos/backups</code>. We'll also set a custom port and level seed too.</p>
+
+<pre><code>$ sweetpotato --server-dir /home/hristos/minecraft --backup-dir /home/hristos/backups --port 25566 --level-seed AwesomeSeedYo -gb 1 2 --json
+FATAL: The configured directory "/home/hristos/backups" does not exist. Do you need to run --create?
+</code></pre>
+
+<p>Not to worry, as the message suggests we will run the create command:</p>
+
+<pre><code>$ sweetpotato --server-dir /home/hristos/minecraft --backup-dir /home/hristos/backups --port 25566 --level-seed AwesomeSeedYo -gb 1 2 --create
+[create] Creating "SweetpotatoWorld" ...
+[create] Creating /home/hristos/backups ... Done!
+[create] Creating /home/hristos/minecraft ... Done!
+[create] Downloading minecraft_server.1.8.1.jar ... Done!
+[create] Agreeing to the eula ... Done!
+[create] Generating server.properties ... Done!
+[create] World "SweetpotatoWorld" has been created!
+</code></pre>
+
+<p>Now we've got a server that we can use, but it is a little annoying to pass all of these options each time. Let's capture our configuration in a file that we can read from:</p>
+
+<pre><code>$ sweetpotato --server-dir /home/hristos/minecraft --backup-dir /home/hristos/backups --port 25566 --level-seed AwesomeSeedYo -gb 1 2 --genconf &gt; sweetpotato.conf
+</code></pre>
+
+<p>Just use the <code>-c</code> or <code>--conf</code> option to configure <code>sweetpotato</code>:</p>
+
+<pre><code>$ sweetpotato --conf sweetpotato.conf --json
+{
+    "backup_dir": "/home/hristos/backups",
+    "compression": "gz",
+    "conf_file": "/home/hristos/sweetpotato.conf",
+    "forge": null,
+    "level_seed": "AwesomeSeedYo",
+    "mc_version": "1.8.1",
+    "mem_format": "GB",
+    "mem_max": "2",
+    "mem_min": "1",
+    "permgen": null,
+    "port": "25566",
+    "running": false,
+    "screen_name": "SweetpotatoWorld",
+    "server_dir": "/home/hristos/minecraft",
+    "webui_port": "8080",
+    "world_name": "SweetpotatoWorld"
+}
+</code></pre>
+
+<p>That's better, but we could save even more keystrokes if we wanted to by putting our conf file into the default location as expected by <code>sweetpotato</code>, which is <code>$HOME/.config/sweetpotato/sweetpotato.conf</code>:</p>
+
+<pre><code>$ mv sweetpotato.conf .config/sweetpotato/
+$ sweetpotato --start
+[start] Starting "SweetpotatoWorld" ... Done!
+</code></pre>
+
+<p>Success! Using explicit conf files makes managing multiple servers under one user much easier, but if you are only running one server using the default conf file makes the most sense.</p>
+
+<p>Now that you've got a working Minecraft server configured with <code>sweetpotato</code>, you may want to check out the WebUI:</p>
+
+<pre><code>sweetpotato --web
+sweetpotato 0.34b - launching WebUI now!
+Bottle v0.12.7 server starting up (using WSGIRefServer())...
+Listening on http://127.0.0.1:8080/
+Hit Ctrl-C to quit.
+</code></pre>
+
+<p>Open <code>http://127.0.0.1:8080/</code> in your favorite web browser and rock &amp; roll!</p>
+
+<p>Or, you can set up a cron job to run a live backup every day at a set time (or other fun things):</p>
+
+<pre><code>$ crontab -l
+# m h  dom mon dow   command
+@reboot (sleep 30s &amp;&amp; sweetpotato --start)
+45 23 * * * sweetpotato --backup
+00 12 * * * sweetpotato --say "`ddate`"
+</code></pre>
 
 <h2>
 <a id="usage" class="anchor" href="#usage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Usage</h2>
@@ -307,7 +389,7 @@ LarrylandX has been up for 0 days, 5 hours, 23 minutes, and 40 seconds
 <p>A simple web-based interface for many of the functions offered by <code>sweetpotato</code>. By default it binds to port <code>8080</code>, but this can be changed with the <code>--web-port</code> option or a conf file setting.</p>
 
 <pre><code>$ sweetpotato --web
-sweetpotato 0.31b - launching WebUI now!
+sweetpotato 0.34b - launching WebUI now!
 Bottle v0.12.7 server starting up (using WSGIRefServer())...
 Listening on http://127.0.0.1:3434/
 Hit Ctrl-C to quit.
@@ -316,7 +398,7 @@ Hit Ctrl-C to quit.
 <h3>
 <a id="forge" class="anchor" href="#forge" aria-hidden="true"><span class="octicon octicon-link"></span></a>Forge</h3>
 
-<p><code>sweetpotato</code> supports using Forge, and defaults to the latest Recommended 1.7.10 build. You can set a specific Forge version with the <code>-f</code> or <code>--forge</code> option. The extra <code>-P</code> or <code>--permgen</code> option is available for Forge, by default it is set to 256MB.</p>
+<p><code>sweetpotato</code> supports using Forge. You can set a specific Forge version with the <code>-f</code> or <code>--forge</code> option. The extra <code>-P</code> or <code>--permgen</code> option is available for Forge, by default it is set to 256MB.</p>
 
 <ul>
 <li>Both your Forge version and permgen setting can be stored in a conf file or passed in as arguments.</li>
