@@ -28,7 +28,6 @@
                     % end
                     % if backup_dir_contents:
                     <h3>Click any of the below filenames to download them</h3>
-                    % end
                     <div id="backup_files" class="well">
                         <dl class="dl-horizontal">
                         % for file_dict in backup_file_list:
@@ -40,5 +39,6 @@
                         % end
                         </dl>
                     </div>
+                    % end
                     % end
                 </div>

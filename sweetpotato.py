@@ -711,7 +711,7 @@ def start_screen(screen_name, server_dir):
     subprocess.Popen(cmd_args, close_fds=True, shell=False, stdin=slave, stdout=slave, stderr=slave)
 
 
-def start_server(print_pre, settings):
+def start_server(print_pre, settings, quiet):
     """
     Starts a configured server.
 
@@ -747,18 +747,22 @@ def start_server(print_pre, settings):
         start_screen(screen_name, server_dir)
 
     if not server_running:
-        if print_pre:
-            print(print_pre + Colors.light_blue + 'Starting "{}" ...'.format(world_name), end=' ')
-        else:
-            print('starting "{}" ...'.format(world_name), end=' ')
-        sys.stdout.flush()
+        if not quiet:
+            if print_pre:
+                print(print_pre + Colors.light_blue + 'Starting "{}" ...'.format(world_name), end=' ')
+            else:
+                print('starting "{}" ...'.format(world_name), end=' ')
+            sys.stdout.flush()
         send_command(launch_server, screen_name)
-        print('Done!' + Colors.end)
-    else:
+        if not quiet:
+            print('Done!' + Colors.end)
+    elif not quiet:
         raise ServerAlreadyRunningError('World "{0}" already running with PID {1}'.format(
             settings.world_name,
             server_running.get('pid')
         ))
+    else:
+        die_silently()
 
 
 def stop_server(print_pre, screen_name, server_dir, world_name, quiet):
@@ -791,7 +795,7 @@ def stop_server(print_pre, screen_name, server_dir, world_name, quiet):
         die_silently()
 
 
-def restart_server(print_pre, settings):
+def restart_server(print_pre, settings, quiet):
     """
     Restarts a configured server.
 
@@ -820,14 +824,16 @@ def restart_server(print_pre, settings):
 
     if server_running:
         server_pid = server_running.get('pid')
-        print(print_pre + Colors.light_blue + 'Restarting {} ...'.format(world_name), end=' ')
-        sys.stdout.flush()
+        if not quiet:
+            print(print_pre + Colors.light_blue + 'Restarting {} ...'.format(world_name), end=' ')
+            sys.stdout.flush()
         wait_for_server_shutdown(screen_name, server_pid)
-    else:
+    elif not quiet:
         print(print_pre + Colors.light_blue + 'Starting {} ...'.format(world_name), end=' ')
         sys.stdout.flush()
     send_command(launch_server, screen_name)
-    print('Done!' + Colors.end)
+    if not quiet:
+        print('Done!' + Colors.end)
 
 
 def run_server_backup(print_pre, settings, quiet, offline=False):
@@ -1056,16 +1062,16 @@ def run_webui(settings):
                 start = postdata.get('start')
                 stop = postdata.get('stop')
                 if restart is not None:
-                    t = Thread(target=restart_server, args=('', settings))
+                    t = Thread(target=restart_server, args=('', settings, True))
                     t.daemon = True
                     t.start()
                 elif start is not None:
-                    t = Thread(target=start_server, args=('', settings))
+                    t = Thread(target=start_server, args=('', settings, True))
                     t.daemon = True
                     t.start()
                 elif stop is not None:
                     t = Thread(target=stop_server,
-                               args=('', settings.screen_name, settings.server_dir, settings.world_name))
+                               args=('', settings.screen_name, settings.server_dir, settings.world_name, True))
                     t.daemon = True
                     t.start()
             return {
@@ -1383,20 +1389,20 @@ def arg_parse(argz):
         try:
             run_server_backup(print_pre, s, quiet, offline=True)
         except BackupFileAlreadyExistsError as e:
-            start_server(None, s)
+            start_server(None, s, quiet)
             error_and_die(e)
     elif args.say:
         send_command('say ' + args.say, s.screen_name)
     elif args.restart:
         print_pre = '[' + Colors.yellow_green + 'restart' + Colors.end + '] '
         try:
-            restart_server(print_pre, s)
+            restart_server(print_pre, s, quiet)
         except BackupFileAlreadyExistsError as e:
             error_and_die(e)
     elif args.start:
         print_pre = '[' + Colors.yellow_green + 'start' + Colors.end + '] '
         try:
-            start_server(print_pre, s)
+            start_server(print_pre, s, quiet)
         except ServerAlreadyRunningError as e:
             error_and_die(e)
     elif args.stop:
