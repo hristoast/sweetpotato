@@ -34,7 +34,7 @@ __author__ = 'Hristos N. Triantafillou <me@hristos.triantafillou.us>'
 __license__ = 'GPLv3'
 __mcversion__ = '1.8.1'
 __progname__ = 'sweetpotato'
-__version__ = '0.34.5b'
+__version__ = '0.34.6b'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
