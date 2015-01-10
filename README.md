@@ -6,7 +6,7 @@
 ## What is it?
 ----
 
-`ssh minecraft@mycoolserver.net`
+`su - mcuser`
 
 `screen -x mcserver`
 
@@ -22,7 +22,9 @@ But what if you could do it with just one command, like this: `sweetpotato -r`
 
 It was created as a way to simplify managing a Minecraft server by providing a simple wrapper for common tasks. It knows what your world is and where its files are via command-line options, values set in a configuration file, or a mixture of both!
 
-## Simple Installation
+Oh yeah - you need **Python 3**!
+
+## Simple (Minimal) Installation
 
 Just grab the file and run it:
 
@@ -31,7 +33,7 @@ Just grab the file and run it:
     ./sweetpotato.py --version
     sweetpotato 0.34b
 
-A modern distro should have python3, if not make sure you install that first! Note that this would be a *very* minimal install, with command-line capabilities only.
+A modern distro should have python3, if not make sure you install that first! Note that this would be a *very* minimal install, with command-line capabilities only (no WebUI.)
 
 ## Installation
 

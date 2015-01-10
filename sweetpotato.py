@@ -34,7 +34,7 @@ __author__ = 'Hristos N. Triantafillou <me@hristos.triantafillou.us>'
 __license__ = 'GPLv3'
 __mcversion__ = '1.8.1'
 __progname__ = 'sweetpotato'
-__version__ = '0.34b'
+__version__ = '0.34.5b'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -86,6 +86,11 @@ class ConfFileError(SweetpotatoIOErrorBase):
 
 class EmptySettingError(SweetpotatoIOErrorBase):
     """Raised when a required setting value is None."""
+    pass
+
+
+class MinimalInstallError(SweetpotatoIOErrorBase):
+    """Raised when we are running as a minimal install."""
     pass
 
 
@@ -403,6 +408,26 @@ def error_and_die(msg):
     sys.exit(1)
 
 
+def format_launch_cmd(settings):
+    """
+    Reads from settings to return the proper command string for launching
+    the configured server.
+
+    @param settings:
+    @return:
+    """
+    jar_name, launch_cmd = get_jar(settings)
+    mem_format = settings.mem_format
+    mem_max = settings.mem_max
+    mem_min = settings.mem_min
+    permgen = settings.permgen
+
+    if settings.forge:
+        return launch_cmd.format(mem_min, mem_max, mem_format[0], permgen, jar_name)
+    else:
+        return launch_cmd.format(mem_min, mem_max, mem_format[0], jar_name)
+
+
 def get_exe_path(exe):
     """
     Checks for exe in $PATH.
@@ -704,7 +729,7 @@ def start_screen(screen_name, server_dir):
     @param server_dir:
     @return:
     """
-    command = 'screen -dmS {0}'.format(screen_name)
+    command = 'screen -dmS ' + screen_name
     os.chdir(server_dir)
     master, slave = pty.openpty()
     cmd_args = shlex.split(command)
@@ -803,10 +828,6 @@ def restart_server(print_pre, settings, quiet):
     @param settings:
     @return:
     """
-    jar_name, launch_cmd = get_jar(settings)
-    mem_format = settings.mem_format
-    mem_max = settings.mem_max
-    mem_min = settings.mem_min
     screen_name = settings.screen_name
     server_dir = settings.server_dir
     world_name = settings.world_name
@@ -814,10 +835,7 @@ def restart_server(print_pre, settings, quiet):
     screen_started = is_screen_started(screen_name)
     server_running = is_server_running(server_dir)
 
-    if settings.forge:
-        launch_server = launch_cmd.format(mem_min, mem_max, mem_format[0], settings.permgen, jar_name)
-    else:
-        launch_server = launch_cmd.format(mem_min, mem_max, mem_format[0], jar_name)
+    launch_server = format_launch_cmd(settings)
 
     if not screen_started:
         start_screen(screen_name, server_dir)
@@ -849,11 +867,9 @@ def run_server_backup(print_pre, settings, quiet, offline=False):
     date_stamp = datetime.now().strftime('%Y-%m-%d')
     force = is_forced(settings)
     forge = settings.forge
-    jar_name = VANILLA_JAR_NAME.format(settings.mc_version)
-    mem_format = settings.mem_format
-    mem_max = settings.mem_max
-    mem_min = settings.mem_min
-    launch_server = 'java -Xms{0}{2} -Xmx{1}{2} -jar {3} nogui'.format(mem_min, mem_max, mem_format[0], jar_name)
+
+    launch_server = format_launch_cmd(settings)
+
     screen_name = settings.screen_name
     server_dir = settings.server_dir
     world_name = settings.world_name
@@ -862,31 +878,37 @@ def run_server_backup(print_pre, settings, quiet, offline=False):
     backup_file = '{0}_{1}.tar.{2}'.format(date_stamp, world_name, compression)
     full_path_to_backup_file = os.path.join(backup_dir, backup_file)
     backup_made_today = os.path.isfile(full_path_to_backup_file)
-    server_running = is_server_running(server_dir)
+    server_running_at_first = is_server_running(server_dir)
 
     if backup_made_today and not force:
         sys.stdout.flush()
         try:
             with open(full_path_to_backup_file, 'rb'):
-                error_and_die('File "{}" already exists!'.format(full_path_to_backup_file))
+                if not quiet:
+                    error_and_die('File "{}" already exists!'.format(full_path_to_backup_file))
+                else:
+                    die_silently()
         except IOError:
             pass
 
     if offline:
         print(print_pre + Colors.light_blue, end=' ')
-        if server_running:
-            server_pid = server_running.get('pid')
-            print('Stopping "{}" ...'.format(world_name), end=' ')
+        if server_running_at_first:
+            server_pid = server_running_at_first.get('pid')
+            if not quiet:
+                print('Stopping "{}" ...'.format(world_name), end=' ')
             sys.stdout.flush()
             wait_for_server_shutdown(screen_name, server_pid)
-            print('backing up ...', end=' ')
-        else:
+            if not quiet:
+                print('backing up ...', end=' ')
+        elif not quiet:
             print('Backing up "{}" ...'.format(world_name), end=' ')
         sys.stdout.flush()
     else:
         send_command('save-all', screen_name)
         send_command('save-off', screen_name)
-        print(print_pre + Colors.light_blue + 'Running live backup of "{}"  ...'.format(world_name), end=' ')
+        if not quiet:
+            print(print_pre + Colors.light_blue + 'Running live backup of "{}"  ...'.format(world_name), end=' ')
         sys.stdout.flush()
         send_command('say Server backing up now', screen_name)
 
@@ -907,14 +929,15 @@ def run_server_backup(print_pre, settings, quiet, offline=False):
         send_command('save-on', screen_name)
 
     screen_started = is_screen_started(screen_name)
-    server_running = is_server_running(server_dir)
-    if offline and not server_running:
+    if offline and server_running_at_first:
         if not screen_started:
             start_screen(screen_name, server_dir)
-        print('starting "{}" ...'.format(world_name), end=' ')
+        if not quiet:
+            print('Starting "{}" ...'.format(world_name), end=' ')
         sys.stdout.flush()
         send_command(launch_server, screen_name)
-    print('Done!' + Colors.end)
+    if not quiet:
+        print('Done!' + Colors.end)
 
 
 def run_webui(settings):
@@ -928,9 +951,13 @@ def run_webui(settings):
     # TODO: POST routes for control functions
     if bottle:
         app = bottle.app()
-        # TODO: bail if one of the below don't exist
         static_path = os.path.join(BASE_DIR, 'data/static')
         tpl_path = os.path.join(BASE_DIR, 'data/tpl')
+
+        if not os.path.isdir(static_path) or not os.path.isdir(tpl_path):
+            raise MinimalInstallError(
+                "The WebUI cannot run while using a minimal install. Exiting ..."
+            )
 
         bottle.debug(False)
         bottle.TEMPLATE_PATH.insert(0, tpl_path)
@@ -1430,7 +1457,13 @@ def arg_parse(argz):
         except ServerNotRunningError as e:
             error_and_die(e)
     elif args.web:
-            run_webui(s)
+            try:
+                run_webui(s)
+            except MinimalInstallError as e:
+                if not quiet:
+                    error_and_die(e)
+                else:
+                    die_silently()
     else:
         parser.print_usage()
 

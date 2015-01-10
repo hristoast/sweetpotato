@@ -23,6 +23,8 @@
                             <dt>Conf File:</dt>
                             % elif k is 'forge':
                             <dt>Forge Version:</dt>
+                            % elif k is 'level_seed':
+                            <dt>Level Seed:</dt>
                             % elif k is 'mc_version':
                             <dt>Minecraft Version:</dt>
                             % elif k is 'mem_format':

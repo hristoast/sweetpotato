@@ -4,10 +4,18 @@
 # TODO: stop when already stopped
 # TODO: webui when already webui-ing
 import os
+import pty
 import unittest
+import shlex
+import subprocess
 import sweetpotato
 
+from shutil import SameFileError, copy
 
+
+BASE_DIR = os.path.dirname(os.path.realpath(__file__))
+SCRIPT_NAME = 'sweetpotato.py'
+SWEETPOTATO_PY = os.path.join(BASE_DIR, SCRIPT_NAME)
 TEST_BACKUP_DIR = '/tmp/_sp_test_backup'
 TEST_CONF_FILE = '/tmp/_sp_test.conf'
 TEST_CONF_FILE2 = '/tmp/_sp_test.conf2'
@@ -139,6 +147,25 @@ class SweetpotatoTests(unittest.TestCase):
     def test_get_jar(self):
         jar = sweetpotato.get_jar(self.config)[0]
         self.assertEqual(jar, 'minecraft_server.{}.jar'.format(sweetpotato.__mcversion__))
+
+    def test_minimal_install(self):
+        sweetpotato_py_file = SWEETPOTATO_PY.split(os.path.sep)[-1]
+        init = open('/tmp/__init__.py', 'a')
+        init.write('\n')
+        init.close()
+        temp_sweetpotato_py_file = os.path.join('/tmp/', sweetpotato_py_file)
+        try:
+            copy(SWEETPOTATO_PY, temp_sweetpotato_py_file)
+        except SameFileError:
+            pass
+        os.chdir('/tmp')
+
+        command = './{0} -c {1} -q -W'.format(SCRIPT_NAME, TEST_CONF_FILE)
+
+        self.assertRaises(
+            SystemExit,
+            p=subprocess.Popen(command.split())
+        )
 
     def test_stop_when_stopped(self):
         self.assertRaises(
