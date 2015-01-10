@@ -354,7 +354,7 @@ def create_server(settings, quiet):
             print(print_pre + Colors.light_blue + 'Found {}!'.format(server_dir) + Colors.end)
 
     full_jar_path = os.path.join(server_dir, jar_name)
-    if not os.path.isfile(full_jar_path) or force and not quiet:
+    if not os.path.isfile(full_jar_path) and not quiet or force:
         print(print_pre + Colors.light_blue + 'Downloading {} ...'.format(jar_name), end=' ')
         sys.stdout.flush()
         try:
@@ -362,14 +362,18 @@ def create_server(settings, quiet):
             jar = open(local_jar)
             jar.close()
         except urllib.error.HTTPError as e:
-            if not quiet:
-                error_and_die(e.msg + ' Is your version valid?')
-            else:
-                die_silently()
+            error_and_die(e.msg + ' Is your version valid?')
         if not quiet:
             print('Done!' + Colors.end)
     elif not quiet:
         print(print_pre + Colors.light_blue + 'Found {}!'.format(jar_name) + Colors.end)
+    elif not os.path.isfile(full_jar_path) and quiet or force:
+        try:
+            local_jar = urllib.request.urlretrieve(dl_url, full_jar_path)[0]
+            jar = open(local_jar)
+            jar.close()
+        except urllib.error.HTTPError:
+            die_silently()
 
     eula_txt = os.path.join(server_dir, 'eula.txt')
     agree_to_eula(eula_txt, force, print_pre, quiet)
