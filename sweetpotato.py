@@ -30,7 +30,7 @@ __author__ = 'Hristos N. Triantafillou <me@hristos.triantafillou.us>'
 __license__ = 'GPLv3'
 __mcversion__ = '1.8.1'
 __progname__ = 'sweetpotato'
-__version__ = '0.34.7b'
+__version__ = '0.34.8b'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -700,7 +700,9 @@ def list_players(settings):
         'logs',
         'latest.log'
     )
-    send_command('list', settings.screen_name)
+    running = is_server_running(settings.server_dir)
+    if running:
+        send_command('list', settings.screen_name)
 
     with open(latest_log, 'r') as log:
         log_lines = log.readlines()
