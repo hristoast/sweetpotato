@@ -1475,7 +1475,11 @@ def arg_parse(argz):
                                 c += 1
                         print(p + Colors.end)
                 else:
-                    print('Nobody on right now :(')
+                    print(
+                        Colors.light_red +
+                        'Nobody on right now :(' +
+                        Colors.end
+                    )
             except LogReadError as e:
                 error_and_die(e)
         elif not quiet:
