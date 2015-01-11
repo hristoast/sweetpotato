@@ -12,7 +12,7 @@
 
 `stop`
 
-`java -Xms1G -Xmx2G -XX:MaxPermSize=256M -jar forge-1.7.10-10.13.2.1272-universal.jar nogui`
+`java -Xms1G -Xmx2G -XX:MaxPermSize=256M -jar forge-1.7.10-10.13.2.1284-universal.jar nogui`
 
 The above might be pretty close to the normal commands you'd use to restart a Minecraft server 'by hand'.
 
@@ -31,7 +31,7 @@ Just grab the file and run it:
     wget https://raw.githubusercontent.com/hristoast/sweetpotato/dev/sweetpotato.py
     chmod +x sweetpotato.py
     ./sweetpotato.py --version
-    sweetpotato 0.34b
+    sweetpotato 0.34.6b
 
 A modern distro should have python3, if not make sure you install that first! Note that this would be a *very* minimal install, with command-line capabilities only (no WebUI.)
 
@@ -122,7 +122,7 @@ Success! Using explicit conf files makes managing multiple servers under one use
 Now that you've got a working Minecraft server configured with `sweetpotato`, you may want to check out the WebUI:
 
     sweetpotato --web
-    sweetpotato 0.34b - launching WebUI now!
+    sweetpotato 0.34.6b - launching WebUI now!
     Bottle v0.12.7 server starting up (using WSGIRefServer())...
     Listening on http://127.0.0.1:8080/
     Hit Ctrl-C to quit.
@@ -301,7 +301,7 @@ See your server's uptime if it's running:
 A simple web-based interface for many of the functions offered by `sweetpotato`. By default it binds to port `8080`, but this can be changed with the `--web-port` option or a conf file setting.
 
     $ sweetpotato --web
-    sweetpotato 0.34b - launching WebUI now!
+    sweetpotato 0.34.6b - launching WebUI now!
     Bottle v0.12.7 server starting up (using WSGIRefServer())...
     Listening on http://127.0.0.1:3434/
     Hit Ctrl-C to quit.
@@ -328,7 +328,7 @@ Here is an example conf file for a Forge server, taken from my server:
     server_dir: /srv/ftb/LLX
     mem_min: 3
     world_name: LarrylandX
-    forge: 1.7.10-10.13.2.1230
+    forge: 1.7.10-10.13.2.1284
 
 ## ETC
 

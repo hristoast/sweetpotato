@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
 """A tool for managing Minecraft servers on GNU/Linux."""
-# TODO: better webui logging and logging in general
-# TODO: get actual level seed
-# TODO: get player count
-# TODO: --save
 import argparse
 try:
     import bottle
@@ -34,7 +30,7 @@ __author__ = 'Hristos N. Triantafillou <me@hristos.triantafillou.us>'
 __license__ = 'GPLv3'
 __mcversion__ = '1.8.1'
 __progname__ = 'sweetpotato'
-__version__ = '0.34.6b'
+__version__ = '0.34.7b'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -86,6 +82,11 @@ class ConfFileError(SweetpotatoIOErrorBase):
 
 class EmptySettingError(SweetpotatoIOErrorBase):
     """Raised when a required setting value is None."""
+    pass
+
+
+class LogReadError(SweetpotatoIOErrorBase):
+    """Raised when there is a problem reading a log."""
     pass
 
 
@@ -160,6 +161,11 @@ class SweetpotatoConfig:
 
     @property
     def as_json(self):
+        try:
+            players = list_players(self)
+        except LogReadError:
+            players = None
+        self.__dict__.update(players=players)
         try:
             raw = get_uptime_raw(self.server_dir, self.world_name, False)
             u = get_uptime(raw)
@@ -679,6 +685,36 @@ def list_or_create_dir(d):
         except PermissionError as e:
             error_and_die(e)
     return os.listdir(d)
+
+
+def list_players(settings):
+    """
+    Send a 'list' command to the server and try to read the list of
+    logged-in players.
+
+    @param settings:
+    @return:
+    """
+    latest_log = os.path.join(
+        settings.server_dir,
+        'logs',
+        'latest.log'
+    )
+    send_command('list', settings.screen_name)
+
+    with open(latest_log, 'r') as log:
+        log_lines = log.readlines()
+        log.close()
+    if 'players online:' not in log_lines[-2:][0]:
+        raise LogReadError(
+            "There was a problem listing players, please try again!"
+        )
+    else:
+        players = log_lines[-2:][1].split(']:')[1].strip().split(',')
+    if players == ['']:
+        return None
+    else:
+        return players
 
 
 def read_conf_file(file, settings):
@@ -1274,13 +1310,16 @@ def arg_parse(argz):
     actions.add_argument('-C', '--create', action='store_true', help='create a server from settings')
     actions.add_argument('-g', '--genconf', action='store_true', help='generate conf file from passed-in CLI arguments')
     actions.add_argument('-j', '--json', action='store_true', help='output settings as json')
+    actions.add_argument('-l', '--list', action='store_true', help='list logged-in players')
     actions.add_argument('-o', '--offline', action='store_true', help='make an offline backup (stops the server)')
     actions.add_argument('-r', '--restart', action='store_true', help='restart the server')
     actions.add_argument('--say', help=argparse.SUPPRESS)
     actions.add_argument('--start', action='store_true', help='start the server in a screen session')
+    # actions.add_argument('--save', action='store_true', help='save the current config')
     actions.add_argument('--stop', action='store_true', help='stop the server')
     actions.add_argument('-U', '--uptime', action='store_true', help='Show server uptime in hours')
     actions.add_argument('-W', '--web', action='store_true', help='run the WebUI')
+    # actions.add_argument('--wipe', action='store_true', help='Wipe configs')
 
     settings = parser.add_argument_group('Settings', 'config options for %(prog)s')
     settings.add_argument('-c', '--conf', help='config file containing your settings', metavar='CONF FILE')
@@ -1415,6 +1454,33 @@ def arg_parse(argz):
         if running:
             s.running = running
         print(s.as_json)
+    elif args.list:
+        if running and not quiet:
+            try:
+                players = list_players(s)
+                if players:
+                    c = 0
+                    player_count = len(players)
+                    print(
+                        Colors.light_blue +
+                        'Currently logged-in:' +
+                        Colors.green, end=' '
+                    )
+                    for p in players:
+                        if player_count > 1:
+                            while c < player_count:
+                                print(p, end=', ')
+                                c += 1
+                        print(p + Colors.end)
+                else:
+                    print('Nobody on right now :(')
+            except LogReadError as e:
+                error_and_die(e)
+        elif not quiet:
+            error_and_die("{} is not running!".format(s.world_name))
+        else:
+            # you want to list while being quiet?! kay....
+            die_silently()
     elif args.offline:
         print_pre = '[' + Colors.yellow_green + 'offline-backup' + Colors.end + '] '
         try:
@@ -1473,6 +1539,8 @@ def arg_parse(argz):
 
 
 def main():
+    # TODO: better webui logging and logging in general
+    # TODO: get actual level seed
     # ensure dependencies are here
     try:
         dependency_check(

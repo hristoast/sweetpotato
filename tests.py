@@ -4,9 +4,7 @@
 # TODO: stop when already stopped
 # TODO: webui when already webui-ing
 import os
-import pty
 import unittest
-import shlex
 import subprocess
 import sweetpotato
 
