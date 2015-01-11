@@ -1476,7 +1476,7 @@ def arg_parse(argz):
                         print(p + Colors.end)
                 else:
                     print(
-                        Colors.light_red +
+                        Colors.yellow +
                         'Nobody on right now :(' +
                         Colors.end
                     )
