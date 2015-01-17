@@ -4,7 +4,20 @@
                     % if server_running:
                     <h2>World "{{world_name}}" is running with PID {{pid}}</h2>
                     <h3>Uptime: <span class="bold">{{uptime}}</span></h3>
-                    % else:
+                    % if players:
+                    <h4>Logged-in:
+                    % c = 0
+                    % pc = len(players)
+                    % for p in players:
+                    % c += 1
+                    % if c < pc:
+                    {{p}},
+                    % elif c >= pc:
+                    {{p}}
+                    % end
+                    </h4>
+                    % end
+                    % elif not server_running:
                     <h2>World "{{world_name}}" is not presently running.</h2>
                     % end
                     <div id="server_stats" class="well">

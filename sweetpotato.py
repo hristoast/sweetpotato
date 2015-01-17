@@ -30,7 +30,7 @@ __author__ = 'Hristos N. Triantafillou <me@hristos.triantafillou.us>'
 __license__ = 'GPLv3'
 __mcversion__ = '1.8.1'
 __progname__ = 'sweetpotato'
-__version__ = '0.34.9b'
+__version__ = '0.34.10b'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -156,9 +156,8 @@ class SweetpotatoConfig:
 
     @property
     def as_json(self):
-        players = list_players(self)
-        self.__dict__.update(players=players)
         try:
+            players = list_players_as_list(list_players(self))
             raw = get_uptime_raw(self.server_dir, self.world_name, False)
             u = get_uptime(raw)
             uptime = {
@@ -167,6 +166,7 @@ class SweetpotatoConfig:
                 'minutes': u[2],
                 'seconds': u[3]
             }
+            self.__dict__['running'].update(players=players)
             self.__dict__['running'].update(uptime=uptime)
         except ServerNotRunningError:
             pass
@@ -725,7 +725,20 @@ def list_players(settings):
 
 
 def list_players_as_list(player_list):
-    pass
+    """
+    Takes the output of list_players() and puts each logged-in player into a
+    Python list, if there are any.
+
+    @param player_list:
+    @return:
+    """
+    if player_list:
+        if 'There are 0/20 players online' in player_list[0]:
+            return None
+        else:
+            return player_list[-2:][1].split(']:')[1].strip().split(',')
+    else:
+        return None
 
 
 def read_conf_file(file, settings):
@@ -871,13 +884,18 @@ def stop_server(print_pre, screen_name, server_dir, world_name, quiet):
         die_silently()
 
 
-# def reread_settings(settings):
-#     """
-#
-#     @param settings:
-#     @return:
-#     """
-#     pass
+def reread_settings(settings):
+    """
+    Reloads settings. Useful for the WebUI, in case you've modified your
+    conf file since having started it.
+
+    @param settings:
+    @return:
+    """
+    # Read a passed-in conf file
+    if settings.conf_file:
+        read_conf_file(settings.conf_file, settings)
+    return settings
 
 
 def restart_server(print_pre, settings, quiet):
@@ -1056,20 +1074,21 @@ def run_webui(settings, quiet):
         @bottle.post('/backup')
         @bottle.view('backup')
         def backups():
+            s = reread_settings(settings)
             offline = None
-            is_running = is_server_running(settings.server_dir)
+            is_running = is_server_running(s.server_dir)
             path = bottle.request.path
             request_method = bottle.request.method
             todays_file = '{0}_{1}.tar.{2}'.format(
                 datetime.now().strftime('%Y-%m-%d'),
-                settings.world_name,
-                settings.compression
+                s.world_name,
+                s.compression
             )
 
-            backup_dir_contents = os.listdir(settings.backup_dir)
+            backup_dir_contents = os.listdir(s.backup_dir)
             unsorted_backup_file_list = []
             for backup_file in backup_dir_contents:
-                full_path_to_backup_file = os.path.join(settings.backup_dir, backup_file)
+                full_path_to_backup_file = os.path.join(s.backup_dir, backup_file)
                 raw_backup_file_size = os.path.getsize(full_path_to_backup_file)
                 if not os.path.isdir(full_path_to_backup_file):
                     backup_file_size = raw_backup_file_size / 1000000
@@ -1085,7 +1104,7 @@ def run_webui(settings, quiet):
                 offline = 'offline' in postdata
                 t = Thread(
                     target=run_server_backup,
-                    args=('', settings),
+                    args=('', s),
                     kwargs={'offline': offline})
                 t.daemon = True
                 t.start()
@@ -1098,46 +1117,52 @@ def run_webui(settings, quiet):
                 'request_method': request_method,
                 'server_running': is_running,
                 'todays_file': todays_file,
-                'world_name': settings.world_name,
+                'world_name': s.world_name,
                 '__version__': __version__
             }
 
         @bottle.route('/')
         @bottle.view('index')
         def index():
-            is_running = is_server_running(settings.server_dir)
+            s = reread_settings(settings)
+            is_running = is_server_running(s.server_dir)
             path = bottle.request.path
             pid = None
+            players = None
             try:
-                raw = get_uptime_raw(settings.server_dir, settings.world_name, False)
+                raw = get_uptime_raw(s.server_dir, s.world_name, False)
                 u = get_uptime(raw)
                 uptime = get_uptime_string(u)
                 if is_running:
                     pid = is_running.get('pid')
+                    players = list_players_as_list(list_players(s))
             except ServerNotRunningError:
                 uptime = None
-            sorted_settings = OrderedDict(sorted(settings.__dict__.items()))
+            sorted_settings = OrderedDict(sorted(s.__dict__.items()))
 
             return {
                 'path': path,
                 'pid': pid,
+                'players': players,
                 'server_running': is_running,
                 'sorted_settings': sorted_settings,
                 'uptime': uptime,
-                'world_name': settings.world_name,
+                'world_name': s.world_name,
                 '__version__': __version__
             }
 
         @bottle.route('/json')
         def as_json():
-            settings.running = is_server_running(settings.server_dir)
-            return settings.as_json
+            s = reread_settings(settings)
+            s.running = is_server_running(s.server_dir)
+            return s.as_json
 
         @bottle.get('/server')
         @bottle.post('/server')
         @bottle.view('server')
         def server():
-            is_running = is_server_running(settings.server_dir)
+            s = reread_settings(settings)
+            is_running = is_server_running(s.server_dir)
             path = bottle.request.path
             request_method = bottle.request.method
             restart = None
@@ -1149,16 +1174,16 @@ def run_webui(settings, quiet):
                 start = postdata.get('start')
                 stop = postdata.get('stop')
                 if restart is not None:
-                    t = Thread(target=restart_server, args=('', settings, True))
+                    t = Thread(target=restart_server, args=('', s, True))
                     t.daemon = True
                     t.start()
                 elif start is not None:
-                    t = Thread(target=start_server, args=('', settings, True))
+                    t = Thread(target=start_server, args=('', s, True))
                     t.daemon = True
                     t.start()
                 elif stop is not None:
                     t = Thread(target=stop_server,
-                               args=('', settings.screen_name, settings.server_dir, settings.world_name, True))
+                               args=('', s.screen_name, s.server_dir, s.world_name, True))
                     t.daemon = True
                     t.start()
             return {
@@ -1168,14 +1193,15 @@ def run_webui(settings, quiet):
                 'start': start,
                 'stop': stop,
                 'server_running': is_running,
-                'world_name': settings.world_name,
+                'world_name': s.world_name,
                 '__version__': __version__
             }
 
         # noinspection PyUnresolvedReferences
         @bottle.route('/backups/<file_path:path>')
         def serve_backup(file_path):
-            return bottle.static_file(file_path, root=settings.backup_dir)
+            s = reread_settings(settings)
+            return bottle.static_file(file_path, root=s.backup_dir)
 
         # noinspection PyUnresolvedReferences
         @bottle.route('/static/<file_path:path>')
@@ -1343,6 +1369,7 @@ def arg_parse(argz):
     actions.add_argument('--start', action='store_true', help='start the server in a screen session')
     # actions.add_argument('--save', action='store_true', help='save the current config')
     actions.add_argument('--stop', action='store_true', help='stop the server')
+    # actions.add_argument('--testing', action='store_true', help=argparse.SUPPRESS)
     actions.add_argument('-U', '--uptime', action='store_true', help='Show server uptime in hours')
     actions.add_argument('-W', '--web', action='store_true', help='run the WebUI')
     # actions.add_argument('--wipe', action='store_true', help='Wipe configs')
@@ -1476,24 +1503,27 @@ def arg_parse(argz):
             error_and_die(e.msg.strip('"'))
     elif args.genconf:
         print(s.as_conf_file)
-    elif args.json and not quiet:
+    elif args.json:
         if running:
             s.running = running
         print(s.as_json)
-    elif args.list and not quiet:
-        if running:
+    elif args.list:
+        if running and not quiet:
+            print_pre = '[' + Colors.yellow_green + 'list' + Colors.end + '] '
             players = list_players(s)
             if players:
                 for p in players:
-                    print(Colors.light_blue + p.strip() + Colors.end)
+                    print(print_pre + Colors.light_blue + p.strip() + Colors.end)
             else:
-                print(
-                    Colors.yellow +
-                    'Nobody on right now :(' +
-                    Colors.end
-                )
-        else:
+                print(print_pre +
+                      Colors.yellow +
+                      'Nobody on right now :(' +
+                      Colors.end
+                      )
+        elif not quiet:
             error_and_die("{} is not running!".format(s.world_name))
+        else:
+            die_silently()
     elif args.offline:
         print_pre = '[' + Colors.yellow_green + 'offline-backup' + Colors.end + '] '
         try:
@@ -1527,6 +1557,8 @@ def arg_parse(argz):
             )
         except ServerNotRunningError as e:
             error_and_die(e)
+    # elif args.testing:
+    #     print(list_players_as_list(list_players(s)))
     elif args.uptime:
         try:
             raw_uptime = get_uptime_raw(s.server_dir, s.world_name, quiet)
