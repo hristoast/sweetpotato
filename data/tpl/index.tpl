@@ -11,9 +11,9 @@
                     % for p in players:
                     % c += 1
                     % if c < pc:
-                    {{p}},
+                    <span class="bold">{{p}}</span>,
                     % elif c >= pc:
-                    {{p}}
+                    <span class="bold">{{p}}</span>
                     % end
                     </h4>
                     % end
