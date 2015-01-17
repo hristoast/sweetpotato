@@ -3,12 +3,15 @@
 # TODO: run when already running
 # TODO: stop when already stopped
 # TODO: webui when already webui-ing
+# import json
 import os
 import unittest
+# import urllib.request
 import subprocess
 import sweetpotato
 
 from shutil import SameFileError, copy
+# from threading import Thread
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -22,6 +25,7 @@ TEST_MEM_MAX = '1024'
 TEST_MEM_MIN = '512'
 TEST_SERVER_DIR = '/tmp/_sp_test_server'
 TEST_SERVER_DIR2 = '/tmp/_sp_test_server2'
+TEST_WEBUI_PORT = 8181
 TEST_WORLD_NAME = 'TestWorld'
 TEST_WORLD_NAME2 = 'TestWorld2'
 TEST_CONF = """
@@ -32,8 +36,9 @@ mem_min: {2}
 backup_dir: {3}
 mem_format: {4}
 server_dir: {5}
-""".format(TEST_WORLD_NAME, TEST_MEM_MAX, TEST_MEM_MIN,
-           TEST_BACKUP_DIR, TEST_MEM_FORMAT, TEST_SERVER_DIR)
+webui_port: {6}
+""".format(TEST_WORLD_NAME, TEST_MEM_MAX, TEST_MEM_MIN, TEST_BACKUP_DIR,
+           TEST_MEM_FORMAT, TEST_SERVER_DIR, TEST_WEBUI_PORT)
 TEST_SERVER_PROPERTIES = """generator-settings=
 op-permission-level=4
 allow-nether=true
@@ -83,9 +88,11 @@ JSON = """{
     "running": false,
     "screen_name": "SweetpotatoWorld",
     "server_dir": "/tmp/_sp_test_server",
-    "webui_port": 8080,
+    "webui_port": 8181,
     "world_name": "SweetpotatoWorld"
 }"""
+# JSON = ''''''
+# JSON_NOT_PRETTY = '{"backup_dir": "/tmp/_sp_test_backup", "compression": "gz", "conf_file": null, "level_seed": null, "mc_version": "1.8.1", "mem_format": "MB", "mem_max": "1024", "mem_min": "512", "port": "25565", "running": false, "screen_name": "SweetpotatoWorld", "server_dir": "/tmp/_sp_test_server", "webui_port": 8181, "world_name": "SweetpotatoWorld"}'
 
 
 class SweetpotatoTests(unittest.TestCase):
@@ -97,6 +104,7 @@ class SweetpotatoTests(unittest.TestCase):
         self.config.mem_max = TEST_MEM_MAX
         self.config.mem_min = TEST_MEM_MIN
         self.config.server_dir = TEST_SERVER_DIR
+        self.config.webui_port = TEST_WEBUI_PORT
 
         # Write the test conf file
         with open(TEST_CONF_FILE, 'w') as c:
@@ -115,8 +123,34 @@ class SweetpotatoTests(unittest.TestCase):
     def test_as_conf_file(self):
         self.assertIn(TEST_SERVER_DIR, self.config.as_conf_file)
 
-    def test_json(self):  # TODO: test if forge and if not forge
-        self.assertEqual(self.config.as_json, JSON)
+    def test_json_output_pretty(self):  # TODO: test if forge and if not forge
+        self.config.pretty = True
+        self_json = self.config.as_json
+        self.assertEqual(self_json, JSON)
+
+    # def test_json_output_not_pretty(self):  # this output is unsorted; hard to test
+    #     self.assertEqual(self.config.as_json, JSON_NOT_PRETTY)
+
+    def test_json_type(self):
+        self.assertIsInstance(self.config.as_json, str)
+
+    # TODO: doing this wrong ...
+    # def test_json_url(self):
+        # sweetpotato.arg_parse([
+        #     '--conf', '{}'.format(TEST_CONF_FILE),
+        #     '--quiet',
+        #     '--web'
+        # ])
+        # t = Thread(target=sweetpotato.run_webui,
+        #            args=(self.config, True))
+        # t.start()
+        # url = 'http://127.0.0.1:8181/json'
+        # r = urllib.request.urlopen(url)
+        # rs = r.readall().decode('utf-8')
+        # r.close()
+        # jo = json.loads(rs)
+        # print(jo)
+        # t._stop()
 
     def test_as_serverproperties(self):
         self.assertEqual(self.config.as_serverproperties, TEST_SERVER_PROPERTIES)

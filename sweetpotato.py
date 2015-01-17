@@ -31,7 +31,7 @@ __author__ = 'Hristos N. Triantafillou <me@hristos.triantafillou.us>'
 __license__ = 'GPLv3'
 __mcversion__ = '1.8.1'
 __progname__ = 'sweetpotato'
-__version__ = '0.34.12b'
+__version__ = '0.34.13b'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -141,6 +141,7 @@ class SweetpotatoConfig:
         self.mc_version = __mcversion__
         self.permgen = None
         self.port = DEFAULT_SERVER_PORT
+        self.pretty = False
         self.running = False
         self.screen_name = DEFAULT_SCREEN_NAME
         self.server_dir = None
@@ -152,7 +153,11 @@ class SweetpotatoConfig:
         conf = self.header + '\n'
         conf += '[Settings]\n'
         for k, v in self.__dict__.items():
-            if v is not None and k is not 'conf_file' and k is not 'force' and k is not 'running':
+            if v is not None \
+                    and k is not 'conf_file' \
+                    and k is not 'force' \
+                    and k is not 'running'\
+                    and not (v is False and k is 'pretty'):
                 conf += '{0}: {1}\n'.format(k, v)
         return conf.strip()
 
@@ -175,10 +180,22 @@ class SweetpotatoConfig:
         # We don't care to show force
         if 'force' in self.__dict__.keys():
             self.__dict__.pop('force')
-        if not self.forge:
-            self.__dict__.pop('forge')
-            self.__dict__.pop('permgen')
-        return json.dumps(self.__dict__, sort_keys=True, indent=4)
+        try:
+            if not self.forge:
+                self.__dict__.pop('forge')
+                self.__dict__.pop('permgen')
+        except AttributeError:
+            pass
+        try:
+            if self.pretty:
+                # TODO: do we want to show this? I say no for now ...
+                self.__dict__.pop('pretty')
+                return json.dumps(self.__dict__, sort_keys=True, indent=4)
+            else:
+                self.__dict__.pop('pretty')
+                return json.dumps(self.__dict__)
+        except AttributeError:
+            return json.dumps(self.__dict__)
 
     @property
     def as_serverproperties(self):
@@ -896,9 +913,18 @@ def reread_settings(settings):
     @param settings:
     @return:
     """
+    try:
+        if settings.pretty:
+            pretty = True
+        else:
+            pretty = False
+    except AttributeError:
+        pretty = False
     # Read a passed-in conf file
     if settings.conf_file:
         read_conf_file(settings.conf_file, settings)
+    if pretty:
+        settings.pretty = pretty
     return settings
 
 
@@ -1099,7 +1125,7 @@ def run_webui(settings, quiet):
                     unsorted_backup_file_list.append({
                         'bit': 'MB',
                         'file': backup_file,
-                        'size': backup_file_size
+                        'size': str(backup_file_size)[0:4]
                     })
             backup_file_list = sorted(unsorted_backup_file_list, key=lambda k: k['size'], reverse=True)
 
@@ -1108,7 +1134,7 @@ def run_webui(settings, quiet):
                 offline = 'offline' in postdata
                 t = Thread(
                     target=run_server_backup,
-                    args=('', s),
+                    args=('', s, True),
                     kwargs={'offline': offline})
                 t.daemon = True
                 t.start()
@@ -1157,8 +1183,13 @@ def run_webui(settings, quiet):
 
         @bottle.route('/json')
         def as_json():
+            bottle.response.content_type = 'application/json'
             s = reread_settings(settings)
             s.running = is_server_running(s.server_dir)
+            # print(s.as_json)
+            # print()
+            # print(json.dumps(s.as_json))
+            # return json.dumps(s.as_json)
             return s.as_json
 
         @bottle.get('/server')
@@ -1401,6 +1432,7 @@ def arg_parse(argz):
     #                       help='set the log location. Default: {}'.format(DEFAULT_LOG_DIR))
     settings.add_argument('-p', '--port',
                           help='port you wish to run your server on. Default: {}'.format(DEFAULT_SERVER_PORT))
+    settings.add_argument('--pretty', action='store_true', help="print json with fancy indentation and sorting")
     settings.add_argument('-q', '--quiet', action='store_true', help='Silence all output')
     settings.add_argument('-s', '--server-dir', metavar='/path/to/server',
                           help='set the FULL path to the directory containing your server files')
@@ -1463,6 +1495,8 @@ def arg_parse(argz):
         s.level_seed = args.level_seed
     if args.permgen:
         s.permgen = args.permgen
+    if args.pretty:
+        s.pretty = True
     if args.port:
         s.port = args.port
     if args.quiet:

@@ -31,7 +31,7 @@ Just grab the file and run it:
     wget https://raw.githubusercontent.com/hristoast/sweetpotato/dev/sweetpotato.py
     chmod +x sweetpotato.py
     ./sweetpotato.py --version
-    sweetpotato 0.34.6b
+    sweetpotato 0.34.13b
 
 A modern distro should have python3, if not make sure you install that first! Note that this would be a *very* minimal install, with command-line capabilities only (no WebUI.)
 
@@ -122,7 +122,7 @@ Success! Using explicit conf files makes managing multiple servers under one use
 Now that you've got a working Minecraft server configured with `sweetpotato`, you may want to check out the WebUI:
 
     sweetpotato --web
-    sweetpotato 0.34.6b - launching WebUI now!
+    sweetpotato 0.34.13b - launching WebUI now!
     Bottle v0.12.7 server starting up (using WSGIRefServer())...
     Listening on http://127.0.0.1:8080/
     Hit Ctrl-C to quit.
@@ -195,13 +195,11 @@ You can create your own file like this:
         "backup_dir": "/srv/backups/minecraft",
         "compression": "gz",
         "conf_file": "/home/larry/myconf.conf",
-        "forge": null,
         "level_seed": null,
         "mc_version": "1.8.1",
         "mem_format": "GB",
         "mem_max": "1",
         "mem_min": "1",
-        "permgen": null,
         "port": "25565",
         "running": false,
         "screen_name": "SweetpotatoWorld",
@@ -305,6 +303,10 @@ A simple web-based interface for many of the functions offered by `sweetpotato`.
     Bottle v0.12.7 server starting up (using WSGIRefServer())...
     Listening on http://127.0.0.1:3434/
     Hit Ctrl-C to quit.
+
+If you use a conf file it will be reread each request, so if you make changes to a particular setting a restart is not necessarily required.
+
+The WebUI also allows you to provide access to your server info to outside consumers in json format. Pipe that into a consumer of your choosing, and who knows what kinds of crazy stuff you could do!
 
 ### Forge
 

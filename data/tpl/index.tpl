@@ -1,11 +1,14 @@
                 % rebase('base.tpl', title=world_name)
 <div class="center">
                     <h1>Welcome to the <span class="text-muted">sweetpotato WebUI</span>!</h1>
+                    % if not server_running:
+                    <h2>World "{{world_name}}" is not presently running.</h2>
+                    % end
                     % if server_running:
                     <h2>World "{{world_name}}" is running with PID {{pid}}</h2>
                     <h3>Uptime: <span class="bold">{{uptime}}</span></h3>
                     % if players:
-                    <h4>Logged-in:
+                    <h4><span class="fa fa-users"></span> Logged-in:
                     % c = 0
                     % pc = len(players)
                     % for p in players:
@@ -15,10 +18,9 @@
                     % elif c >= pc:
                     <span class="bold">{{p}}</span>
                     % end
+                    % end
                     </h4>
                     % end
-                    % elif not server_running:
-                    <h2>World "{{world_name}}" is not presently running.</h2>
                     % end
                     <div id="server_stats" class="well">
                         <h2 class="center"><span class="fa fa-cogs"></span> Loaded Settings</h2>
@@ -50,6 +52,8 @@
                             <dt>Permgen:</dt>
                             % elif k is 'port':
                             <dt>Server Port:</dt>
+                            % elif k is 'pretty':
+                            <dt>Pretty json:</dt>
                             % elif k is 'screen_name':
                             <dt>Screen Session Name:</dt>
                             % elif k is 'server_dir':
