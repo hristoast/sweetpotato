@@ -702,7 +702,7 @@ def list_players(settings):
                 log_lines = log.readlines()
                 log.close()
                 return log_lines
-        except FileNotFoundError:
+        except (OSError, IOError):
             return None
 
     ll = read_latest_log()
