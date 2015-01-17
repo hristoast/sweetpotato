@@ -146,6 +146,8 @@ class SweetpotatoTests(unittest.TestCase):
         jar = sweetpotato.get_jar(self.config)[0]
         self.assertEqual(jar, 'minecraft_server.{}.jar'.format(sweetpotato.__mcversion__))
 
+    # TODO: test listing (will be None)
+
     def test_minimal_install(self):
         sweetpotato_py_file = SWEETPOTATO_PY.split(os.path.sep)[-1]
         init = open('/tmp/__init__.py', 'a')

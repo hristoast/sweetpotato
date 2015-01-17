@@ -7,6 +7,7 @@ except ImportError:
     bottle = None
 import configparser
 import json
+# import logging
 import os
 import pty
 import shlex
@@ -30,7 +31,7 @@ __author__ = 'Hristos N. Triantafillou <me@hristos.triantafillou.us>'
 __license__ = 'GPLv3'
 __mcversion__ = '1.8.1'
 __progname__ = 'sweetpotato'
-__version__ = '0.34.11b'
+__version__ = '0.34.12b'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -42,6 +43,7 @@ DEFAULT_WORLD_NAME = DEFAULT_SCREEN_NAME
 DESCRIPTION = "Manage your Minecraft server on a GNU/Linux system."
 HOME_DIR = os.getenv('HOME')
 CONFIG_DIR = '{0}/.config/{1}'.format(HOME_DIR, __progname__)
+DEFAULT_LOG_DIR = os.path.join(CONFIG_DIR, 'logs')
 DEFAULT_CONF_FILE = '{0}/{1}.conf'.format(CONFIG_DIR, __progname__)
 REQUIRED = 'backup_dir mem_format mem_max mem_min port screen_name server_dir world_name'
 SERVER_WAIT_TIME = 0.5
@@ -697,13 +699,15 @@ def list_players(settings):
         send_command('list', settings.screen_name)
 
     def read_latest_log():
-        try:
-            with open(latest_log, 'r') as log:
-                log_lines = log.readlines()
-                log.close()
-                return log_lines
-        except (OSError, IOError):
-            return None
+        if running:
+            try:
+                with open(latest_log, 'r') as log:
+                    log_lines = log.readlines()
+                    log.close()
+                    return log_lines
+            except (OSError, IOError):
+                pass
+        return None
 
     ll = read_latest_log()
 
@@ -1354,6 +1358,17 @@ def write_server_properties(print_pre, file, settings, quiet):
         do_the_write()
 
 
+# def write_to_logfile(msg, settings):
+#     """
+#     Write the supplied message to the configured log.
+#
+#     @param msg:
+#     @param settings:
+#     @return:
+#     """
+#     pass
+
+
 def arg_parse(argz):
     parser = argparse.ArgumentParser(description=DESCRIPTION, prog=__progname__)
 
@@ -1380,13 +1395,10 @@ def arg_parse(argz):
                           metavar='/path/to/backups')
     settings.add_argument('-F', '--force', help='forces writing of server files, even when they already exist',
                           action='store_true')
-
-    forge_settings = parser.add_argument_group('Mods', 'Options for Forge users')
-    forge_settings.add_argument('-f', '--forge', help='version of Forge you are using.', metavar='FORGE VERSION')
-    forge_settings.add_argument('-P', '--permgen',
-                                help='Amount of permgen to use in MB. Default: {}'.format(DEFAULT_PERMGEN))
-
-    settings.add_argument('--level-seed', '--seed', help='optional and only applied during world creation')
+    settings.add_argument('--level-seed', '--seed', metavar="LEVEL SEED",
+                          help='optional and only applied during world creation')
+    # settings.add_argument('--log-dir', '-L', metavar="LOG DIR",
+    #                       help='set the log location. Default: {}'.format(DEFAULT_LOG_DIR))
     settings.add_argument('-p', '--port',
                           help='port you wish to run your server on. Default: {}'.format(DEFAULT_SERVER_PORT))
     settings.add_argument('-q', '--quiet', action='store_true', help='Silence all output')
@@ -1408,6 +1420,12 @@ def arg_parse(argz):
                             metavar=('MIN', 'MAX'), nargs=2)
     mem_values.add_argument('-mb', '-MB', help='set min/max memory usage (in megabytes)',
                             metavar=('MIN', 'MAX'), nargs=2)
+
+    forge_settings = parser.add_argument_group('Mods', 'Options for Forge users')
+    forge_settings.add_argument('-f', '--forge', help='version of Forge you are using.', metavar='FORGE VERSION')
+    forge_settings.add_argument('-P', '--permgen',
+                                help='Amount of permgen to use in MB. Default: {}'.format(DEFAULT_PERMGEN))
+
     parser.add_argument('-V', '--version', action='version', version='%(prog)s {0}'.format(__version__))
 
     args = parser.parse_args(argz)
