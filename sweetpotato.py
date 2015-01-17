@@ -85,11 +85,6 @@ class EmptySettingError(SweetpotatoIOErrorBase):
     pass
 
 
-class LogReadError(SweetpotatoIOErrorBase):
-    """Raised when there is a problem reading a log."""
-    pass
-
-
 class MinimalInstallError(SweetpotatoIOErrorBase):
     """Raised when we are running as a minimal install."""
     pass
@@ -161,10 +156,7 @@ class SweetpotatoConfig:
 
     @property
     def as_json(self):
-        try:
-            players = list_players(self)
-        except LogReadError:
-            players = None
+        players = list_players(self)
         self.__dict__.update(players=players)
         try:
             raw = get_uptime_raw(self.server_dir, self.world_name, False)
@@ -704,19 +696,36 @@ def list_players(settings):
     if running:
         send_command('list', settings.screen_name)
 
-    with open(latest_log, 'r') as log:
-        log_lines = log.readlines()
-        log.close()
-    if 'players online:' not in log_lines[-2:][0]:
-        raise LogReadError(
-            "There was a problem listing players, please try again!"
-        )
+    def read_latest_log():
+        try:
+            with open(latest_log, 'r') as log:
+                log_lines = log.readlines()
+                log.close()
+                return log_lines
+        except FileNotFoundError:
+            return None
+
+    ll = read_latest_log()
+
+    if ll:
+        while 'players online:' not in ll[-2:][0]:
+            ll = read_latest_log()
+        else:
+            player_list = ll[-2:]
     else:
-        players = log_lines[-2:][1].split(']:')[1].strip().split(',')
-    if players == ['']:
+        player_list = ll
+
+    if player_list:
+        if 'There are 0/20 players online' in player_list[0]:
+            return None
+        else:
+            return player_list
+    else:
         return None
-    else:
-        return players
+
+
+def list_players_as_list(player_list):
+    pass
 
 
 def read_conf_file(file, settings):
@@ -862,6 +871,15 @@ def stop_server(print_pre, screen_name, server_dir, world_name, quiet):
         die_silently()
 
 
+# def reread_settings(settings):
+#     """
+#
+#     @param settings:
+#     @return:
+#     """
+#     pass
+
+
 def restart_server(print_pre, settings, quiet):
     """
     Restarts a configured server.
@@ -982,7 +1000,7 @@ def run_server_backup(print_pre, settings, quiet, offline=False):
         print('Done!' + Colors.end)
 
 
-def run_webui(settings):
+def run_webui(settings, quiet):
     """
     Run the WebUI or print a message about why not.
 
@@ -1184,14 +1202,20 @@ def run_webui(settings):
                 '__version__': __version__
             }
         try:
-            print(Colors.green + '{0} {1} - launching WebUI now!'.format(__progname__, __version__))
-            sys.stdout.flush()
-            bottle.run(app=app, port=settings.webui_port, quiet=False)
+            if not quiet:
+                print(Colors.green + '{0} {1} - launching WebUI now!'.format(__progname__, __version__))
+                sys.stdout.flush()
+            bottle.run(app=app, port=settings.webui_port, quiet=quiet)
         except OSError:
-            error_and_die('Port {} is already in use! Exiting ...\n'.format(settings.webui_port))
-    else:
+            if not quiet:
+                error_and_die('Port {} is already in use! Exiting ...\n'.format(settings.webui_port))
+            else:
+                die_silently()
+    elif not quiet:
         error_and_die('The web component requires both bottle.py to function, '
                       'with Python-Markdown as an optional dependency.')
+    else:
+        die_silently()
 
 
 def validate_directories(*dirs):
@@ -1452,41 +1476,24 @@ def arg_parse(argz):
             error_and_die(e.msg.strip('"'))
     elif args.genconf:
         print(s.as_conf_file)
-    elif args.json:
+    elif args.json and not quiet:
         if running:
             s.running = running
         print(s.as_json)
-    elif args.list:
-        if running and not quiet:
-            try:
-                players = list_players(s)
-                if players:
-                    c = 0
-                    player_count = len(players)
-                    print(
-                        Colors.light_blue +
-                        'Currently logged-in:' +
-                        Colors.green, end=' '
-                    )
-                    for p in players:
-                        if player_count > 1:
-                            while c < player_count:
-                                print(p, end=', ')
-                                c += 1
-                        print(p + Colors.end)
-                else:
-                    print(
-                        Colors.yellow +
-                        'Nobody on right now :(' +
-                        Colors.end
-                    )
-            except LogReadError as e:
-                error_and_die(e)
-        elif not quiet:
-            error_and_die("{} is not running!".format(s.world_name))
+    elif args.list and not quiet:
+        if running:
+            players = list_players(s)
+            if players:
+                for p in players:
+                    print(Colors.light_blue + p.strip() + Colors.end)
+            else:
+                print(
+                    Colors.yellow +
+                    'Nobody on right now :(' +
+                    Colors.end
+                )
         else:
-            # you want to list while being quiet?! kay....
-            die_silently()
+            error_and_die("{} is not running!".format(s.world_name))
     elif args.offline:
         print_pre = '[' + Colors.yellow_green + 'offline-backup' + Colors.end + '] '
         try:
@@ -1534,7 +1541,7 @@ def arg_parse(argz):
             error_and_die(e)
     elif args.web:
             try:
-                run_webui(s)
+                run_webui(s, quiet)
             except MinimalInstallError as e:
                 if not quiet:
                     error_and_die(e)

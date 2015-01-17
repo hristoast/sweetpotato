@@ -79,6 +79,7 @@ JSON = """{
     "mem_format": "MB",
     "mem_max": "1024",
     "mem_min": "512",
+    "players": null,
     "port": "25565",
     "running": false,
     "screen_name": "SweetpotatoWorld",
