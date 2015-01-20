@@ -31,7 +31,7 @@ __author__ = 'Hristos N. Triantafillou <me@hristos.triantafillou.us>'
 __license__ = 'GPLv3'
 __mcversion__ = '1.8.1'
 __progname__ = 'sweetpotato'
-__version__ = '0.34.14b'
+__version__ = '0.34.15b'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -1111,16 +1111,20 @@ def run_webui(settings, quiet):
             for backup_file in backup_dir_contents:
                 full_path_to_backup_file = os.path.join(s.backup_dir, backup_file)
                 raw_backup_file_size = os.path.getsize(full_path_to_backup_file)
-                if not os.path.isdir(full_path_to_backup_file):
+                if os.path.isfile(full_path_to_backup_file):
                     backup_file_size = raw_backup_file_size / 1000000
                     dc = len(str(backup_file_size).split('.')[-1])
                     dc_diff = dc - 2
+                    try:
+                        trimmed_size = float(str(backup_file_size)[0:-dc_diff])
+                    except ValueError:
+                        trimmed_size = backup_file_size
                     unsorted_backup_file_list.append({
                         'bit': 'MB',
                         'file': backup_file,
-                        'size': str(backup_file_size)[0:-dc_diff]
+                        'size': trimmed_size
                     })
-            backup_file_list = sorted(unsorted_backup_file_list, key=lambda k: k['size'], reverse=False)
+            backup_file_list = sorted(unsorted_backup_file_list, key=lambda k: k['size'], reverse=True)
 
             if bottle.request.method == 'POST':
                 postdata = bottle.request.POST
