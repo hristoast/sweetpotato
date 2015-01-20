@@ -123,8 +123,8 @@ class SweetpotatoTests(unittest.TestCase):
     def test_as_conf_file(self):
         self.assertIn(TEST_SERVER_DIR, self.config.as_conf_file)
 
-    def test_json_output_pretty(self):  # TODO: test if forge and if not forge
-        self.config.pretty = True
+    def test_json_output_fancy(self):  # TODO: test if forge and if not forge
+        self.config.fancy = True
         self_json = self.config.as_json
         self.assertEqual(self_json, JSON)
 

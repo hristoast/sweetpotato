@@ -31,7 +31,7 @@ __author__ = 'Hristos N. Triantafillou <me@hristos.triantafillou.us>'
 __license__ = 'GPLv3'
 __mcversion__ = '1.8.1'
 __progname__ = 'sweetpotato'
-__version__ = '0.34.13b'
+__version__ = '0.34.14b'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -132,6 +132,7 @@ class SweetpotatoConfig:
         self.backup_dir = None
         self.compression = 'gz'
         self.conf_file = None
+        self.fancy = False
         self.force = False
         self.forge = None
         self.level_seed = None
@@ -141,7 +142,6 @@ class SweetpotatoConfig:
         self.mc_version = __mcversion__
         self.permgen = None
         self.port = DEFAULT_SERVER_PORT
-        self.pretty = False
         self.running = False
         self.screen_name = DEFAULT_SCREEN_NAME
         self.server_dir = None
@@ -157,7 +157,7 @@ class SweetpotatoConfig:
                     and k is not 'conf_file' \
                     and k is not 'force' \
                     and k is not 'running'\
-                    and not (v is False and k is 'pretty'):
+                    and not (v is False and k is 'fancy'):
                 conf += '{0}: {1}\n'.format(k, v)
         return conf.strip()
 
@@ -187,12 +187,12 @@ class SweetpotatoConfig:
         except AttributeError:
             pass
         try:
-            if self.pretty:
+            if self.fancy:
                 # TODO: do we want to show this? I say no for now ...
-                self.__dict__.pop('pretty')
+                self.__dict__.pop('fancy')
                 return json.dumps(self.__dict__, sort_keys=True, indent=4)
             else:
-                self.__dict__.pop('pretty')
+                self.__dict__.pop('fancy')
                 return json.dumps(self.__dict__)
         except AttributeError:
             return json.dumps(self.__dict__)
@@ -913,18 +913,9 @@ def reread_settings(settings):
     @param settings:
     @return:
     """
-    try:
-        if settings.pretty:
-            pretty = True
-        else:
-            pretty = False
-    except AttributeError:
-        pretty = False
     # Read a passed-in conf file
     if settings.conf_file:
         read_conf_file(settings.conf_file, settings)
-    if pretty:
-        settings.pretty = pretty
     return settings
 
 
@@ -1122,12 +1113,14 @@ def run_webui(settings, quiet):
                 raw_backup_file_size = os.path.getsize(full_path_to_backup_file)
                 if not os.path.isdir(full_path_to_backup_file):
                     backup_file_size = raw_backup_file_size / 1000000
+                    dc = len(str(backup_file_size).split('.')[-1])
+                    dc_diff = dc - 2
                     unsorted_backup_file_list.append({
                         'bit': 'MB',
                         'file': backup_file,
-                        'size': str(backup_file_size)[0:4]
+                        'size': str(backup_file_size)[0:-dc_diff]
                     })
-            backup_file_list = sorted(unsorted_backup_file_list, key=lambda k: k['size'], reverse=True)
+            backup_file_list = sorted(unsorted_backup_file_list, key=lambda k: k['size'], reverse=False)
 
             if bottle.request.method == 'POST':
                 postdata = bottle.request.POST
@@ -1186,10 +1179,6 @@ def run_webui(settings, quiet):
             bottle.response.content_type = 'application/json'
             s = reread_settings(settings)
             s.running = is_server_running(s.server_dir)
-            # print(s.as_json)
-            # print()
-            # print(json.dumps(s.as_json))
-            # return json.dumps(s.as_json)
             return s.as_json
 
         @bottle.get('/server')
@@ -1424,6 +1413,7 @@ def arg_parse(argz):
     settings.add_argument('-c', '--conf', help='config file containing your settings', metavar='CONF FILE')
     settings.add_argument('-d', '--backup-dir', help='the FULL path to your backups folder',
                           metavar='/path/to/backups')
+    settings.add_argument('-x', '--fancy', action='store_true', help="print json with fancy indentation and sorting")
     settings.add_argument('-F', '--force', help='forces writing of server files, even when they already exist',
                           action='store_true')
     settings.add_argument('--level-seed', '--seed', metavar="LEVEL SEED",
@@ -1432,7 +1422,6 @@ def arg_parse(argz):
     #                       help='set the log location. Default: {}'.format(DEFAULT_LOG_DIR))
     settings.add_argument('-p', '--port',
                           help='port you wish to run your server on. Default: {}'.format(DEFAULT_SERVER_PORT))
-    settings.add_argument('--pretty', action='store_true', help="print json with fancy indentation and sorting")
     settings.add_argument('-q', '--quiet', action='store_true', help='Silence all output')
     settings.add_argument('-s', '--server-dir', metavar='/path/to/server',
                           help='set the FULL path to the directory containing your server files')
@@ -1479,6 +1468,8 @@ def arg_parse(argz):
             pass
     if args.backup_dir:
         s.backup_dir = args.backup_dir
+    if args.fancy:
+        s.fancy = True
     if args.force:
         s.force = args.force
     if args.forge:
@@ -1495,8 +1486,6 @@ def arg_parse(argz):
         s.level_seed = args.level_seed
     if args.permgen:
         s.permgen = args.permgen
-    if args.pretty:
-        s.pretty = True
     if args.port:
         s.port = args.port
     if args.quiet:

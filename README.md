@@ -213,24 +213,7 @@ You can also make your settings the default (so you don't have to pass a conf fi
 
     $ sweetpotato -d /srv/backups/minecraft -s /srv/minecraft/mc_server -gb 1 1 --seed awesomeseed --genconf > $HOME/.config/sweetpotato/sweetpotato.conf
     $ sweetpotato --json
-    {
-        "backup_dir": "/srv/backups/minecraft",
-        "compression": "gz",
-        "conf_file": null,
-        "forge": null,
-        "level_seed": "awesomeseed",
-        "mc_version": "1.8.1",
-        "mem_format": "GB",
-        "mem_max": "1",
-        "mem_min": "1",
-        "permgen": null,
-        "port": "25565",
-        "running": false,
-        "screen_name": "SweetpotatoWorld",
-        "server_dir": "/srv/minecraft/mc_server",
-        "webui_port": "8080",
-        "world_name": "SweetpotatoWorld"
-    }
+    {"screen_name": "SweetpotatoWorld", "compression": "gz", "conf_file": "/home/larry/.config/sweetpotato/sweetpotato.conf", "mem_min": "1", "server_dir": "/srv/minecraft/mc_server", "webui_port": "8080", "world_name": "SweetpotatoWorld", "mem_format": "GB", "level_seed": "awesomeseed", "mc_version": "1.8.1", "port": "25565", "backup_dir": "/srv/backups/minecraft", "running": false, "mem_max": "2"}
 
 ### Live Backup
 
