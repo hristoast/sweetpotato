@@ -10,6 +10,8 @@ VERSION = '0.34.16b'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
+DEFAULT_COMPRESSION = 'gz'
+COMPRESSION_CHOICES = ['bz2', DEFAULT_COMPRESSION, 'xz']
 DEFAULT_PERMGEN = '256'
 DEFAULT_SCREEN_NAME = 'SweetpotatoWorld'
 DEFAULT_SERVER_PORT = '25565'

@@ -36,6 +36,8 @@
                             <dt>Compression Type:</dt>
                             % elif k is 'conf_file':
                             <dt>Conf File:</dt>
+                            % elif k is 'fancy':
+                            <dt>Fancy json:</dt>
                             % elif k is 'forge':
                             <dt>Forge Version:</dt>
                             % elif k is 'level_seed':
@@ -52,8 +54,6 @@
                             <dt>Permgen:</dt>
                             % elif k is 'port':
                             <dt>Server Port:</dt>
-                            % elif k is 'pretty':
-                            <dt>Pretty json:</dt>
                             % elif k is 'screen_name':
                             <dt>Screen Session Name:</dt>
                             % elif k is 'server_dir':

@@ -32,7 +32,7 @@ class SweetpotatoConfig(Daemon):
     def __init__(self):
         super().__init__(DEFAULT_PIDFILE)
         self.backup_dir = None
-        self.compression = 'gz'
+        self.compression = DEFAULT_COMPRESSION
         self.conf_file = None
         self.fancy = False
         self.force = False
@@ -64,8 +64,13 @@ class SweetpotatoConfig(Daemon):
         return conf.strip()
 
     @property
+    def as_daemon(self):
+        return self.run()
+
+    @property
     def as_json(self):
-        self.__dict__.pop('pidfile')  # TODO: maybe not do this?
+        self_dict = self.__dict__.copy()
+        self_dict.pop('pidfile')
         try:
             players = list_players_as_list(list_players(self))
             raw = get_uptime_raw(self.server_dir, self.world_name, False)
@@ -76,29 +81,15 @@ class SweetpotatoConfig(Daemon):
                 'minutes': u[2],
                 'seconds': u[3]
             }
-            self.__dict__['running'].update(players=players)
-            self.__dict__['running'].update(uptime=uptime)
+            self_dict['running'].update(players=players)
+            self_dict['running'].update(uptime=uptime)
         except ServerNotRunningError:
             pass
-        # We don't care to show force
-        if 'force' in self.__dict__.keys():
-            self.__dict__.pop('force')
-        try:
-            if not self.forge:
-                self.__dict__.pop('forge')
-                self.__dict__.pop('permgen')
-        except AttributeError:
-            pass
-        try:
-            if self.fancy:
-                # TODO: do we want to show this? I say no for now ...
-                self.__dict__.pop('fancy')
-                return json.dumps(self.__dict__, sort_keys=True, indent=4)
-            else:
-                self.__dict__.pop('fancy')
-                return json.dumps(self.__dict__)
-        except AttributeError:
-            return json.dumps(self.__dict__)
+        if self.fancy:
+            # TODO: do we want to show this? I say no for now ...
+            return json.dumps(self_dict, sort_keys=True, indent=4)
+        else:
+            return json.dumps(self_dict)
 
     @property
     def as_serverproperties(self):
@@ -179,6 +170,12 @@ motd=Welcome to {0}!
                 "We can't generate a server.properties for "
                 "the version ov MC you are trying to use ({}).".format(self.mc_version)
             )
+
+    def run(self):
+        """
+        Set up the daemon.
+        """
+        pass
 
 
 def _agree_to_eula(eula_txt, force, print_pre, quiet):
@@ -692,6 +689,12 @@ def read_conf_file(file, settings):
     options_dict = {}
     for o in options:
         options_dict[o] = c.get(section, o)
+    fancy = c[section].getboolean('fancy')
+    try:
+        options_dict.pop('fancy')
+        options_dict.update(fancy=fancy)
+    except KeyError:
+        pass
     return settings.__dict__.update(**options_dict)
 
 

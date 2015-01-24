@@ -17,6 +17,7 @@ def setup_args(args):
     actions = parser.add_mutually_exclusive_group(required=True)
     actions.add_argument('-b', '--backup', action='store_true', help='back up your Minecraft server (live)')
     actions.add_argument('-C', '--create', action='store_true', help='create a server from settings')
+    actions.add_argument('-D', '--daemon', action='store_true', help="run the WebUI as a background process")
     actions.add_argument('-g', '--genconf', action='store_true', help='generate conf file from passed-in CLI arguments')
     actions.add_argument('-j', '--json', action='store_true', help='output settings as json')
     actions.add_argument('-l', '--list', action='store_true', help='list logged-in players')
@@ -35,31 +36,24 @@ def setup_args(args):
     settings.add_argument('-c', '--conf', help='config file containing your settings', metavar='CONF FILE')
     settings.add_argument('-d', '--backup-dir', help='the FULL path to your backups folder',
                           metavar='/path/to/backups')
-    settings.add_argument('-D', '--daemon', action='store_true', help="run the WebUI as a background process")
     settings.add_argument('-x', '--fancy', action='store_true', help="print json with fancy indentation and sorting")
     settings.add_argument('-F', '--force', help='forces writing of server files, even when they already exist',
                           action='store_true')
     settings.add_argument('--level-seed', '--seed', metavar="LEVEL SEED",
                           help='optional and only applied during world creation')
-    # settings.add_argument('--log-dir', '-L', metavar="LOG DIR",
-    #                       help='set the log location. Default: {}'.format(DEFAULT_LOG_DIR))
-    settings.add_argument('--pidfile', '-pid', metavar='PID FILE',
-                          help='set the pid file used when running in daemon mode. Default: ' + DEFAULT_PIDFILE)
     settings.add_argument('-p', '--port',
-                          help='port you wish to run your server on. Default: {}'.format(DEFAULT_SERVER_PORT))
+                          help='port you wish to run your server on. Default: ' + DEFAULT_SERVER_PORT)
     settings.add_argument('-q', '--quiet', action='store_true', help='Silence all output')
     settings.add_argument('-s', '--server-dir', metavar='/path/to/server',
                           help='set the FULL path to the directory containing your server files')
     settings.add_argument('-S', '--screen', metavar='SCREEN NAME',
                           help='set the name of your screen session. Default: the same as your world')
     settings.add_argument('-v', '--mc-version', metavar='MC VERSION',
-                          help='set the version of minecraft. Default: The latest stable')
-    settings.add_argument('--webui-port', dest='webui_port',
-                          help='Port to bind to for the WebUI. Default: {}'.format(DEFAULT_WEBUI_PORT))
+                          help='set the version of minecraft. Default: ' + MCVERSION)
     settings.add_argument('-w', '--world', metavar='WORLD NAME',
-                          help='set the name of your Minecraft world. Default: {}'.format(DEFAULT_WORLD_NAME))
-    settings.add_argument('-z', '--compression', choices=['bz2', 'gz', 'xz'], dest='compression',
-                          help='select compression type. Default: gz')
+                          help='set the name of your Minecraft world. Default: ' + DEFAULT_WORLD_NAME)
+    settings.add_argument('-z', '--compression', choices=COMPRESSION_CHOICES, dest='compression',
+                          help='select compression type. Default: ' + DEFAULT_COMPRESSION)
 
     mem_values = settings.add_mutually_exclusive_group()
     mem_values.add_argument('-gb', '-GB', help='set min/max memory usage (in gigabytes)',
@@ -70,9 +64,17 @@ def setup_args(args):
     forge_settings = parser.add_argument_group('Mods', 'Options for Forge users')
     forge_settings.add_argument('-f', '--forge', help='version of Forge you are using.', metavar='FORGE VERSION')
     forge_settings.add_argument('-P', '--permgen',
-                                help='Amount of permgen to use in MB. Default: {}'.format(DEFAULT_PERMGEN))
+                                help='Amount of permgen to use in MB. Default: ' + DEFAULT_PERMGEN)
 
-    parser.add_argument('-V', '--version', action='version', version='%(prog)s {0}'.format(VERSION))
+    webui_settings = parser.add_argument_group('WebUI', 'More configuration options for the WebUI and daemon mode')
+    webui_settings.add_argument('--log-dir', '-L', metavar="LOG DIR",
+                                help='set the log location. Default: ' + DEFAULT_LOG_DIR)
+    webui_settings.add_argument('--pidfile', '-pid', metavar='PID FILE',
+                                help='set the pid file used when running in daemon mode. Default: ' + DEFAULT_PIDFILE)
+    webui_settings.add_argument('--webui-port', dest='webui_port',
+                                help='Port to bind to for the WebUI. Default: ' + str(DEFAULT_WEBUI_PORT))
+
+    parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + VERSION)
 
     args = parser.parse_args(args)
     s = SweetpotatoConfig()
@@ -89,6 +91,8 @@ def setup_args(args):
         try:
             read_conf_file(DEFAULT_CONF_FILE, s)
             s.conf_file = DEFAULT_CONF_FILE
+            # if s.fancy:
+            #     s.fancy = True
         except (configparser.NoSectionError, ConfFileError):
             pass
     if args.backup_dir:
@@ -167,6 +171,9 @@ def setup_args(args):
             create_server(s, quiet)
         except ServerAlreadyRunningError as e:
             error_and_die(e.msg.strip('"'))
+    elif args.daemon:
+        print('Do the daemon.. HUH!')
+        sys.exit(0)
     elif args.genconf:
         print(s.as_conf_file)
     elif args.json:
