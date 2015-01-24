@@ -1,3 +1,10 @@
+"""
+Original credit for daemon3.py belongs to:
+
+http://www.jejik.com/articles/2007/02/a_simple_unix_linux_daemon_in_python/
+
+Thank you!
+"""
 import sys
 import os
 import time
@@ -95,3 +102,4 @@ class Daemon:
         It will be called after the process has been daemonized by
         start() or restart().
         """
+        pass
