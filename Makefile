@@ -1,22 +1,43 @@
-INSTALL_TARGET_DIR = /opt
-CLEAN = /bin/rm -fr __pycache__ /tmp/_sp_test* /tmp/sweetpotato.py /tmp/__init__.py
-COPY = /bin/cp -fr ../sweetpotato $(INSTALL_TARGET_DIR)/
-REMOVE = /bin/rm -fr $(INSTALL_TARGET_DIR)/sweetpotato /usr/bin/sweetpotato
-SYMLINK = ln -s $(INSTALL_TARGET_DIR)/sweetpotato/sweetpotato.py /usr/bin/sweetpotato
+BDIST = python3 setup.py bdist
+BUILD = python3 setup.py build --force
+CLEAN = /bin/rm -fr MANIFEST build dist *.egg-info sweetpotato/__pycache__
+CLEAN_TEST = /bin/rm -fr /tmp/_sp_test*
+INSTALL = python3 setup.py install --force --optimize 2
+SDIST = python3 setup.py sdist
 TEST = ./tests.py
 
+.DEFAULT_GOAL := sdist
+.PHONY: all
+
+all: bdist build clean cleantest install max reinstall sdist test
+
+# sweetpotato won't actually work out of a bdist ...
+bdist:
+	$(BDIST)
+
+# or a build..
+build:
+	$(BUILD)
 
 clean:
 	$(CLEAN)
 
+cleantest:
+	$(CLEAN_TEST)
+
 install:
-	$(COPY) && $(SYMLINK)
+	$(INSTALL)
+
+max:
+	$(INSTALL) && $(CLEAN)
+
+sdist:
+	$(SDIST)
 
 reinstall:
-	$(REMOVE) && $(COPY) && $(SYMLINK)
+	$(INSTALL)
 
 test:
 	$(TEST)
 
-uninstall:
-	$(REMOVE)
+#uninstall:
