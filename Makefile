@@ -6,7 +6,7 @@ INSTALL = python3 setup.py install --force --optimize 2
 SDIST = python3 setup.py sdist
 TEST = ./tests.py
 
-.DEFAULT_GOAL := build
+.DEFAULT_GOAL := sdist
 .PHONY: all
 
 all: bdist build clean cleantest install reinstall sdist test
@@ -15,6 +15,7 @@ all: bdist build clean cleantest install reinstall sdist test
 bdist:
 	$(BDIST)
 
+# or a build..
 build:
 	$(BUILD)
 
