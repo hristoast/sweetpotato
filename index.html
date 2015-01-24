@@ -23,8 +23,8 @@
         </header>
 
         <section id="downloads" class="clearfix">
-          <a href="https://github.com/hristoast/sweetpotato/zipball/dev" id="download-zip" class="button"><span>Download .zip</span></a>
-          <a href="https://github.com/hristoast/sweetpotato/tarball/dev" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
+          <a href="https://github.com/hristoast/sweetpotato/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
+          <a href="https://github.com/hristoast/sweetpotato/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
           <a href="https://github.com/hristoast/sweetpotato" id="view-on-github" class="button"><span>View on GitHub</span></a>
         </section>
 
@@ -49,7 +49,7 @@
 
 <p><code>stop</code></p>
 
-<p><code>java -Xms1G -Xmx2G -XX:MaxPermSize=256M -jar forge-1.7.10-10.13.2.1272-universal.jar nogui</code></p>
+<p><code>java -Xms1G -Xmx2G -XX:MaxPermSize=256M -jar forge-1.7.10-10.13.2.1284-universal.jar nogui</code></p>
 
 <p>The above might be pretty close to the normal commands you'd use to restart a Minecraft server 'by hand'.</p>
 
@@ -60,19 +60,6 @@
 <p>It was created as a way to simplify managing a Minecraft server by providing a simple wrapper for common tasks. It knows what your world is and where its files are via command-line options, values set in a configuration file, or a mixture of both!</p>
 
 <p>Oh yeah - you need <strong>Python 3</strong>!</p>
-
-<h2>
-<a id="simple-minimal-installation" class="anchor" href="#simple-minimal-installation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Simple (Minimal) Installation</h2>
-
-<p>Just grab the file and run it:</p>
-
-<pre><code>wget https://raw.githubusercontent.com/hristoast/sweetpotato/dev/sweetpotato.py
-chmod +x sweetpotato.py
-./sweetpotato.py --version
-sweetpotato 0.34b
-</code></pre>
-
-<p>A modern distro should have python3, if not make sure you install that first! Note that this would be a <em>very</em> minimal install, with command-line capabilities only (no WebUI.)</p>
 
 <h2>
 <a id="installation" class="anchor" href="#installation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installation</h2>
@@ -91,34 +78,12 @@ sweetpotato 0.34b
 <h2>
 <a id="re-installation" class="anchor" href="#re-installation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Re-installation</h2>
 
-<p>You might do this when you want to update your installed version of <code>sweetpotato</code>.</p>
-
-<p>With <code>sweetpotato</code> already installed, <code>make</code> installed, and <code>sudo</code> access:</p>
-
-<ol>
-<li>
-<code>cd</code> into your git-cloned or downloaded <code>sweetpotato</code> source directory</li>
-<li><code>sudo make reinstall</code></li>
-</ol>
+<p>Simply do the installation process again.</p>
 
 <h2>
 <a id="uninstallation" class="anchor" href="#uninstallation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Uninstallation</h2>
 
-<p>With <code>make</code> installed and <code>sudo</code> access:</p>
-
-<ol>
-<li>
-<code>cd</code> into your git-cloned source directory</li>
-<li><code>sudo make uninstall</code></li>
-</ol>
-
-<p><strong>OR</strong></p>
-
-<ol>
-<li><code>sudo rm -fr /opt/sweetpotato /usr/bin/sweetpotato</code></li>
-</ol>
-
-<p>Which are essentially the same thing.</p>
+<p>Remove the files from the install prefix (default: <code>/usr/local/lib/python3.#/dist-packages/sweetpotato-0.34.16b-py3.4.egg</code>, where <code>#</code> is your version of Py3k). There may be several sweetpotato-related egg files, remove as many as you need to.</p>
 
 <h2>
 <a id="getting-started" class="anchor" href="#getting-started" aria-hidden="true"><span class="octicon octicon-link"></span></a>Getting Started</h2>
@@ -127,13 +92,13 @@ sweetpotato 0.34b
 
 <p>Let's set up a server at <code>/home/hristos/minecraft</code> and configure it to back up to <code>/home/hristos/backups</code>. We'll also set a custom port and level seed too.</p>
 
-<pre><code>$ sweetpotato --server-dir /home/hristos/minecraft --backup-dir /home/hristos/backups --port 25566 --level-seed AwesomeSeedYo -gb 1 2 --json
+<pre><code>$ sweetpotato --server-dir /home/hristos/minecraft --backup-dir /home/hristos/backups --port 25566 --level-seed AwesomeSeedYo -GB 1 2 --json
 FATAL: The configured directory "/home/hristos/backups" does not exist. Do you need to run --create?
 </code></pre>
 
 <p>Not to worry, as the message suggests we will run the create command:</p>
 
-<pre><code>$ sweetpotato --server-dir /home/hristos/minecraft --backup-dir /home/hristos/backups --port 25566 --level-seed AwesomeSeedYo -gb 1 2 --create
+<pre><code>$ sweetpotato --server-dir /home/hristos/minecraft --backup-dir /home/hristos/backups --port 25566 --level-seed AwesomeSeedYo -GB 1 2 --create
 [create] Creating "SweetpotatoWorld" ...
 [create] Creating /home/hristos/backups ... Done!
 [create] Creating /home/hristos/minecraft ... Done!
@@ -145,12 +110,12 @@ FATAL: The configured directory "/home/hristos/backups" does not exist. Do you n
 
 <p>Now we've got a server that we can use, but it is a little annoying to pass all of these options each time. Let's capture our configuration in a file that we can read from:</p>
 
-<pre><code>$ sweetpotato --server-dir /home/hristos/minecraft --backup-dir /home/hristos/backups --port 25566 --level-seed AwesomeSeedYo -gb 1 2 --genconf &gt; sweetpotato.conf
+<pre><code>$ sweetpotato --server-dir /home/hristos/minecraft --backup-dir /home/hristos/backups --port 25566 --level-seed AwesomeSeedYo -GB 1 2 --genconf &gt; sweetpotato.conf
 </code></pre>
 
 <p>Just use the <code>-c</code> or <code>--conf</code> option to configure <code>sweetpotato</code>:</p>
 
-<pre><code>$ sweetpotato --conf sweetpotato.conf --json
+<pre><code>$ sweetpotato --conf sweetpotato.conf --json --fancy
 {
     "backup_dir": "/home/hristos/backups",
     "compression": "gz",
@@ -180,10 +145,12 @@ $ sweetpotato --start
 
 <p>Success! Using explicit conf files makes managing multiple servers under one user much easier, but if you are only running one server using the default conf file makes the most sense.</p>
 
+<p>Keep in mind that with the above configuration, the world and screen names are generated from default values.</p>
+
 <p>Now that you've got a working Minecraft server configured with <code>sweetpotato</code>, you may want to check out the WebUI:</p>
 
 <pre><code>sweetpotato --web
-sweetpotato 0.34b - launching WebUI now!
+sweetpotato 0.34.16b - launching WebUI now!
 Bottle v0.12.7 server starting up (using WSGIRefServer())...
 Listening on http://127.0.0.1:8080/
 Hit Ctrl-C to quit.
@@ -260,18 +227,16 @@ server_dir: /srv/minecraft/mc_server
 <p>You can create your own file like this:</p>
 
 <pre><code>$ sweetpotato -d /srv/backups/minecraft -s /srv/minecraft/mc_server -gb 1 1 --genconf &gt; myconf.conf
-$ sweetpotato -c myconf.conf --json
+$ sweetpotato -c myconf.conf -j -x
 {
     "backup_dir": "/srv/backups/minecraft",
     "compression": "gz",
     "conf_file": "/home/larry/myconf.conf",
-    "forge": null,
     "level_seed": null,
     "mc_version": "1.8.1",
     "mem_format": "GB",
     "mem_max": "1",
     "mem_min": "1",
-    "permgen": null,
     "port": "25565",
     "running": false,
     "screen_name": "SweetpotatoWorld",
@@ -285,25 +250,17 @@ $ sweetpotato -c myconf.conf --json
 <code>$HOME/.config/sweetpotato/sweetpotato.conf</code>:</p>
 
 <pre><code>$ sweetpotato -d /srv/backups/minecraft -s /srv/minecraft/mc_server -gb 1 1 --seed awesomeseed --genconf &gt; $HOME/.config/sweetpotato/sweetpotato.conf
-$ sweetpotato --json
-{
-    "backup_dir": "/srv/backups/minecraft",
-    "compression": "gz",
-    "conf_file": null,
-    "forge": null,
-    "level_seed": "awesomeseed",
-    "mc_version": "1.8.1",
-    "mem_format": "GB",
-    "mem_max": "1",
-    "mem_min": "1",
-    "permgen": null,
-    "port": "25565",
-    "running": false,
-    "screen_name": "SweetpotatoWorld",
-    "server_dir": "/srv/minecraft/mc_server",
-    "webui_port": "8080",
-    "world_name": "SweetpotatoWorld"
-}
+$ sweetpotato -j
+{"screen_name": "SweetpotatoWorld", "compression": "gz", "conf_file": "/home/larry/.config/sweetpotato/sweetpotato.conf", "mem_min": "1", "server_dir": "/srv/minecraft/mc_server", "webui_port": "8080", "world_name": "SweetpotatoWorld", "mem_format": "GB", "level_seed": "awesomeseed", "mc_version": "1.8.1", "port": "25565", "backup_dir": "/srv/backups/minecraft", "running": false, "mem_max": "2"}
+</code></pre>
+
+<h3>
+<a id="list-players" class="anchor" href="#list-players" aria-hidden="true"><span class="octicon octicon-link"></span></a>List players</h3>
+
+<p>Show the console output  of <code>list</code> if any players are logged in:</p>
+
+<pre><code>[list] [13:00:28] [Server thread/INFO]: There are 1/20 players online:
+[list] [13:00:28] [Server thread/INFO]: georgedubya
 </code></pre>
 
 <h3>
@@ -311,15 +268,17 @@ $ sweetpotato --json
 
 <p>Run a backup while the server is running. This sends a message to the in-game chat when the backup starts and finishes, then creates a backup of your configured world</p>
 
-<pre><code>$ sweetpotato -d /srv/backups/minecraft -s /srv/minecraft/mc_server -gb 1 1 --backup
+<pre><code>$ sweetpotato -d /srv/backups/minecraft -s /srv/minecraft/mc_server -gb 1 1 -b
 [live-backup] Running live backup of "SweetpotatoWorld"  ... Done!
 </code></pre>
 
 <p>But the backup will not be ran if the file (named after today's date) already exists:</p>
 
-<pre><code>$ sweetpotato -d /srv/backups/minecraft -s /srv/minecraft/mc_server -gb 1 1 --backup
+<pre><code>$ sweetpotato -d /srv/backups/minecraft -s /srv/minecraft/mc_server -gb 1 1 -b
 [live-backup] Running live backup of "SweetpotatoWorld"  ... FATAL: File "/srv/backups/minecraft/2014-10-20_SweetpotatoWorld.tar.gz" already exists!
 </code></pre>
+
+<p>Use the <code>--force</code> option to override that.</p>
 
 <h3>
 <a id="offline-backup" class="anchor" href="#offline-backup" aria-hidden="true"><span class="octicon octicon-link"></span></a>Offline Backup</h3>
@@ -336,6 +295,8 @@ $ sweetpotato --json
 [offline-backup]  Stopping "SweetpotatoWorld" ... backing up ... starting "SweetpotatoWorld" ... Done!
 FATAL: File "/srv/backups/minecraft/2014-10-20_SweetpotatoWorld.tar.gz" already exists!
 </code></pre>
+
+<p>And once again, use the <code>--force</code> option to override.</p>
 
 <h3>
 <a id="restart" class="anchor" href="#restart" aria-hidden="true"><span class="octicon octicon-link"></span></a>Restart</h3>
@@ -391,11 +352,22 @@ LarrylandX has been up for 0 days, 5 hours, 23 minutes, and 40 seconds
 <p>A simple web-based interface for many of the functions offered by <code>sweetpotato</code>. By default it binds to port <code>8080</code>, but this can be changed with the <code>--web-port</code> option or a conf file setting.</p>
 
 <pre><code>$ sweetpotato --web
-sweetpotato 0.34b - launching WebUI now!
+sweetpotato 0.34.6b - launching WebUI now!
 Bottle v0.12.7 server starting up (using WSGIRefServer())...
 Listening on http://127.0.0.1:3434/
 Hit Ctrl-C to quit.
 </code></pre>
+
+<p>If you use a conf file it will be reread each request, so if you make changes to a particular setting a restart is not necessarily required.</p>
+
+<p>The WebUI also allows you to provide access to your server info to outside consumers in json format. Pipe that into a consumer of your choosing, and who knows what kinds of crazy stuff you could do!</p>
+
+<p>It's easy to put <code>sweetpotato</code> behind an HTTP server if your server is out in the internets, check out the examples folder included in the source for some hints.</p>
+
+<h3>
+<a id="daemon-mode" class="anchor" href="#daemon-mode" aria-hidden="true"><span class="octicon octicon-link"></span></a>Daemon mode</h3>
+
+<p>Coming soon ...</p>
 
 <h3>
 <a id="forge" class="anchor" href="#forge" aria-hidden="true"><span class="octicon octicon-link"></span></a>Forge</h3>
@@ -422,7 +394,7 @@ compression: gz
 server_dir: /srv/ftb/LLX
 mem_min: 3
 world_name: LarrylandX
-forge: 1.7.10-10.13.2.1230
+forge: 1.7.10-10.13.2.1284
 </code></pre>
 
 <h2>
