@@ -34,12 +34,6 @@ def run_webui(settings, quiet):
 
         bottle.debug(True)
         bottle.TEMPLATE_PATH.insert(0, WEB_TPL)
-        print(WEB_TPL)
-        print(WEB_TPL)
-        print(WEB_TPL)
-        print(WEB_TPL)
-        print(WEB_TPL)
-        print(WEB_TPL)
 
         if markdown:
             def readme_md_to_html(md_file):

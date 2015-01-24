@@ -38,7 +38,7 @@ setup(
         'Topic :: System :: Archiving :: Backup',
         'Topic :: System :: Operating System Kernels :: Linux',
         'Topic :: Utilities'],
-    # platforms=,  # TODO
+    platforms=['linux2'],
     license=lic,
     data_files=[
         ('', ['README.md']),
