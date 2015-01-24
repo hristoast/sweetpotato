@@ -7,16 +7,14 @@
 import os
 import unittest
 # import urllib.request
-import subprocess
-import sweetpotato
 
-from shutil import SameFileError, copy
-# from threading import Thread
+from sweetpotato.cli import setup_args
+from sweetpotato.common import MCVERSION
+from sweetpotato.core import SweetpotatoConfig, dependency_check, get_exe_path, get_jar
+from sweetpotato.error import MissingExeError
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
-SCRIPT_NAME = 'sweetpotato.py'
-SWEETPOTATO_PY = os.path.join(BASE_DIR, SCRIPT_NAME)
 TEST_BACKUP_DIR = '/tmp/_sp_test_backup'
 TEST_CONF_FILE = '/tmp/_sp_test.conf'
 TEST_CONF_FILE2 = '/tmp/_sp_test.conf2'
@@ -98,7 +96,7 @@ JSON = """{
 class SweetpotatoTests(unittest.TestCase):
 
     def setUp(self):
-        self.config = sweetpotato.SweetpotatoConfig()
+        self.config = SweetpotatoConfig()
         self.config.backup_dir = TEST_BACKUP_DIR
         self.config.mem_format = TEST_MEM_FORMAT
         self.config.mem_max = TEST_MEM_MAX
@@ -114,7 +112,7 @@ class SweetpotatoTests(unittest.TestCase):
             c.close()
 
         # Install a server to test with
-        sweetpotato.arg_parse([
+        setup_args([
             '--conf', '{}'.format(TEST_CONF_FILE),
             '--create',
             '--quiet'
@@ -164,47 +162,47 @@ class SweetpotatoTests(unittest.TestCase):
         self.assertTrue(agreed)
 
     def test_dependency_check(self):
-        check = sweetpotato.dependency_check(('nothing', None))
-        self.assertRaises(sweetpotato.MissingExeError, check)
+        check = dependency_check(('nothing', None))
+        self.assertRaises(MissingExeError, check)
 
     @unittest.expectedFailure
     def test_get_fake_exe_path(self):
-        fake = sweetpotato.get_exe_path('FartBomb.EXE')
+        fake = get_exe_path('FartBomb.EXE')
         self.assertTrue(fake)
 
     def test_get_real_exe_path(self):
-        ls = sweetpotato.get_exe_path('ls')
+        ls = get_exe_path('ls')
         self.assertEqual(ls, '/bin/ls')
 
     def test_get_jar(self):
-        jar = sweetpotato.get_jar(self.config)[0]
-        self.assertEqual(jar, 'minecraft_server.{}.jar'.format(sweetpotato.__mcversion__))
+        jar = get_jar(self.config)[0]
+        self.assertEqual(jar, 'minecraft_server.{}.jar'.format(MCVERSION))
 
     # TODO: test listing (will be None)
 
-    def test_minimal_install(self):
-        sweetpotato_py_file = SWEETPOTATO_PY.split(os.path.sep)[-1]
-        init = open('/tmp/__init__.py', 'a')
-        init.write('\n')
-        init.close()
-        temp_sweetpotato_py_file = os.path.join('/tmp/', sweetpotato_py_file)
-        try:
-            copy(SWEETPOTATO_PY, temp_sweetpotato_py_file)
-        except SameFileError:
-            pass
-        os.chdir('/tmp')
+    # def test_minimal_install(self):
+    #     sweetpotato_py_file = SWEETPOTATO_PY.split(os.path.sep)[-1]
+    #     init = open('/tmp/__init__.py', 'a')
+    #     init.write('\n')
+    #     init.close()
+    #     temp_sweetpotato_py_file = os.path.join('/tmp/', sweetpotato_py_file)
+    #     try:
+    #         copy(SWEETPOTATO_PY, temp_sweetpotato_py_file)
+    #     except SameFileError:
+    #         pass
+    #     os.chdir('/tmp')
 
-        command = './{0} -c {1} -q -W'.format(SCRIPT_NAME, TEST_CONF_FILE)
+        # command = './{0} -c {1} -q -W'.format(SCRIPT_NAME, TEST_CONF_FILE)
 
-        self.assertRaises(
-            SystemExit,
-            p=subprocess.Popen(command.split())
-        )
+        # self.assertRaises(
+        #     SystemExit,
+        #     p=subprocess.Popen(command.split())
+        # )
 
     def test_stop_when_stopped(self):
         self.assertRaises(
             SystemExit,
-            sweetpotato.arg_parse, (
+            setup_args, (
                 '--conf', '{}'.format(TEST_CONF_FILE),
                 '--quiet',
                 '--stop'
@@ -213,7 +211,7 @@ class SweetpotatoTests(unittest.TestCase):
     def test_uptime_when_server_not_running(self):
         self.assertRaises(
             SystemExit,
-            sweetpotato.arg_parse, (
+            setup_args, (
                 '--conf', '{}'.format(TEST_CONF_FILE),
                 '--quiet',
                 '--uptime'
