@@ -4,6 +4,7 @@ import sys
 
 from .common import *
 from .core import *
+from .daemon import run_daemon
 from .error import *
 from .web import run_webui
 
@@ -20,6 +21,7 @@ def setup_args(args):
     actions.add_argument('-D', '--daemon', action='store_true', help="run the WebUI as a background process")
     actions.add_argument('-g', '--genconf', action='store_true', help='generate conf file from passed-in CLI arguments')
     actions.add_argument('-j', '--json', action='store_true', help='output settings as json')
+    actions.add_argument('-K', '--kill', action='store_true', help='terminate the daemonized process')
     actions.add_argument('-l', '--list', action='store_true', help='list logged-in players')
     actions.add_argument('-o', '--offline', action='store_true', help='make an offline backup (stops the server)')
     actions.add_argument('-r', '--restart', action='store_true', help='restart the server')
@@ -50,8 +52,11 @@ def setup_args(args):
                           help='set the name of your screen session. Default: the same as your world')
     settings.add_argument('-v', '--mc-version', metavar='MC VERSION',
                           help='set the version of minecraft. Default: ' + MCVERSION)
+    # settings.add_argument('--webui-port', dest='webui_port',
+    #                       help='Port to bind to for the WebUI. Default: ' + str(DEFAULT_WEBUI_PORT))
     settings.add_argument('-w', '--world', metavar='WORLD NAME',
                           help='set the name of your Minecraft world. Default: ' + DEFAULT_WORLD_NAME)
+    settings.add_argument('--world-only', help='back up only the world files', action='store_true')
     settings.add_argument('-z', '--compression', choices=COMPRESSION_CHOICES, dest='compression',
                           help='select compression type. Default: ' + DEFAULT_COMPRESSION)
 
@@ -91,8 +96,6 @@ def setup_args(args):
         try:
             read_conf_file(DEFAULT_CONF_FILE, s)
             s.conf_file = DEFAULT_CONF_FILE
-            # if s.fancy:
-            #     s.fancy = True
         except (configparser.NoSectionError, ConfFileError):
             pass
     if args.backup_dir:
@@ -131,6 +134,10 @@ def setup_args(args):
         s.webui_port = args.webui_port
     if args.world:
         s.world_name = args.world
+    if args.world_only:
+        world_only = True
+    else:
+        world_only = False
     if args.compression:
         s.compression = args.compression
 
@@ -162,7 +169,7 @@ def setup_args(args):
     if args.backup:
         print_pre = '[' + Colors.yellow_green + 'live-backup' + Colors.end + '] '
         try:
-            run_server_backup(print_pre, s, quiet)
+            run_server_backup(print_pre, s, quiet, world_only)
         except BackupFileAlreadyExistsError as e:
             send_command('say Backup Done!', s.screen_name)
             error_and_die(e)
@@ -172,14 +179,16 @@ def setup_args(args):
         except ServerAlreadyRunningError as e:
             error_and_die(e.msg.strip('"'))
     elif args.daemon:
-        print('Do the daemon.. HUH!')
-        sys.exit(0)
+        print(run_daemon(s))
     elif args.genconf:
         print(s.as_conf_file)
     elif args.json:
         if running:
             s.running = running
         print(s.as_json)
+    elif args.kill:
+        print('KILL')
+        # close_daemon()
     elif args.list:
         if running and not quiet:
             print_pre = '[' + Colors.yellow_green + 'list' + Colors.end + '] '
@@ -194,13 +203,13 @@ def setup_args(args):
                       Colors.end
                       )
         elif not quiet:
-            error_and_die("{} is not running!".format(s.world_name))
+            error_and_die(s.world_name + " is not running!")
         else:
             die_silently()
     elif args.offline:
         print_pre = '[' + Colors.yellow_green + 'offline-backup' + Colors.end + '] '
         try:
-            run_server_backup(print_pre, s, quiet, offline=True)
+            run_server_backup(print_pre, s, quiet, world_only, offline=True)
         except BackupFileAlreadyExistsError as e:
             start_server(None, s, quiet)
             error_and_die(e)
@@ -245,14 +254,12 @@ def setup_args(args):
         except ServerNotRunningError as e:
             error_and_die(e)
     elif args.web:
-        # TODO daemon
         run_webui(s, quiet)
     else:
         parser.print_usage()
 
 
 def parse_args():
-    # TODO: better webui logging and logging in general
     # TODO: get actual level seed
     # ensure dependencies are here
     try:

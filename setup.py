@@ -9,6 +9,10 @@ progname = __import__('sweetpotato').PROGNAME
 version = __import__('sweetpotato').VERSION
 URL = 'http://hristoast.github.io/sweetpotato/'
 
+with open('README.md', 'r') as r:
+    rl = r.read()
+    r.close()
+
 setup(
     name=progname,
     version=version,
@@ -18,7 +22,7 @@ setup(
     maintainer_email=author_email,
     url=URL,
     description=description,
-    # long_description=,  # TODO
+    long_description=str(r),
     download_url=URL,
     classifiers=[
         'Development Status :: 4 - Beta',

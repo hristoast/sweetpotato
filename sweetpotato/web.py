@@ -2,7 +2,6 @@ try:
     import bottle
 except ImportError:
     bottle = None
-# import logging
 import sys
 
 from collections import OrderedDict
