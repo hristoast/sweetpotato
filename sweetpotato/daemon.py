@@ -1,105 +1,51 @@
-"""
-Original credit for daemon3.py belongs to:
-
-http://www.jejik.com/articles/2007/02/a_simple_unix_linux_daemon_in_python/
-
-Thank you!
-"""
 import sys
-import os
-import time
-import atexit
-import signal
+
+from sweetpotato.common import *
+from sweetpotato.core import error_and_die
+from sweetpotato.web import SweetpotatoDaemon
+
+try:
+    from daemon import runner
+except ImportError:
+    runner = None
 
 
-__all__ = ['Daemon']
+__all__ = ['daemon_action', 'run_daemon']
 
 
-class Daemon:
-    def __init__(self, pidfile):
-        self.pidfile = pidfile
+def daemon_action(action):
+    s = _setup_daemon()
+    if runner:
+        sys.argv.insert(1, action)
+        daemon_runner = runner.DaemonRunner(s)
+        daemon_runner.do_action()
+    else:
+        error_and_die(DAEMON_PY3K_ERROR)
 
-    def daemonize(self):
-        try:
-            pid = os.fork()
-            if pid > 0:
-                sys.exit(0)
-        except OSError as err:
-            sys.stderr.write('fork #1 failed: {0}\n'.format(err))
-            sys.exit(1)
-        os.chdir('/')
-        os.setsid()
-        os.umask(0)
-        try:
-            pid = os.fork()
-            if pid > 0:
-                sys.exit(0)
-        except OSError as err:
-            sys.stderr.write('fork #2 failed: {0}\n'.format(err))
-            sys.exit(1)
-        sys.stdout.flush()
-        sys.stderr.flush()
-        si = open(os.devnull, 'r')
-        so = open(os.devnull, 'a+')
-        se = open(os.devnull, 'a+')
-        os.dup2(si.fileno(), sys.stdin.fileno())
-        os.dup2(so.fileno(), sys.stdout.fileno())
-        os.dup2(se.fileno(), sys.stderr.fileno())
-        atexit.register(self.delpid)
-        pid = str(os.getpid())
-        with open(self.pidfile, 'w+') as f:
-            f.write(pid + '\n')
 
-    def delpid(self):
-        os.remove(self.pidfile)
+def _ensure_default_log_dir():
+    if not os.path.isdir(DEFAULT_LOG_DIR):
+        os.makedirs(DEFAULT_LOG_DIR)
 
-    def start(self):
-        try:
-            with open(self.pidfile, 'r') as pf:
-                pid = int(pf.read().strip())
-        except IOError:
-            pid = None
-        if pid:
-            message = "pidfile {0} already exist. " + \
-                      "Daemon already running?\n"
-            sys.stderr.write(message.format(self.pidfile))
-            sys.exit(1)
-        self.daemonize()
-        self.run()
 
-    def stop(self):
-        try:
-            with open(self.pidfile, 'r') as pf:
-                pid = int(pf.read().strip())
-        except IOError:
-            pid = None
-        if not pid:
-            message = "pidfile {0} does not exist. " + \
-                      "Daemon not running?\n"
-            sys.stderr.write(message.format(self.pidfile))
-            return
-        try:
-            while 1:
-                os.kill(pid, signal.SIGTERM)
-                time.sleep(0.1)
-        except OSError as err:
-            e = str(err.args)
-            if e.find("No such process") > 0:
-                if os.path.exists(self.pidfile):
-                    os.remove(self.pidfile)
-            else:
-                print(str(err.args))
-                sys.exit(1)
+def _ensure_default_run_dir():
+    if not os.path.isdir(os.path.dirname(DEFAULT_PIDFILE)):
+        os.makedirs(os.path.dirname(DEFAULT_PIDFILE))
 
-    def restart(self):
-        self.stop()
-        self.start()
 
-    def run(self):
-        """
-        You should override this method when you subclass Daemon.
+def run_daemon():
+    s = _setup_daemon()
+    if runner:
+        daemon_runner = runner.DaemonRunner(s)
+        daemon_runner.do_action()
+    else:
+        # TODO: warning about requiring patched version
+        error_and_die(DAEMON_PY3K_ERROR)
 
-        It will be called after the process has been daemonized by
-        start() or restart().
-        """
-        pass
+
+def _setup_daemon():
+    _ensure_default_log_dir()
+    _ensure_default_run_dir()
+    s = SweetpotatoDaemon()
+    s.configure()
+    return s

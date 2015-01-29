@@ -284,7 +284,11 @@ It's easy to put `sweetpotato` behind an HTTP server if your server is out in th
 
 ### Daemon mode
 
-Coming soon ...
+The experimental daemon mode can be accessed via the `--daemon` or `-D` command line options, or via the `sweetpotatod` shortcut script. Either method take stop, start, or restart as arguments to perform the respective actions.
+
+**[A patched version of python-daemon-3K](https://github.com/hristoast/python-daemon) is required for daemon mode!**
+
+This function is highly experimental and not highly tested.
 
 ### Forge
 
