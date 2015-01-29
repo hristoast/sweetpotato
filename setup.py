@@ -61,6 +61,7 @@ setup(
     ],
     packages=find_packages(),
     entry_points={'console_scripts': [
-        'sweetpotato = sweetpotato:main'
+        'sweetpotato = sweetpotato:main',
+        'sweetpotatod = sweetpotato:daemon'
     ]}
 )

@@ -9,7 +9,7 @@ TEST = ./tests.py
 .DEFAULT_GOAL := sdist
 .PHONY: all
 
-all: bdist build clean cleantest install max reinstall sdist test
+all: bdist build clean cleantest install i reinstall sdist test
 
 # sweetpotato won't actually work out of a bdist ...
 bdist:
@@ -28,7 +28,7 @@ cleantest:
 install:
 	$(INSTALL)
 
-max:
+i:
 	$(INSTALL) && $(CLEAN)
 
 sdist:

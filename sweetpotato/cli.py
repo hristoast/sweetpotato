@@ -4,7 +4,7 @@ import sys
 
 from .common import *
 from .core import *
-from .daemon import run_daemon
+from .daemon import daemon_action
 from .error import *
 from .web import run_webui
 
@@ -18,7 +18,8 @@ def setup_args(args):
     actions = parser.add_mutually_exclusive_group(required=True)
     actions.add_argument('-b', '--backup', action='store_true', help='back up your Minecraft server (live)')
     actions.add_argument('-C', '--create', action='store_true', help='create a server from settings')
-    actions.add_argument('-D', '--daemon', action='store_true', help="run the WebUI as a background process")
+    actions.add_argument('-D', '--daemon', choices=['stop', 'start', 'restart'],
+                         help="run the WebUI as a background process")
     actions.add_argument('-g', '--genconf', action='store_true', help='generate conf file from passed-in CLI arguments')
     actions.add_argument('-j', '--json', action='store_true', help='output settings as json')
     actions.add_argument('-K', '--kill', action='store_true', help='terminate the daemonized process')
@@ -76,7 +77,7 @@ def setup_args(args):
                                 help='set the log location. Default: ' + DEFAULT_LOG_DIR)
     webui_settings.add_argument('--pidfile', '-pid', metavar='PID FILE',
                                 help='set the pid file used when running in daemon mode. Default: ' + DEFAULT_PIDFILE)
-    webui_settings.add_argument('--webui-port', dest='webui_port',
+    webui_settings.add_argument('--webui-port', dest='webui_port', metavar='WEBUI PORT',
                                 help='Port to bind to for the WebUI. Default: ' + str(DEFAULT_WEBUI_PORT))
 
     parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + VERSION)
@@ -179,7 +180,7 @@ def setup_args(args):
         except ServerAlreadyRunningError as e:
             error_and_die(e.msg.strip('"'))
     elif args.daemon:
-        print(run_daemon(s))
+        daemon_action(args.daemon)
     elif args.genconf:
         print(s.as_conf_file)
     elif args.json:

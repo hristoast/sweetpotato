@@ -2,6 +2,7 @@ try:
     import bottle
 except ImportError:
     bottle = None
+import configparser
 import sys
 
 from collections import OrderedDict
@@ -16,7 +17,35 @@ from .core import *
 from .error import *
 
 
-__all__ = ['run_webui']
+__all__ = ['SweetpotatoDaemon', 'run_webui']
+
+
+class SweetpotatoDaemon(SweetpotatoConfig):
+    """TODO"""
+    def __init__(self):
+        super().__init__()
+        self.stdin_path = '/dev/null'
+        self.stdout_path = '/dev/tty'
+        self.stderr_path = '/dev/tty'
+        self.pidfile_path = DEFAULT_PIDFILE
+        self.pidfile_timeout = DEFAULT_PIDFILE_TIMEOUT
+
+    def configure(self):
+        """
+        Provides a way to configure a SweetpotatoConfig instance outside of the
+        normal command line means. Useful for daemon contexts.
+
+        @return:
+        """
+        try:
+            read_conf_file(DEFAULT_CONF_FILE, self)
+            self.conf_file = DEFAULT_CONF_FILE
+        except (configparser.NoSectionError, ConfFileError):
+            error_and_die('You must set a default configuration to use {}d!'.format(PROGNAME))
+
+    def run(self):
+        while True:
+            run_webui(self, True)
 
 
 def run_webui(settings, quiet):
@@ -243,11 +272,3 @@ def run_webui(settings, quiet):
                       'with Python-Markdown as an optional dependency.')
     else:
         die_silently()
-
-
-
-
-
-
-
-
