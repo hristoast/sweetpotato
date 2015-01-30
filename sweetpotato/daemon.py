@@ -1,8 +1,9 @@
+import configparser
 import sys
 
 from sweetpotato.common import *
-from sweetpotato.core import error_and_die
-from sweetpotato.web import SweetpotatoDaemon
+from sweetpotato.core import error_and_die, SweetpotatoConfig, read_conf_file, ConfFileError
+from sweetpotato.web import run_webui
 
 try:
     from daemon import runner
@@ -10,7 +11,38 @@ except ImportError:
     runner = None
 
 
-__all__ = ['daemon_action', 'run_daemon']
+__all__ = ['SweetpotatoDaemon', 'daemon_action', 'run_daemon']
+
+
+class SweetpotatoDaemon(SweetpotatoConfig):
+    """A bootstrap-able version of SweetpotatoConfig to be used for the daemon"""
+    def __init__(self):
+        super().__init__()
+        self.stdin_path = '/dev/null'
+        self.stdout_path = '/dev/tty'
+        self.stderr_path = '/dev/tty'
+        self.pidfile_path = DEFAULT_PIDFILE
+        self.pidfile_timeout = DEFAULT_PIDFILE_TIMEOUT
+
+    def configure(self):
+        """
+        Provides a way to configure a SweetpotatoConfig instance outside of the
+        normal command line means.
+
+        We won't be taking command-line options, so the only source for
+        configurations will be the default config file.
+
+        @return:
+        """
+        try:
+            read_conf_file(DEFAULT_CONF_FILE, self)
+            self.conf_file = DEFAULT_CONF_FILE
+        except (configparser.NoSectionError, ConfFileError):
+            error_and_die('You must set a default configuration to use {}d!'.format(PROGNAME))
+
+    def run(self):
+        while True:
+            run_webui(self, True)
 
 
 def daemon_action(action):

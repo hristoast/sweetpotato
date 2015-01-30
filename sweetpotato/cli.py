@@ -22,7 +22,6 @@ def setup_args(args):
                          help="run the WebUI as a background process")
     actions.add_argument('-g', '--genconf', action='store_true', help='generate conf file from passed-in CLI arguments')
     actions.add_argument('-j', '--json', action='store_true', help='output settings as json')
-    actions.add_argument('-K', '--kill', action='store_true', help='terminate the daemonized process')
     actions.add_argument('-l', '--list', action='store_true', help='list logged-in players')
     actions.add_argument('-o', '--offline', action='store_true', help='make an offline backup (stops the server)')
     actions.add_argument('-r', '--restart', action='store_true', help='restart the server')
@@ -53,8 +52,6 @@ def setup_args(args):
                           help='set the name of your screen session. Default: the same as your world')
     settings.add_argument('-v', '--mc-version', metavar='MC VERSION',
                           help='set the version of minecraft. Default: ' + MCVERSION)
-    # settings.add_argument('--webui-port', dest='webui_port',
-    #                       help='Port to bind to for the WebUI. Default: ' + str(DEFAULT_WEBUI_PORT))
     settings.add_argument('-w', '--world', metavar='WORLD NAME',
                           help='set the name of your Minecraft world. Default: ' + DEFAULT_WORLD_NAME)
     settings.add_argument('--world-only', help='back up only the world files', action='store_true')
@@ -187,9 +184,6 @@ def setup_args(args):
         if running:
             s.running = running
         print(s.as_json)
-    elif args.kill:
-        print('KILL')
-        # close_daemon()
     elif args.list:
         if running and not quiet:
             print_pre = '[' + Colors.yellow_green + 'list' + Colors.end + '] '
