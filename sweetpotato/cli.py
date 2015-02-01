@@ -133,9 +133,9 @@ def setup_args(args):
     if args.world:
         s.world_name = args.world
     if args.world_only:
-        world_only = True
+        s.world_only = world_only = True
     else:
-        world_only = False
+        s.world_only = world_only = False
     if args.compression:
         s.compression = args.compression
 
@@ -167,7 +167,7 @@ def setup_args(args):
     if args.backup:
         print_pre = '[' + Colors.yellow_green + 'live-backup' + Colors.end + '] '
         try:
-            run_server_backup(print_pre, s, quiet, world_only)
+            run_server_backup(print_pre, s, quiet, running, s.world_only)
         except BackupFileAlreadyExistsError as e:
             send_command('say Backup Done!', s.screen_name)
             error_and_die(e)
@@ -204,7 +204,7 @@ def setup_args(args):
     elif args.offline:
         print_pre = '[' + Colors.yellow_green + 'offline-backup' + Colors.end + '] '
         try:
-            run_server_backup(print_pre, s, quiet, world_only, offline=True)
+            run_server_backup(print_pre, s, quiet, running, world_only, offline=True)
         except BackupFileAlreadyExistsError as e:
             start_server(None, s, quiet)
             error_and_die(e)

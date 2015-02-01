@@ -45,6 +45,7 @@ class SweetpotatoConfig:
         self.server_dir = None
         self.webui_port = DEFAULT_WEBUI_PORT
         self.world_name = DEFAULT_WORLD_NAME
+        self.world_only = False
 
     @property
     def as_conf_file(self):
@@ -846,12 +847,15 @@ def restart_server(print_pre, settings, quiet):
         print('Done!' + Colors.end)
 
 
-def run_server_backup(print_pre, settings, quiet, world_only, offline=False):  # TODO
+def run_server_backup(print_pre, settings, quiet, running, world_only, offline=False):
     """
     Runs the configured backup on the configured server.
 
     @param print_pre:
     @param settings:
+    @param quiet:
+    @param running:
+    @param world_only:
     @param offline:
     @return:
     """
@@ -859,8 +863,6 @@ def run_server_backup(print_pre, settings, quiet, world_only, offline=False):  #
     date_stamp = datetime.now().strftime('%Y-%m-%d')
     force = _is_forced(settings)
     forge = settings.forge
-
-    launch_server = _format_launch_cmd(settings)
 
     screen_name = settings.screen_name
     server_dir = settings.server_dir
@@ -870,7 +872,6 @@ def run_server_backup(print_pre, settings, quiet, world_only, offline=False):  #
     backup_file = '{0}_{1}.tar.{2}'.format(date_stamp, world_name, compression)
     full_path_to_backup_file = os.path.join(backup_dir, backup_file)
     backup_made_today = os.path.isfile(full_path_to_backup_file)
-    server_running_at_first = is_server_running(server_dir)
 
     if backup_made_today and not force:
         sys.stdout.flush()
@@ -885,8 +886,8 @@ def run_server_backup(print_pre, settings, quiet, world_only, offline=False):  #
 
     if offline:
         print(print_pre + Colors.light_blue, end=' ')
-        if server_running_at_first:
-            server_pid = server_running_at_first.get('pid')
+        if running:
+            server_pid = running.get('pid')
             if not quiet:
                 print('Stopping "{}" ...'.format(world_name), end=' ')
             sys.stdout.flush()
@@ -896,7 +897,7 @@ def run_server_backup(print_pre, settings, quiet, world_only, offline=False):  #
         elif not quiet:
             print('Backing up "{}" ...'.format(world_name), end=' ')
         sys.stdout.flush()
-    else:
+    elif running:
         send_command('save-all', screen_name)
         send_command('save-off', screen_name)
         if not quiet:
@@ -906,29 +907,26 @@ def run_server_backup(print_pre, settings, quiet, world_only, offline=False):  #
 
     _create_dir(backup_dir)
 
-    if not _can_xz():
+    if not _can_xz() and settings.compression == 'xz':
         compression = 'gz'
 
     tar = tarfile.open(full_path_to_backup_file, 'w:{}'.format(compression))
-    # TODO: world_only
-    if forge:
+    if world_only:
+        print_pre = '[' + Colors.yellow_green + 'backup' + Colors.end + '] '
+        print(print_pre + Colors.light_blue, end='')
+        print('Backing up "{}" ...'.format(world_name), end=' ')
+        sys.stdout.flush()
+        tar.add(os.path.join(server_dir, world_name))
+    elif forge:
         tar.add(server_dir, exclude=lambda x: 'dynmap' in x)
     else:
         tar.add(server_dir)
     tar.close()
 
-    if not offline:
+    if not offline and running:
         send_command('say Backup complete', screen_name)
         send_command('save-on', screen_name)
 
-    screen_started = _is_screen_started(screen_name)
-    if offline and server_running_at_first:
-        if not screen_started:
-            start_screen(screen_name, server_dir)
-        if not quiet:
-            print('Starting "{}" ...'.format(world_name), end=' ')
-        sys.stdout.flush()
-        send_command(launch_server, screen_name)
     if not quiet:
         print('Done!' + Colors.end)
 

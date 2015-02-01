@@ -91,10 +91,9 @@ JSON = """{
     "screen_name": "SweetpotatoWorld",
     "server_dir": "/tmp/_sp_test_server",
     "webui_port": 8181,
-    "world_name": "SweetpotatoWorld"
+    "world_name": "SweetpotatoWorld",
+    "world_only": false
 }"""
-# JSON = ''''''
-# JSON_NOT_PRETTY = '{"backup_dir": "/tmp/_sp_test_backup", "compression": "gz", "conf_file": null, "level_seed": null, "mc_version": "1.8.1", "mem_format": "MB", "mem_max": "1024", "mem_min": "512", "port": "25565", "running": false, "screen_name": "SweetpotatoWorld", "server_dir": "/tmp/_sp_test_server", "webui_port": 8181, "world_name": "SweetpotatoWorld"}'
 
 
 class SweetpotatoTests(unittest.TestCase):
