@@ -912,10 +912,11 @@ def run_server_backup(print_pre, settings, quiet, running, world_only, offline=F
 
     tar = tarfile.open(full_path_to_backup_file, 'w:{}'.format(compression))
     if world_only:
-        print_pre = '[' + Colors.yellow_green + 'backup' + Colors.end + '] '
-        print(print_pre + Colors.light_blue, end='')
-        print('Backing up "{}" ...'.format(world_name), end=' ')
-        sys.stdout.flush()
+        if not running:
+            print_pre = '[' + Colors.yellow_green + 'backup' + Colors.end + '] '
+            print(print_pre + Colors.light_blue, end='')
+            print('Backing up "{}" ...'.format(world_name), end=' ')
+            sys.stdout.flush()
         tar.add(os.path.join(server_dir, world_name))
     elif forge:
         tar.add(server_dir, exclude=lambda x: 'dynmap' in x)
