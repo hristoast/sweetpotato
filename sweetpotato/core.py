@@ -912,7 +912,7 @@ def run_server_backup(print_pre, settings, quiet, running, world_only, offline=F
 
     tar = tarfile.open(full_path_to_backup_file, 'w:{}'.format(compression))
     if world_only:
-        if not running:
+        if not running and not offline:
             print_pre = '[' + Colors.yellow_green + 'backup' + Colors.end + '] '
             print(print_pre + Colors.light_blue, end='')
             print('Backing up "{}" ...'.format(world_name), end=' ')
