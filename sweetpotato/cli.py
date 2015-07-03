@@ -1,83 +1,137 @@
 import argparse
 import configparser
+import os
 import sys
 
-from .common import *
-from .core import *
+from .common import (COMPRESSION_CHOICES, DEFAULT_COMPRESSION,
+                     DEFAULT_CONF_FILE, DEFAULT_LOG_DIR, DEFAULT_PERMGEN,
+                     DEFAULT_PIDFILE, DEFAULT_SERVER_PORT, DEFAULT_WEBUI_PORT,
+                     DEFAULT_WORLD_NAME, DESCRIPTION, MCVERSION, PROGNAME,
+                     VERSION, Colors)
+from .core import (SweetpotatoConfig, create_server, dependency_check,
+                   die_silently, error_and_die, get_exe_path, get_uptime,
+                   get_uptime_raw, get_uptime_string, is_server_running,
+                   list_players, read_conf_file, run_server_backup,
+                   send_command, start_server, stop_server, restart_server,
+                   validate_directories, validate_mem_values,
+                   validate_settings)
 from .daemon import daemon_action
-from .error import *
+from .error import (BackupFileAlreadyExistsError, ConfFileError,
+                    EmptySettingError, MissingExeError, NoDirFoundError,
+                    ServerAlreadyRunningError, ServerNotRunningError)
 from .web import run_webui
-
-
-__all__ = ['parse_args', 'setup_args']
 
 
 def setup_args(args):
     parser = argparse.ArgumentParser(description=DESCRIPTION, prog=PROGNAME)
 
     actions = parser.add_mutually_exclusive_group(required=True)
-    actions.add_argument('-b', '--backup', action='store_true', help='back up your Minecraft server (live)')
-    actions.add_argument('-C', '--create', action='store_true', help='create a server from settings')
-    actions.add_argument('-D', '--daemon', choices=['stop', 'start', 'restart'],
+    actions.add_argument('-b', '--backup', action='store_true',
+                         help='back up your Minecraft server (live)')
+    actions.add_argument('-C', '--create', action='store_true',
+                         help='create a server from settings')
+    actions.add_argument('-D', '--daemon',
+                         choices=['stop', 'start', 'restart'],
                          help="run the WebUI as a background process")
-    actions.add_argument('-g', '--genconf', action='store_true', help='generate conf file from passed-in CLI arguments')
-    actions.add_argument('-j', '--json', action='store_true', help='output settings as json')
-    actions.add_argument('-l', '--list', action='store_true', help='list logged-in players')
-    actions.add_argument('-o', '--offline', action='store_true', help='make an offline backup (stops the server)')
-    actions.add_argument('-r', '--restart', action='store_true', help='restart the server')
+    actions.add_argument('-g', '--genconf', action='store_true',
+                         help='generate conf file from passed-in arguments')
+    actions.add_argument('-j', '--json', action='store_true',
+                         help='output settings as json')
+    actions.add_argument('-l', '--list', action='store_true',
+                         help='list logged-in players')
+    actions.add_argument('-o', '--offline', action='store_true',
+                         help='make an offline backup (stops the server)')
+    actions.add_argument('-r', '--restart', action='store_true',
+                         help='restart the server')
     actions.add_argument('--say', help=argparse.SUPPRESS)
-    actions.add_argument('--start', action='store_true', help='start the server in a screen session')
-    # actions.add_argument('--save', action='store_true', help='save the current config')
+    actions.add_argument('--start', action='store_true',
+                         help='start the server in a screen session')
+    # actions.add_argument('--save', action='store_true',
+    #                      help='save the current config')
     actions.add_argument('--stop', action='store_true', help='stop the server')
-    # actions.add_argument('--testing', action='store_true', help=argparse.SUPPRESS)
-    actions.add_argument('-U', '--uptime', action='store_true', help='Show server uptime in hours')
-    actions.add_argument('-W', '--web', action='store_true', help='run the WebUI')
+    # actions.add_argument('--testing', action='store_true',
+    #                      help=argparse.SUPPRESS)
+    actions.add_argument('-U', '--uptime', action='store_true',
+                         help='Show server uptime in hours')
+    actions.add_argument('-W', '--web', action='store_true',
+                         help='run the WebUI')
     # actions.add_argument('--wipe', action='store_true', help='Wipe configs')
 
-    settings = parser.add_argument_group('Settings', 'config options for %(prog)s')
-    settings.add_argument('-c', '--conf', help='config file containing your settings', metavar='CONF FILE')
-    settings.add_argument('-d', '--backup-dir', help='the FULL path to your backups folder',
+    settings = parser.add_argument_group('Settings',
+                                         'config options for %(prog)s')
+    settings.add_argument('-c', '--conf',
+                          help='config file containing your settings',
+                          metavar='CONF FILE')
+    settings.add_argument('-d', '--backup-dir',
+                          help='the FULL path to your backups folder',
                           metavar='/path/to/backups')
-    settings.add_argument('-x', '--fancy', action='store_true', help="print json with fancy indentation and sorting")
-    settings.add_argument('-F', '--force', help='forces writing of server files, even when they already exist',
+    settings.add_argument('-x', '--fancy', action='store_true',
+                          help="print json with fancy indentation and sorting")
+    settings.add_argument('-F', '--force',
+                          help='forces writing of server files,'
+                               ' even when they already exist',
                           action='store_true')
     settings.add_argument('--level-seed', '--seed', metavar="LEVEL SEED",
-                          help='optional and only applied during world creation')
+                          help='optional and only applied'
+                               'during world creation')
     settings.add_argument('-p', '--port',
-                          help='port you wish to run your server on. Default: ' + DEFAULT_SERVER_PORT)
-    settings.add_argument('-q', '--quiet', action='store_true', help='Silence all output')
+                          help='port you wish to run your server on.'
+                               ' Default: ' + DEFAULT_SERVER_PORT)
+    settings.add_argument('-q', '--quiet', action='store_true',
+                          help='Silence all output')
     settings.add_argument('-s', '--server-dir', metavar='/path/to/server',
-                          help='set the FULL path to the directory containing your server files')
+                          help='set the FULL path to the directory'
+                               ' containing your server files')
     settings.add_argument('-S', '--screen', metavar='SCREEN NAME',
-                          help='set the name of your screen session. Default: the same as your world')
+                          help='set the name of your screen session.'
+                               ' Default: the same as your world')
     settings.add_argument('-v', '--mc-version', metavar='MC VERSION',
-                          help='set the version of minecraft. Default: ' + MCVERSION)
+                          help='set the version of minecraft.'
+                               ' Default: ' + MCVERSION)
     settings.add_argument('-w', '--world', metavar='WORLD NAME',
-                          help='set the name of your Minecraft world. Default: ' + DEFAULT_WORLD_NAME)
-    settings.add_argument('--world-only', help='back up only the world files', action='store_true')
-    settings.add_argument('-z', '--compression', choices=COMPRESSION_CHOICES, dest='compression',
-                          help='select compression type. Default: ' + DEFAULT_COMPRESSION)
+                          help='set the name of your Minecraft world.'
+                               ' Default: ' + DEFAULT_WORLD_NAME)
+    settings.add_argument('--world-only', help='back up only the world files',
+                          action='store_true')
+    settings.add_argument('-z', '--compression', choices=COMPRESSION_CHOICES,
+                          dest='compression',
+                          help='select compression type.'
+                               ' Default: ' + DEFAULT_COMPRESSION)
 
     mem_values = settings.add_mutually_exclusive_group()
-    mem_values.add_argument('-gb', '-GB', help='set min/max memory usage (in gigabytes)',
+    mem_values.add_argument('-gb', '-GB',
+                            help='set min/max memory usage (in gigabytes)',
                             metavar=('MIN', 'MAX'), nargs=2)
-    mem_values.add_argument('-mb', '-MB', help='set min/max memory usage (in megabytes)',
+    mem_values.add_argument('-mb', '-MB',
+                            help='set min/max memory usage (in megabytes)',
                             metavar=('MIN', 'MAX'), nargs=2)
 
-    forge_settings = parser.add_argument_group('Mods', 'Options for Forge users')
-    forge_settings.add_argument('-f', '--forge', help='version of Forge you are using.', metavar='FORGE VERSION')
+    forge_settings = parser.add_argument_group('Mods',
+                                               'Options for Forge users')
+    forge_settings.add_argument('-f', '--forge',
+                                help='version of Forge you are using.',
+                                metavar='FORGE VERSION')
     forge_settings.add_argument('-P', '--permgen',
-                                help='Amount of permgen to use in MB. Default: ' + DEFAULT_PERMGEN)
+                                help='Amount of permgen to use in MB.'
+                                     ' Default: ' + DEFAULT_PERMGEN)
 
-    webui_settings = parser.add_argument_group('WebUI', 'More configuration options for the WebUI and daemon mode')
+    webui_settings = parser.add_argument_group('WebUI',
+                                               'More configuration options for'
+                                               ' the WebUI and daemon mode')
     webui_settings.add_argument('--log-dir', '-L', metavar="LOG DIR",
-                                help='set the log location. Default: ' + DEFAULT_LOG_DIR)
+                                help='set the log location.'
+                                     ' Default: ' + DEFAULT_LOG_DIR)
     webui_settings.add_argument('--pidfile', '-pid', metavar='PID FILE',
-                                help='set the pid file used when running in daemon mode. Default: ' + DEFAULT_PIDFILE)
-    webui_settings.add_argument('--webui-port', dest='webui_port', metavar='WEBUI PORT',
-                                help='Port to bind to for the WebUI. Default: ' + str(DEFAULT_WEBUI_PORT))
+                                help='set the pid file used when running in'
+                                     ' daemon mode. Default: ' +
+                                     DEFAULT_PIDFILE)
+    webui_settings.add_argument('--webui-port', dest='webui_port',
+                                metavar='WEBUI PORT',
+                                help='Port to bind to for the WebUI.'
+                                     ' Default: ' + str(DEFAULT_WEBUI_PORT))
 
-    parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + VERSION)
+    parser.add_argument('-V', '--version', action='version',
+                        version='%(prog)s ' + VERSION)
 
     args = parser.parse_args(args)
     s = SweetpotatoConfig()
@@ -146,7 +200,8 @@ def setup_args(args):
 
     try:
         validate_settings(s)
-        if s.world_name != DEFAULT_WORLD_NAME and not args.screen and s.screen_name == DEFAULT_WORLD_NAME:
+        if s.world_name != DEFAULT_WORLD_NAME and not args.screen and \
+           s.screen_name == DEFAULT_WORLD_NAME:
             s.screen_name = s.world_name
     except EmptySettingError as e:
         error_and_die(e)
@@ -160,12 +215,14 @@ def setup_args(args):
     try:
         validate_mem_values(s.mem_min, s.mem_max)
     except ValueError:
-        error_and_die('The maximum memory value must be greater than the minimum!')
+        error_and_die('The maximum memory value must be greater'
+                      ' than the minimum!')
 
     running = is_server_running(s.server_dir)
 
     if args.backup:
-        print_pre = '[' + Colors.yellow_green + 'live-backup' + Colors.end + '] '
+        print_pre = '[' + Colors.yellow_green + 'live-backup' \
+                    + Colors.end + '] '
         try:
             run_server_backup(print_pre, s, quiet, running, s.world_only)
         except BackupFileAlreadyExistsError as e:
@@ -190,7 +247,8 @@ def setup_args(args):
             players = list_players(s)
             if players:
                 for p in players:
-                    print(print_pre + Colors.light_blue + p.strip() + Colors.end)
+                    print(print_pre + Colors.light_blue + p.strip()
+                          + Colors.end)
             else:
                 print(print_pre +
                       Colors.yellow +
@@ -202,9 +260,11 @@ def setup_args(args):
         else:
             die_silently()
     elif args.offline:
-        print_pre = '[' + Colors.yellow_green + 'offline-backup' + Colors.end + '] '
+        print_pre = '[' + Colors.yellow_green + 'offline-backup' \
+                    + Colors.end + '] '
         try:
-            run_server_backup(print_pre, s, quiet, running, world_only, offline=True)
+            run_server_backup(print_pre, s, quiet, running, world_only,
+                              offline=True)
         except BackupFileAlreadyExistsError as e:
             start_server(None, s, quiet)
             error_and_die(e)

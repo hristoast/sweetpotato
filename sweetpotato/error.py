@@ -1,4 +1,3 @@
-
 class SweetpotatoIOErrorBase(IOError):
     def __init__(self, msg):
         self.msg = msg
@@ -13,7 +12,9 @@ class BackupFileAlreadyExistsError(SweetpotatoIOErrorBase):
 
 
 class ConfFileError(SweetpotatoIOErrorBase):
-    """Raised when a given conf file doesn't exist or have the right section."""
+    """
+    Raised when a given conf file doesn't exist or have the right section.
+    """
     pass
 
 
@@ -48,5 +49,8 @@ class ServerNotRunningError(SweetpotatoIOErrorBase):
 
 
 class UnsupportedVersionError(SweetpotatoIOErrorBase):
-    """Raised when we try to generate a server.properties for an unsupported mc_version."""
+    """
+    Raised when we try to generate a server.properties
+    for an unsupported mc_version.
+    """
     pass

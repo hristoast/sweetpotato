@@ -1,9 +1,12 @@
 import configparser
+import os
 import sys
 
-from sweetpotato.common import *
-from sweetpotato.core import error_and_die, SweetpotatoConfig, read_conf_file, ConfFileError
-from sweetpotato.web import run_webui
+from .common import (DAEMON_PY3K_ERROR, DEFAULT_CONF_FILE, DEFAULT_LOG_DIR,
+                     DEFAULT_PIDFILE, DEFAULT_PIDFILE_TIMEOUT, PROGNAME)
+from .core import SweetpotatoConfig, error_and_die, read_conf_file
+from .error import ConfFileError
+from .web import run_webui
 
 try:
     from daemon import runner
@@ -11,11 +14,10 @@ except ImportError:
     runner = None
 
 
-__all__ = ['SweetpotatoDaemon', 'daemon_action', 'run_daemon']
-
-
 class SweetpotatoDaemon(SweetpotatoConfig):
-    """A bootstrap-able version of SweetpotatoConfig to be used for the daemon"""
+    """
+    A bootstrap-able version of SweetpotatoConfig to be used for the daemon
+    """
     def __init__(self):
         super().__init__()
         self.stdin_path = '/dev/null'
@@ -38,7 +40,8 @@ class SweetpotatoDaemon(SweetpotatoConfig):
             read_conf_file(DEFAULT_CONF_FILE, self)
             self.conf_file = DEFAULT_CONF_FILE
         except (configparser.NoSectionError, ConfFileError):
-            error_and_die('You must set a default configuration to use {}d!'.format(PROGNAME))
+            error_and_die('You must set a default configuration to use'
+                          ' {}d!'.format(PROGNAME))
 
     def run(self):
         while True:
@@ -46,6 +49,12 @@ class SweetpotatoDaemon(SweetpotatoConfig):
 
 
 def daemon_action(action):
+    """
+    Run the daemon with the supplied action.
+
+    :param action:
+    :return:
+    """
     s = _setup_daemon()
     if runner:
         sys.argv.insert(1, action)

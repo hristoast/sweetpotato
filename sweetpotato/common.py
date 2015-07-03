@@ -4,9 +4,9 @@ AUTHOR_EMAIL = 'me@hristos.triantafillou.us'
 AUTHOR_NAME = 'Hristos N. Triantafillou'
 AUTHOR = '{0} <{1}>'.format(AUTHOR_EMAIL, AUTHOR_NAME)
 LICENSE = 'GPLv3'
-MCVERSION = '1.8.1'
+MCVERSION = '1.8.3'
 PROGNAME = 'sweetpotato'
-VERSION = '0.34.19b'
+VERSION = '0.34.20b'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -24,7 +24,8 @@ HOME_DIR = os.getenv('HOME')
 CONFIG_DIR = '{0}/.config/{1}'.format(HOME_DIR, PROGNAME)
 DEFAULT_CONF_FILE = '{0}/{1}.conf'.format(CONFIG_DIR, PROGNAME)
 DEFAULT_LOG_DIR = os.path.join(CONFIG_DIR, 'logs')
-DEFAULT_PIDFILE = os.path.join(CONFIG_DIR, 'run', 'sweetpotato.pid')  # TODO: ensure run exists
+DEFAULT_PIDFILE = os.path.join(CONFIG_DIR, 'run',
+                               'sweetpotato.pid')  # TODO: ensure run exists
 DEFAULT_PIDFILE_TIMEOUT = 1
 README_MD = os.path.join(EGG_DIR, 'README.md')
 REQUIRED = 'backup_dir mem_format mem_max mem_min port screen_name server_dir world_name'

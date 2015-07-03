@@ -2,6 +2,7 @@ try:
     import bottle
 except ImportError:
     bottle = None
+import os
 import sys
 
 from collections import OrderedDict
@@ -11,12 +12,12 @@ try:
 except ImportError:
     markdown = None
 from threading import Thread
-from .common import *
-from .core import *
-from .error import *
-
-
-__all__ = ['run_webui']
+from .common import PROGNAME, README_MD, WEB_STATIC, WEB_TPL, VERSION, Colors
+from .core import (die_silently, error_and_die, get_uptime, get_uptime_raw,
+                   get_uptime_string, is_server_running, list_players,
+                   list_players_as_list, start_server, stop_server,
+                   reread_settings, restart_server, run_server_backup)
+from .error import ServerNotRunningError
 
 
 def run_webui(settings, quiet):
@@ -37,7 +38,8 @@ def run_webui(settings, quiet):
         if markdown:
             def readme_md_to_html(md_file):
                 """
-                Runs markdown() on a markdown-formatted README.md file to generate html.
+                Runs markdown() on a markdown-formatted README.md file to
+                generate html.
 
                 @param md_file:
                 @return:
@@ -82,8 +84,10 @@ def run_webui(settings, quiet):
             backup_dir_contents = os.listdir(s.backup_dir)
             unsorted_backup_file_list = []
             for backup_file in backup_dir_contents:
-                full_path_to_backup_file = os.path.join(s.backup_dir, backup_file)
-                raw_backup_file_size = os.path.getsize(full_path_to_backup_file)
+                full_path_to_backup_file = os.path.join(s.backup_dir,
+                                                        backup_file)
+                raw_backup_file_size = os.path.getsize(
+                    full_path_to_backup_file)
                 if os.path.isfile(full_path_to_backup_file):
                     backup_file_size = raw_backup_file_size / 1000000
                     dc = len(str(backup_file_size).split('.')[-1])
@@ -97,7 +101,8 @@ def run_webui(settings, quiet):
                         'file': backup_file,
                         'size': trimmed_size
                     })
-            backup_file_list = sorted(unsorted_backup_file_list, key=lambda k: k['size'], reverse=True)
+            backup_file_list = sorted(unsorted_backup_file_list,
+                                      key=lambda k: k['size'], reverse=True)
 
             if bottle.request.method == 'POST':
                 postdata = bottle.request.POST
@@ -184,7 +189,8 @@ def run_webui(settings, quiet):
                     t.start()
                 elif stop is not None:
                     t = Thread(target=stop_server,
-                               args=('', s.screen_name, s.server_dir, s.world_name, True))
+                               args=('', s.screen_name,
+                                     s.server_dir, s.world_name, True))
                     t.daemon = True
                     t.start()
             return {
@@ -230,12 +236,15 @@ def run_webui(settings, quiet):
             }
         try:
             if not quiet:
-                print(Colors.green + '{0} {1} - launching WebUI now!'.format(PROGNAME, VERSION))
+                print(Colors.green + '{0} {1} - launching WebUI now!'.format(
+                    PROGNAME, VERSION))
                 sys.stdout.flush()
             bottle.run(app=app, port=settings.webui_port, quiet=quiet)
         except OSError:
             if not quiet:
-                error_and_die('Port {} is already in use! Exiting ...\n'.format(settings.webui_port))
+                error_and_die(
+                    'Port {} is already in use! Exiting ...\n'.format(
+                        settings.webui_port))
             else:
                 die_silently()
     elif not quiet:

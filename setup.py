@@ -1,27 +1,24 @@
 from setuptools import find_packages, setup
+from sweetpotato.common import (AUTHOR_EMAIL, AUTHOR_NAME, DESCRIPTION,
+                                LICENSE, PROGNAME, VERSION)
 
 
-author_email = __import__('sweetpotato').AUTHOR_EMAIL
-author_name = __import__('sweetpotato').AUTHOR_NAME
-description = __import__('sweetpotato').DESCRIPTION
-lic = __import__('sweetpotato').LICENSE
-progname = __import__('sweetpotato').PROGNAME
-version = __import__('sweetpotato').VERSION
-URL = 'http://hristoast.github.io/sweetpotato/'
+APP_NAME = 'sweetpotato'
+URL = 'http://hristoast.github.io/{}/'.format(APP_NAME)
 
 with open('README.md', 'r') as r:
     rl = r.read()
     r.close()
 
 setup(
-    name=progname,
-    version=version,
-    author=author_name,
-    author_email=author_email,
-    maintainer=author_name,
-    maintainer_email=author_email,
+    name=PROGNAME,
+    version=VERSION,
+    author=AUTHOR_NAME,
+    author_email=AUTHOR_EMAIL,
+    maintainer=AUTHOR_NAME,
+    maintainer_email=AUTHOR_EMAIL,
     url=URL,
-    description=description,
+    description=DESCRIPTION,
     long_description=str(r),
     download_url=URL,
     classifiers=[
@@ -30,7 +27,8 @@ setup(
         'Environment :: No Input/Output',
         'Environment :: Web Environment',
         'Framework :: Bottle',
-        'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
+        'License :: OSI Approved :: GNU General Public License v3 or later'
+        '(GPLv3+)',
         'Natural Language :: English',
         'Operating System :: POSIX :: Linux',
         'Programming Language :: Python :: 3.2',
@@ -43,12 +41,12 @@ setup(
         'Topic :: System :: Operating System Kernels :: Linux',
         'Topic :: Utilities'],
     platforms=['linux2'],
-    license=lic,
+    license=LICENSE,
     data_files=[
         ('', ['README.md']),
         ('data/static', [
             'data/static/gnu-cat.png',
-            'data/static/sweetpotato.min.css']),
+            'data/static/{}.min.css'.format(APP_NAME)]),
         ('data/tpl', [
             'data/tpl/404.tpl',
             'data/tpl/500.tpl',
@@ -61,7 +59,7 @@ setup(
     ],
     packages=find_packages(),
     entry_points={'console_scripts': [
-        'sweetpotato = sweetpotato:main',
-        'sweetpotatod = sweetpotato:daemon'
+        '{0} = {0}.cli:parse_args'.format(APP_NAME),
+        '{0}d = {0}.daemon:daemon'.format(APP_NAME)
     ]}
 )
