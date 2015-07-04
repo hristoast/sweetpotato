@@ -31,7 +31,7 @@ With `make` installed and `sudo` access:
  1. [Download](https://github.com/hristoast/sweetpotato/tarball/dev) or `git clone https://github.com/hristoast/sweetpotato.git`
  1. Extract (if downloaded)
  1. `cd sweetpotato`
- 1. `sudo make install`
+ 1. `make install` (use `sudo` as needed)
 
 ## Re-installation
 
@@ -39,7 +39,8 @@ Simply do the installation process again.
 
 ## Uninstallation
 
-Remove the files from the install prefix (default: `/usr/local/lib/python3.#/dist-packages/sweetpotato-0.34.16b-py3.4.egg`, where `#` is your version of Py3k). There may be several sweetpotato-related egg files, remove as many as you need to.
+ 1. `cd` into the `sweetpotato` source directory
+ 1. `make uninstall` (use `sudo` as needed)
 
 ## Getting Started
 ----
