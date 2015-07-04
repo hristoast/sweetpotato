@@ -58,4 +58,4 @@ setup(
     packages=find_packages(),
     entry_points={'console_scripts': [
         '{0} = {0}.cli:parse_args'.format(PROGNAME),
-        '{0}d = {0}.daemon:daemon'.format(PROGNAME)]})
+        '{0}d = {0}.daemon:run_daemon'.format(PROGNAME)]})
