@@ -65,9 +65,9 @@
                             % elif k is 'stderr_path':
                             <dt>stderr path:</dt>
                             % elif k is 'stdin_path':
-                            <dt>stderr path:</dt>
+                            <dt>stdin path:</dt>
                             % elif k is 'stdout_path':
-                            <dt>stderr path:</dt>
+                            <dt>stdout path:</dt>
                             % elif k is 'webui_port':
                             <dt>WebUI Port:</dt>
                             % elif k is 'world_name':

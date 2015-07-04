@@ -8,11 +8,15 @@ SDIST = python3 setup.py sdist
 TEST = ./tests.py
 UNINSTALL = /bin/rm -rf /usr/local/lib/python3*/dist-packages/sweetpotato* \
 	/usr/local/bin/sweetpotato*
+UNINSTALL_PYENV = \
+	/bin/rm -rf "~/.pyenv/versions/3*/lib/python3*/site-packages/sweetpotato*" \
+	~/.pyenv/shims/sweetpotato ~/.pyenv/shims/sweetpotatod
 
 .DEFAULT_GOAL := sdist
 .PHONY: all
 
-all: bdist build clean cleantest install i reinstall sdist test
+all: bdist build clean cleantest full_uninstall install i reinstall sdist \
+	 test uninstall uninstall_pyenv
 
 # sweetpotato won't actually work out of a bdist ...
 bdist:
@@ -28,20 +32,26 @@ clean:
 cleantest:
 	$(CLEAN_TEST)
 
+full_uninstall:
+	$(UNINSTALL) && $(UNINSTALL_PYENV)
+
 install:
 	$(INSTALL)
 
 i:
 	$(INSTALL) && $(CLEAN)
 
-sdist:
-	$(SDIST)
-
 reinstall:
 	$(INSTALL)
+
+sdist:
+	$(SDIST)
 
 test:
 	$(TEST)
 
 uninstall:
 	$(UNINSTALL)
+
+uninstall_pyenv:
+	$(UNINSTALL_PYENV)
