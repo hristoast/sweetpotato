@@ -187,9 +187,7 @@ def setup_args(args):
     if args.world:
         s.world_name = args.world
     if args.world_only:
-        s.world_only = world_only = True
-    else:
-        s.world_only = world_only = False
+        s.world_only = True
     if args.compression:
         s.compression = args.compression
 

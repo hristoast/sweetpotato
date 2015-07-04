@@ -194,8 +194,7 @@ def read_conf_file(file, settings):
         file_path = file
     if not os.path.isfile(file_path):
         raise ConfFileError(
-            'The specified conf file does not exist: {}'.format(file_path)
-        )
+            'The specified conf file does not exist: {}'.format(file_path))
 
     section = 'Settings'
     c = configparser.ConfigParser()
@@ -211,9 +210,13 @@ def read_conf_file(file, settings):
     for o in options:
         options_dict[o] = c.get(section, o)
     fancy = c[section].getboolean('fancy')
+    world_only = c[section].getboolean('world_only')
     try:
+        # Special booleans that can be set with truthy values other than True
         options_dict.pop('fancy')
         options_dict.update(fancy=fancy)
+        options_dict.pop('world_only')
+        options_dict.update(world_only=world_only)
     except KeyError:
         pass
     return settings.__dict__.update(**options_dict)
