@@ -80,6 +80,10 @@ def run_webui(settings, quiet):
                 datetime.now().strftime('%Y-%m-%d'),
                 s.world_name,
                 s.compression)
+            if s.world_only:
+                world_only = True
+            else:
+                world_only = None
 
             backup_dir_contents = os.listdir(s.backup_dir)
             unsorted_backup_file_list = []
@@ -107,7 +111,7 @@ def run_webui(settings, quiet):
                 postdata = bottle.request.POST
                 force = 'force' in postdata or 'force-offline' in postdata
                 offline = 'offline' in postdata or 'force-offline' in postdata
-                world_only = 'world_only' in postdata
+                world_only = postdata['world-only'] == 'on' or world_only
                 t = Thread(
                     target=run_server_backup,
                     args=('', s, True, is_running, world_only),
@@ -125,6 +129,7 @@ def run_webui(settings, quiet):
                 'server_running': is_running,
                 'todays_file': todays_file,
                 'world_name': s.world_name,
+                'world_only': world_only,
                 '__version__': VERSION}
 
         @bottle.route('/')
@@ -135,6 +140,10 @@ def run_webui(settings, quiet):
             path = bottle.request.path
             pid = None
             players = None
+            if s.world_only:
+                world_only = True
+            else:
+                world_only = False
             try:
                 raw = get_uptime_raw(s.server_dir, s.world_name, False)
                 u = get_uptime(raw)
@@ -163,6 +172,7 @@ def run_webui(settings, quiet):
                 'sorted_settings': sorted_settings,
                 'uptime': uptime,
                 'world_name': s.world_name,
+                'world_only': world_only,
                 '__version__': VERSION}
 
         @bottle.route('/json')

@@ -290,8 +290,7 @@ def setup_args(args):
                 s.screen_name,
                 s.server_dir,
                 s.world_name,
-                quiet
-            )
+                quiet)
         except ServerNotRunningError as e:
             error_and_die(e)
     # elif args.testing:
@@ -304,8 +303,7 @@ def setup_args(args):
             print(
                 Colors.green + '{}'.format(s.world_name) +
                 Colors.blue + ' has been up for ' +
-                Colors.yellow_green + uptime_string + Colors.end
-            )
+                Colors.yellow_green + uptime_string + Colors.end)
         except ServerNotRunningError as e:
             error_and_die(e)
     elif args.web:
@@ -320,8 +318,7 @@ def parse_args():
     try:
         dependency_check(
             get_exe_path('java'),
-            get_exe_path('screen')
-        )
+            get_exe_path('screen'))
     except MissingExeError as e:
         error_and_die(e)
 

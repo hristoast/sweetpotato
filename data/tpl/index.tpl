@@ -62,6 +62,8 @@
                             <dt>WebUI Port:</dt>
                             % elif k is 'world_name':
                             <dt>World Name:</dt>
+                            % elif k is 'world_only':
+                            <dt>World Only:</dt>
                             % else:
                             <dt>{{k}}:</dt>
                             % end

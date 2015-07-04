@@ -16,24 +16,32 @@
                     % else:
                     % if todays_file in backup_dir_contents:
                     <h2>"{{world_name}}" has been backed up today. Great Job!</h2>
+                    <form action="/backup" method="post">
                     % if server_running:
-                    <form action="/backup" method="post">
-                        <button class="btn btn-lg btn-primary srvctl" name="force" type="submit"><span class="fa fa-upload"></span> Force Online Backup {{world_name}} now</button>
-                    </form>
+                        <div>
+                            <button class="btn btn-lg btn-primary srvctl" name="force" type="submit"><span class="fa fa-upload"></span> Force Online Backup {{world_name}} now</button>
+                        </div>
                     % end
-                    <form action="/backup" method="post">
-                        <button class="btn btn-lg btn-warning srvctl" name="force-offline" type="submit"><span class="fa fa-download"></span> Force Offline Backup {{world_name}} now</button>
-                    </form>
+                        <div>
+                            <button class="btn btn-lg btn-warning srvctl" name="force-offline" type="submit"><span class="fa fa-download"></span> Force Offline Backup {{world_name}} now</button>
+                        </div>
                     % else:
                     % if server_running:
-                    <form action="/backup" method="post">
-                        <button class="btn btn-lg btn-primary srvctl" type="submit"><span class="fa fa-upload"></span> Online Backup {{world_name}} now</button>
-                    </form>
+                        <div>
+                            <button class="btn btn-lg btn-primary srvctl" type="submit"><span class="fa fa-upload"></span> Online Backup {{world_name}} now</button>
+                        </div>
                     % end
-                    <form action="/backup" method="post">
-                        <button class="btn btn-lg btn-warning srvctl" name="offline" type="submit"><span class="fa fa-download"></span> Offline Backup {{world_name}} now</button>
-                    </form>
+                        <div>
+                            <button class="btn btn-lg btn-warning srvctl" name="offline" type="submit"><span class="fa fa-download"></span> Offline Backup {{world_name}} now</button>
+                        </div>
                     % end
+                        <h3>World Only?</h3>
+                    % if world_only:
+                        <input name="world-only" id="world-only" type="checkbox" checked="checked">
+                    % else:
+                        <input name="world-only" id="world-only" type="checkbox">
+                    % end
+                    </form>
                     % if backup_dir_contents:
                     <h3>Click any of the below filenames to download them</h3>
                     <div id="backup_files" class="well">

@@ -219,18 +219,20 @@ def read_conf_file(file, settings):
     return settings.__dict__.update(**options_dict)
 
 
-def reread_settings(settings):
+def reread_settings(old_settings):
     """
     Reloads settings. Useful for the WebUI, in case you've modified your
     conf file since having started it.
 
-    @param settings:
-    @return:
+    @param old_settings:
+    @return: s
     """
-    # Read a passed-in conf file
-    if settings.conf_file:
-        read_conf_file(settings.conf_file, settings)
-    return settings
+    # Create a fresh settings object to work with
+    s = SweetpotatoConfig()
+    # Now read from the old, passed-in conf file
+    if old_settings.conf_file:
+        read_conf_file(old_settings.conf_file, s)
+    return s
 
 
 def run_server_backup(print_pre, settings, quiet, running,
