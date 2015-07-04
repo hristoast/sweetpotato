@@ -13,11 +13,12 @@ except ImportError:
     markdown = None
 from threading import Thread
 from .common import PROGNAME, README_MD, WEB_STATIC, WEB_TPL, VERSION, Colors
-from .core import (die_silently, error_and_die, get_uptime, get_uptime_raw,
-                   get_uptime_string, is_server_running, list_players,
-                   list_players_as_list, start_server, stop_server,
-                   reread_settings, restart_server, run_server_backup)
+from .core import reread_settings, run_server_backup
 from .error import ServerNotRunningError
+from .server import (get_uptime, get_uptime_raw, get_uptime_string,
+                     is_server_running, list_players, list_players_as_list,
+                     restart_server, start_server, stop_server)
+from .system import die_silently, error_and_die
 
 
 def run_webui(settings, quiet):
@@ -78,8 +79,7 @@ def run_webui(settings, quiet):
             todays_file = '{0}_{1}.tar.{2}'.format(
                 datetime.now().strftime('%Y-%m-%d'),
                 s.world_name,
-                s.compression
-            )
+                s.compression)
 
             backup_dir_contents = os.listdir(s.backup_dir)
             unsorted_backup_file_list = []
@@ -99,8 +99,7 @@ def run_webui(settings, quiet):
                     unsorted_backup_file_list.append({
                         'bit': 'MB',
                         'file': backup_file,
-                        'size': trimmed_size
-                    })
+                        'size': trimmed_size})
             backup_file_list = sorted(unsorted_backup_file_list,
                                       key=lambda k: k['size'], reverse=True)
 
@@ -123,8 +122,7 @@ def run_webui(settings, quiet):
                 'server_running': is_running,
                 'todays_file': todays_file,
                 'world_name': s.world_name,
-                '__version__': VERSION
-            }
+                '__version__': VERSION}
 
         @bottle.route('/')
         @bottle.view('index')
@@ -153,8 +151,7 @@ def run_webui(settings, quiet):
                 'sorted_settings': sorted_settings,
                 'uptime': uptime,
                 'world_name': s.world_name,
-                '__version__': VERSION
-            }
+                '__version__': VERSION}
 
         @bottle.route('/json')
         def as_json():
@@ -201,16 +198,13 @@ def run_webui(settings, quiet):
                 'stop': stop,
                 'server_running': is_running,
                 'world_name': s.world_name,
-                '__version__': VERSION
-            }
+                '__version__': VERSION}
 
-        # noinspection PyUnresolvedReferences
         @bottle.route('/backups/<file_path:path>')
         def serve_backup(file_path):
             s = reread_settings(settings)
             return bottle.static_file(file_path, root=s.backup_dir)
 
-        # noinspection PyUnresolvedReferences
         @bottle.route('/static/<file_path:path>')
         def serve_static(file_path):
             return bottle.static_file(file_path, root=WEB_STATIC)
@@ -222,8 +216,7 @@ def run_webui(settings, quiet):
             return {
                 'error': error,
                 'path': path,
-                '__version__': VERSION
-            }
+                '__version__': VERSION}
 
         @bottle.error(500)
         @bottle.view('500')
@@ -232,8 +225,7 @@ def run_webui(settings, quiet):
             return {
                 'error': error,
                 'path': path,
-                '__version__': VERSION
-            }
+                '__version__': VERSION}
         try:
             if not quiet:
                 print(Colors.green + '{0} {1} - launching WebUI now!'.format(

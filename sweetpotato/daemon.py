@@ -4,8 +4,9 @@ import sys
 
 from .common import (DAEMON_PY3K_ERROR, DEFAULT_CONF_FILE, DEFAULT_LOG_DIR,
                      DEFAULT_PIDFILE, DEFAULT_PIDFILE_TIMEOUT, PROGNAME)
-from .core import SweetpotatoConfig, error_and_die, read_conf_file
+from .core import SweetpotatoConfig, read_conf_file
 from .error import ConfFileError
+from .system import error_and_die
 from .web import run_webui
 
 try:

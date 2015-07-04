@@ -3,8 +3,7 @@ from sweetpotato.common import (AUTHOR_EMAIL, AUTHOR_NAME, DESCRIPTION,
                                 LICENSE, PROGNAME, VERSION)
 
 
-APP_NAME = 'sweetpotato'
-URL = 'http://hristoast.github.io/{}/'.format(APP_NAME)
+URL = 'http://hristoast.github.io/{}/'.format(PROGNAME)
 
 with open('README.md', 'r') as r:
     rl = r.read()
@@ -46,7 +45,7 @@ setup(
         ('', ['README.md']),
         ('data/static', [
             'data/static/gnu-cat.png',
-            'data/static/{}.min.css'.format(APP_NAME)]),
+            'data/static/{}.min.css'.format(PROGNAME)]),
         ('data/tpl', [
             'data/tpl/404.tpl',
             'data/tpl/500.tpl',
@@ -55,11 +54,8 @@ setup(
             'data/tpl/index.tpl',
             'data/tpl/lower_nav.tpl',
             'data/tpl/readme_no_md.tpl',
-            'data/tpl/server.tpl'])
-    ],
+            'data/tpl/server.tpl'])],
     packages=find_packages(),
     entry_points={'console_scripts': [
-        '{0} = {0}.cli:parse_args'.format(APP_NAME),
-        '{0}d = {0}.daemon:daemon'.format(APP_NAME)
-    ]}
-)
+        '{0} = {0}.cli:parse_args'.format(PROGNAME),
+        '{0}d = {0}.daemon:daemon'.format(PROGNAME)]})
