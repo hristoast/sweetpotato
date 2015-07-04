@@ -141,6 +141,15 @@ def run_webui(settings, quiet):
                     players = list_players_as_list(list_players(s))
             except ServerNotRunningError:
                 uptime = None
+                try:
+                    # we don't care about these daemon details
+                    s.__dict__.pop('pidfile_path')
+                    s.__dict__.pop('pidfile_timeout')
+                    s.__dict__.pop('stderr_path')
+                    s.__dict__.pop('stdin_path')
+                    s.__dict__.pop('stdout_path')
+                except KeyError:
+                    pass
             sorted_settings = OrderedDict(sorted(s.__dict__.items()))
 
             return {

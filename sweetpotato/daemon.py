@@ -2,8 +2,10 @@ import configparser
 import os
 import sys
 
+from lockfile import LockTimeout
 from .common import (DAEMON_PY3K_ERROR, DEFAULT_CONF_FILE, DEFAULT_LOG_DIR,
-                     DEFAULT_PIDFILE, DEFAULT_PIDFILE_TIMEOUT, PROGNAME)
+                     DEFAULT_LOG_FILE, DEFAULT_PIDFILE,
+                     DEFAULT_PIDFILE_TIMEOUT, PROGNAME)
 from .core import SweetpotatoConfig, read_conf_file
 from .error import ConfFileError
 from .system import error_and_die
@@ -22,8 +24,8 @@ class SweetpotatoDaemon(SweetpotatoConfig):
     def __init__(self):
         super().__init__()
         self.stdin_path = '/dev/null'
-        self.stdout_path = '/dev/tty'
-        self.stderr_path = '/dev/tty'
+        self.stdout_path = DEFAULT_LOG_FILE
+        self.stderr_path = DEFAULT_LOG_FILE
         self.pidfile_path = DEFAULT_PIDFILE
         self.pidfile_timeout = DEFAULT_PIDFILE_TIMEOUT
 
@@ -81,8 +83,8 @@ def run_daemon():
         daemon_runner = runner.DaemonRunner(s)
         try:
             daemon_runner.do_action()
-        except runner.DaemonRunnerStopFailureError:
-            error_and_die("can't stop - sweetpotatod not running.")
+        except (LockTimeout, runner.DaemonRunnerStopFailureError) as e:
+            error_and_die(e)
     else:
         # TODO: warning about requiring patched version
         error_and_die(DAEMON_PY3K_ERROR)

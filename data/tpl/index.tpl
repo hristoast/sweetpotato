@@ -52,22 +52,12 @@
                             <dt>Min Server Memory:</dt>
                             % elif k is 'permgen':
                             <dt>Permgen:</dt>
-                            % elif k is 'pidfile_path':
-                            <dt>Pidfile path:</dt>
-                            % elif k is 'pidfile_timeout':
-                            <dt>Pidfile timeout:</dt>
                             % elif k is 'port':
                             <dt>Server Port:</dt>
                             % elif k is 'screen_name':
                             <dt>Screen Session Name:</dt>
                             % elif k is 'server_dir':
                             <dt>Server Directory:</dt>
-                            % elif k is 'stderr_path':
-                            <dt>stderr path:</dt>
-                            % elif k is 'stdin_path':
-                            <dt>stdin path:</dt>
-                            % elif k is 'stdout_path':
-                            <dt>stdout path:</dt>
                             % elif k is 'webui_port':
                             <dt>WebUI Port:</dt>
                             % elif k is 'world_name':

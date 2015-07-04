@@ -7,7 +7,7 @@ AUTHOR = '{0} <{1}>'.format(AUTHOR_NAME, AUTHOR_EMAIL)
 LICENSE = 'GPLv3'
 MCVERSION = '1.8.7'
 PROGNAME = 'sweetpotato'
-VERSION = '0.34.21b'
+VERSION = '0.34.22b'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -25,6 +25,7 @@ HOME_DIR = os.getenv('HOME')
 CONFIG_DIR = '{0}/.config/{1}'.format(HOME_DIR, PROGNAME)
 DEFAULT_CONF_FILE = '{0}/{1}.conf'.format(CONFIG_DIR, PROGNAME)
 DEFAULT_LOG_DIR = os.path.join(CONFIG_DIR, 'logs')
+DEFAULT_LOG_FILE = os.path.join(DEFAULT_LOG_DIR, 'daemon.log')
 DEFAULT_PIDFILE = os.path.join(CONFIG_DIR, 'run',
                                '{}.pid'.format(PROGNAME))
 DEFAULT_PIDFILE_TIMEOUT = 1
