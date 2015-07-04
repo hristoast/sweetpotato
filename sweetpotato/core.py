@@ -319,6 +319,11 @@ def run_server_backup(print_pre, settings, quiet, running,
         print('Done!' + Colors.end)
 
 
+def save_settings(settings):
+    # TODO: this
+    pass
+
+
 def validate_directories(*dirs):
     """
     Ensures that the passed-in directories exist.

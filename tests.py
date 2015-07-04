@@ -10,8 +10,10 @@ import unittest
 
 from sweetpotato.cli import setup_args
 from sweetpotato.common import MCVERSION
-from sweetpotato.core import SweetpotatoConfig, dependency_check, get_exe_path, get_jar
+from sweetpotato.core import SweetpotatoConfig
 from sweetpotato.error import MissingExeError
+from sweetpotato.java import get_jar
+from sweetpotato.system import dependency_check, get_exe_path
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -41,7 +43,7 @@ TEST_SERVER_PROPERTIES = """generator-settings=
 op-permission-level=4
 allow-nether=true
 resource-pack-hash=
-level-name=SweetpotatoWorld
+level-name=Sweetpotatoworld
 enable-query=false
 allow-flight=false
 announce-player-achievements=true
@@ -71,7 +73,7 @@ max-tick-time=60000
 spawn-monsters=true
 generate-structures=true
 view-distance=10
-motd=Welcome to SweetpotatoWorld!
+motd=Welcome to Sweetpotatoworld!
         """
 JSON = """{
     "backup_dir": "/tmp/_sp_test_backup",
@@ -81,17 +83,17 @@ JSON = """{
     "force": false,
     "forge": null,
     "level_seed": null,
-    "mc_version": "1.8.1",
+    "mc_version": "1.8.7",
     "mem_format": "MB",
     "mem_max": "1024",
     "mem_min": "512",
     "permgen": null,
     "port": "25565",
     "running": false,
-    "screen_name": "SweetpotatoWorld",
+    "screen_name": "Sweetpotatoworld",
     "server_dir": "/tmp/_sp_test_server",
     "webui_port": 8181,
-    "world_name": "SweetpotatoWorld",
+    "world_name": "Sweetpotatoworld",
     "world_only": false
 }"""
 
@@ -125,11 +127,13 @@ class SweetpotatoTests(unittest.TestCase):
         self.assertIn(TEST_SERVER_DIR, self.config.as_conf_file)
 
     def test_json_output_fancy(self):  # TODO: test if forge and if not forge
+        self.maxDiff = None
         self.config.fancy = True
         self_json = self.config.as_json
         self.assertEqual(self_json, JSON)
 
-    # def test_json_output_not_pretty(self):  # this output is unsorted; hard to test
+    # this output is unsorted; hard to test
+    # def test_json_output_not_pretty(self):
     #     self.assertEqual(self.config.as_json, JSON_NOT_PRETTY)
 
     def test_json_type(self):
@@ -154,7 +158,9 @@ class SweetpotatoTests(unittest.TestCase):
         # t._stop()
 
     def test_as_serverproperties(self):
-        self.assertEqual(self.config.as_serverproperties, TEST_SERVER_PROPERTIES)
+        self.maxDiff = None
+        self.assertEqual(self.config.as_serverproperties,
+                         TEST_SERVER_PROPERTIES)
 
     def test_agree_to_eula(self):
         eula_txt = os.path.join(TEST_SERVER_DIR, 'eula.txt')
