@@ -105,11 +105,14 @@ def run_webui(settings, quiet):
 
             if bottle.request.method == 'POST':
                 postdata = bottle.request.POST
-                offline = 'offline' in postdata
+                force = 'force' in postdata or 'force-offline' in postdata
+                offline = 'offline' in postdata or 'force-offline' in postdata
+                world_only = 'world_only' in postdata
                 t = Thread(
                     target=run_server_backup,
-                    args=('', s, True),
-                    kwargs={'offline': offline})
+                    args=('', s, True, is_running, world_only),
+                    kwargs={'offline': offline,
+                            'force': force})
                 t.daemon = True
                 t.start()
 

@@ -42,6 +42,36 @@ Simply do the installation process again.
  1. `cd` into the `sweetpotato` source directory
  1. `make uninstall` (use `sudo` as needed)
 
+## Installing with `pyenv`
+
+Using `pyenv` makes it easy to get not only the latest Python 3 but also any pip package you need without any superuser requirements.
+
+First, prepare your Python 3 environment:
+
+ 1. [Install `pyenv`](https://github.com/yyuu/pyenv#installation)
+ 1. Install Python 3.4.3 (or the newest stable if not this)
+ 1. `pip3.4 install git+git://github.com/hristoast/python-daemon.git bottle Markdown`
+
+Then, simply proceed with the above install steps (omitting the use of `sudo`.) If all went well, you've now got `sweetpotato` and `sweetpotatod` installed locally under your `pyenv`. If you want to use this in a cron job, you'll want to manually set `$PATH` as shown in the below sammple `crontab`:
+
+    crontab -l
+    PATH=/srv/minecraft/.pyenv/shims:/usr/bin:/bin
+    # m h  dom mon dow   command
+    @reboot (sleep 45s && sweetpotato --start)
+    @reboot (sleep 105s && sweetpotatod start)
+    45 23 * * * sweetpotato --backup --force --world-only
+    00 12 * * * sweetpotato --say "`ddate`"
+
+That's it - thanks [pyenv](https://github.com/yyuu/pyenv)!
+
+## Uninstalling with `pyenv`
+
+To uninstall from a `pyenv`, use the `uninstall_pyenv` makefile target:
+
+    $ make uninstall_pyenv
+
+That's it!
+
 ## Getting Started
 ----
 

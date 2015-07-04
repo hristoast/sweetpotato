@@ -7,7 +7,7 @@ AUTHOR = '{0} <{1}>'.format(AUTHOR_NAME, AUTHOR_EMAIL)
 LICENSE = 'GPLv3'
 MCVERSION = '1.8.7'
 PROGNAME = 'sweetpotato'
-VERSION = '0.34.22b'
+VERSION = '0.34.23b'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -32,7 +32,7 @@ DEFAULT_PIDFILE_TIMEOUT = 1
 README_MD = os.path.join(EGG_DIR, 'README.md')
 REQUIRED = 'backup_dir mem_format mem_max mem_min port screen_name server_dir' \
            ' world_name'
-SERVER_WAIT_TIME = 0.5
+SERVER_WAIT_TIME = 1
 FORGE_DL_URL = 'http://files.minecraftforge.net/maven/net/minecraftforge/' \
                'forge/{0}/{1}'
 FORGE_JAR_NAME = 'forge-{}-universal.jar'

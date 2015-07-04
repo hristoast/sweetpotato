@@ -16,10 +16,18 @@
                     % else:
                     % if todays_file in backup_dir_contents:
                     <h2>"{{world_name}}" has been backed up today. Great Job!</h2>
+                    % if server_running:
+                    <form action="/backup" method="post">
+                        <button class="btn btn-lg btn-primary srvctl" name="force" type="submit"><span class="fa fa-upload"></span> Force Online Backup {{world_name}} now</button>
+                    </form>
+                    % end
+                    <form action="/backup" method="post">
+                        <button class="btn btn-lg btn-warning srvctl" name="force-offline" type="submit"><span class="fa fa-download"></span> Force Offline Backup {{world_name}} now</button>
+                    </form>
                     % else:
                     % if server_running:
                     <form action="/backup" method="post">
-                        <button class="btn btn-lg btn-primary srvctl"><span class="fa fa-upload"></span> Online Backup {{world_name}} now</button>
+                        <button class="btn btn-lg btn-primary srvctl" type="submit"><span class="fa fa-upload"></span> Online Backup {{world_name}} now</button>
                     </form>
                     % end
                     <form action="/backup" method="post">

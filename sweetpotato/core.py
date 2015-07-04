@@ -234,7 +234,7 @@ def reread_settings(settings):
 
 
 def run_server_backup(print_pre, settings, quiet, running,
-                      world_only, offline=False):
+                      world_only, offline=False, force=False):
     """
     Runs the configured backup on the configured server.
 
@@ -248,7 +248,8 @@ def run_server_backup(print_pre, settings, quiet, running,
     """
     backup_dir = settings.backup_dir
     date_stamp = datetime.now().strftime('%Y-%m-%d')
-    force = is_forced(settings)
+    if not force:
+        force = is_forced(settings)
     forge = settings.forge
 
     screen_name = settings.screen_name
