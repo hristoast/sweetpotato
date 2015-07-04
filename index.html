@@ -23,8 +23,8 @@
         </header>
 
         <section id="downloads" class="clearfix">
-          <a href="https://github.com/hristoast/sweetpotato/zipball/dev" id="download-zip" class="button"><span>Download .zip</span></a>
-          <a href="https://github.com/hristoast/sweetpotato/tarball/dev" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
+          <a href="https://github.com/hristoast/sweetpotato/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
+          <a href="https://github.com/hristoast/sweetpotato/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
           <a href="https://github.com/hristoast/sweetpotato" id="view-on-github" class="button"><span>View on GitHub</span></a>
         </section>
 
@@ -90,6 +90,44 @@
 <li>
 <code>make uninstall</code> (use <code>sudo</code> as needed)</li>
 </ol>
+
+<h2>
+<a id="installing-with-pyenv" class="anchor" href="#installing-with-pyenv" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installing with <code>pyenv</code>
+</h2>
+
+<p>Using <code>pyenv</code> makes it easy to get not only the latest Python 3 but also any pip package you need without any superuser requirements.</p>
+
+<p>First, prepare your Python 3 environment:</p>
+
+<ol>
+<li><a href="https://github.com/yyuu/pyenv#installation">Install <code>pyenv</code></a></li>
+<li>Install Python 3.4.3 (or the newest stable if not this)</li>
+<li><code>pip3.4 install git+git://github.com/hristoast/python-daemon.git bottle Markdown</code></li>
+</ol>
+
+<p>Then, simply proceed with the above install steps (omitting the use of <code>sudo</code>.) If all went well, you've now got <code>sweetpotato</code> and <code>sweetpotatod</code> installed locally under your <code>pyenv</code>. If you want to use this in a cron job, you'll want to manually set <code>$PATH</code> as shown in the below sammple <code>crontab</code>:</p>
+
+<pre><code>crontab -l
+PATH=/srv/minecraft/.pyenv/shims:/usr/bin:/bin
+# m h  dom mon dow   command
+@reboot (sleep 45s &amp;&amp; sweetpotato --start)
+@reboot (sleep 105s &amp;&amp; sweetpotatod start)
+45 23 * * * sweetpotato --backup --force --world-only
+00 12 * * * sweetpotato --say "`ddate`"
+</code></pre>
+
+<p>That's it - thanks <a href="https://github.com/yyuu/pyenv">pyenv</a>!</p>
+
+<h2>
+<a id="uninstalling-with-pyenv" class="anchor" href="#uninstalling-with-pyenv" aria-hidden="true"><span class="octicon octicon-link"></span></a>Uninstalling with <code>pyenv</code>
+</h2>
+
+<p>To uninstall from a <code>pyenv</code>, use the <code>uninstall_pyenv</code> makefile target:</p>
+
+<pre><code>$ make uninstall_pyenv
+</code></pre>
+
+<p>That's it!</p>
 
 <h2>
 <a id="getting-started" class="anchor" href="#getting-started" aria-hidden="true"><span class="octicon octicon-link"></span></a>Getting Started</h2>
