@@ -127,7 +127,6 @@ class SweetpotatoTests(unittest.TestCase):
         self.assertIn(TEST_SERVER_DIR, self.config.as_conf_file)
 
     def test_json_output_fancy(self):  # TODO: test if forge and if not forge
-        self.maxDiff = None
         self.config.fancy = True
         self_json = self.config.as_json
         self.assertEqual(self_json, JSON)
@@ -158,7 +157,6 @@ class SweetpotatoTests(unittest.TestCase):
         # t._stop()
 
     def test_as_serverproperties(self):
-        self.maxDiff = None
         self.assertEqual(self.config.as_serverproperties,
                          TEST_SERVER_PROPERTIES)
 

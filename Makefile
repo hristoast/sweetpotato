@@ -6,6 +6,7 @@ CLEAN_TEST = /bin/rm -fr /tmp/_sp_test*
 INSTALL = python3 setup.py install --force --optimize 2
 SDIST = python3 setup.py sdist
 TEST = ./tests.py
+UNINSTALL = /bin/rm -rf /usr/local/lib/python3*/dist-packages/sweetpotato*
 
 .DEFAULT_GOAL := sdist
 .PHONY: all
@@ -41,4 +42,5 @@ reinstall:
 test:
 	$(TEST)
 
-#uninstall:
+uninstall:
+	$(UNINSTALL)
