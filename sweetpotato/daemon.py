@@ -79,7 +79,10 @@ def run_daemon():
     s = _setup_daemon()
     if runner:
         daemon_runner = runner.DaemonRunner(s)
-        daemon_runner.do_action()
+        try:
+            daemon_runner.do_action()
+        except runner.DaemonRunnerStopFailureError:
+            error_and_die("can't stop - sweetpotatod not running.")
     else:
         # TODO: warning about requiring patched version
         error_and_die(DAEMON_PY3K_ERROR)

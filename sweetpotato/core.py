@@ -13,7 +13,7 @@ from .error import (ConfFileError, EmptySettingError, NoDirFoundError,
                     ServerNotRunningError, UnsupportedVersionError)
 from .screen import is_screen_started
 from .server import (get_uptime, get_uptime_raw, list_players,
-                     list_players_as_list, send_command,
+                     list_players_as_list, send_command, start_server,
                      wait_for_server_shutdown)
 from .system import create_dir, die_silently, error_and_die, is_forced
 
@@ -171,6 +171,11 @@ def _can_xz():
         return True
 
 
+def _emit_msg(msg, **kwargs):
+    print(msg, **kwargs)
+    sys.stdout.flush()
+
+
 def read_conf_file(file, settings):
     """
     The arg 'file' is a conf file path, and 'settings' is a
@@ -272,22 +277,19 @@ def run_server_backup(print_pre, settings, quiet, running,
         if running:
             server_pid = running.get('pid')
             if not quiet:
-                print('Stopping "{}" ...'.format(world_name), end=' ')
-            sys.stdout.flush()
+                _emit_msg('Stopping "{}" ...'.format(world_name), end=' ')
             wait_for_server_shutdown(screen_name, server_pid)
             if not quiet:
                 print('backing up ...', end=' ')
         elif not quiet:
-            print('Backing up "{}" ...'.format(world_name), end=' ')
-        sys.stdout.flush()
+            _emit_msg('Backing up "{}" ...'.format(world_name), end=' ')
     elif running:
         send_command('save-all', is_screen_started(screen_name))
         send_command('save-off', is_screen_started(screen_name))
         if not quiet:
-            print(print_pre + Colors.light_blue +
-                  'Running live backup of "{}"  ...'.format(
-                      world_name), end=' ')
-        sys.stdout.flush()
+            _emit_msg(print_pre + Colors.light_blue +
+                      'Running live backup of "{}"  ...'.format(
+                          world_name), end=' ')
         send_command('say Server backing up now',
                      is_screen_started(screen_name))
 
@@ -302,8 +304,7 @@ def run_server_backup(print_pre, settings, quiet, running,
             print_pre = '[' + Colors.yellow_green + 'backup' + Colors.end +\
                         '] '
             print(print_pre + Colors.light_blue, end='')
-            print('Backing up "{}" ...'.format(world_name), end=' ')
-            sys.stdout.flush()
+            _emit_msg('Backing up "{}" ...'.format(world_name), end=' ')
         tar.add(os.path.join(server_dir, world_name))
     elif forge:
         tar.add(server_dir, exclude=lambda x: 'dynmap' in x)
@@ -314,6 +315,9 @@ def run_server_backup(print_pre, settings, quiet, running,
     if not offline and running:
         send_command('say Backup complete', is_screen_started(screen_name))
         send_command('save-on', is_screen_started(screen_name))
+    elif offline and running:
+        start_server('', settings, quiet)
+        return True
 
     if not quiet:
         print('Done!' + Colors.end)
