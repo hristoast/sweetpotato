@@ -61,7 +61,7 @@ def get_jar(settings):
     if settings.forge:
         forge_version = settings.forge
         jar_name = FORGE_JAR_NAME.format(forge_version)
-        launch_cmd = 'java -Xms{0}{2} -Xmx{1}{2} -XX:MaxPermSize={3}M -jar'\
+        launch_cmd = 'java -Xms{0}{2} -Xmx{1}{2} -XX:MaxPermSize={3}M -jar ' \
                      '{4} nogui'
     else:
         mc_version = settings.mc_version
