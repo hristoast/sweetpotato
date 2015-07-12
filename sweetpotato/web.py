@@ -71,6 +71,8 @@ def run_webui(settings, quiet):
         @bottle.post('/backup')
         @bottle.view('backup')
         def backups():
+            # TODO: POSTing doesn't seem to work when world_only is enabled via
+            # conf file but unchecked on this page. Y????
             s = reread_settings(settings)
             offline = None
             is_running = is_server_running(s.server_dir)

@@ -249,6 +249,7 @@ def run_server_backup(print_pre, settings, quiet, running,
     @param running:
     @param world_only:
     @param offline:
+    @param force:
     @return:
     """
     backup_dir = settings.backup_dir
@@ -294,7 +295,7 @@ def run_server_backup(print_pre, settings, quiet, running,
         send_command('save-off', is_screen_started(screen_name))
         if not quiet:
             _emit_msg(print_pre + Colors.light_blue +
-                      'Running live backup of "{}"  ...'.format(
+                      'Running live backup of "{}" ...'.format(
                           world_name), end=' ')
         send_command('say Server backing up now',
                      is_screen_started(screen_name))

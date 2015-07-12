@@ -1,6 +1,7 @@
 *egg-info
 *.egg
 __pycache__
+bin
 build
 dist
 MANIFEST

@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from setuptools import find_packages, setup
 from sweetpotato.common import (AUTHOR_EMAIL, AUTHOR_NAME, DESCRIPTION,
                                 LICENSE, PROGNAME, VERSION)

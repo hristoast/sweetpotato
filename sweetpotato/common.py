@@ -7,7 +7,7 @@ AUTHOR = '{0} <{1}>'.format(AUTHOR_NAME, AUTHOR_EMAIL)
 LICENSE = 'GPLv3'
 MCVERSION = '1.8.7'
 PROGNAME = 'sweetpotato'
-VERSION = '0.34.25b'
+VERSION = '0.34.26b0'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -29,6 +29,7 @@ DEFAULT_LOG_FILE = os.path.join(DEFAULT_LOG_DIR, 'daemon.log')
 DEFAULT_PIDFILE = os.path.join(CONFIG_DIR, 'run',
                                '{}.pid'.format(PROGNAME))
 DEFAULT_PIDFILE_TIMEOUT = 1
+DEP_PKGS = ('java', 'screen')
 README_MD = os.path.join(EGG_DIR, 'README.md')
 REQUIRED = 'backup_dir mem_format mem_max mem_min port screen_name server_dir' \
            ' world_name'

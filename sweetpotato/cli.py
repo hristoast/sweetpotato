@@ -6,8 +6,8 @@ import sys
 from .common import (COMPRESSION_CHOICES, DEFAULT_COMPRESSION,
                      DEFAULT_CONF_FILE, DEFAULT_LOG_DIR, DEFAULT_PERMGEN,
                      DEFAULT_PIDFILE, DEFAULT_SERVER_PORT, DEFAULT_WEBUI_PORT,
-                     DEFAULT_WORLD_NAME, DESCRIPTION, MCVERSION, PROGNAME,
-                     VERSION, Colors)
+                     DEFAULT_WORLD_NAME, DEP_PKGS, DESCRIPTION, MCVERSION,
+                     PROGNAME, VERSION, Colors)
 from .core import (SweetpotatoConfig, read_conf_file, run_server_backup,
                    validate_directories, validate_mem_values,
                    validate_settings)
@@ -173,9 +173,9 @@ def setup_args(args):
     if args.port:
         s.port = args.port
     if args.quiet:
-        quiet = True
+        s.quiet = True
     else:
-        quiet = False
+        s.quiet = False
     if args.server_dir:
         s.server_dir = args.server_dir
     if args.screen:
@@ -222,13 +222,13 @@ def setup_args(args):
         print_pre = '[' + Colors.yellow_green + 'live-backup' \
                     + Colors.end + '] '
         try:
-            run_server_backup(print_pre, s, quiet, running, s.world_only)
+            run_server_backup(print_pre, s, s.quiet, running, s.world_only)
         except BackupFileAlreadyExistsError as e:
             send_command('say Backup Done!', s.screen_name)
             error_and_die(e)
     elif args.create:
         try:
-            create_server(s, quiet)
+            create_server(s, s.quiet)
         except ServerAlreadyRunningError as e:
             error_and_die(e.msg.strip('"'))
     elif args.daemon:
@@ -240,7 +240,7 @@ def setup_args(args):
             s.running = running
         print(s.as_json)
     elif args.list:
-        if running and not quiet:
+        if running and not s.quiet:
             print_pre = '[' + Colors.yellow_green + 'list' + Colors.end + '] '
             players = list_players(s)
             if players:
@@ -251,9 +251,8 @@ def setup_args(args):
                 print(print_pre +
                       Colors.yellow +
                       'Nobody on right now :(' +
-                      Colors.end
-                      )
-        elif not quiet:
+                      Colors.end)
+        elif not s.quiet:
             error_and_die(s.world_name + " is not running!")
         else:
             die_silently()
@@ -261,23 +260,23 @@ def setup_args(args):
         print_pre = '[' + Colors.yellow_green + 'offline-backup' \
                     + Colors.end + '] '
         try:
-            run_server_backup(print_pre, s, quiet, running, world_only,
+            run_server_backup(print_pre, s, s.quiet, running, s.world_only,
                               offline=True)
         except BackupFileAlreadyExistsError as e:
-            start_server(None, s, quiet)
+            start_server(None, s, s.quiet)
             error_and_die(e)
     elif args.say:
         send_command('say ' + args.say, s.screen_name)
     elif args.restart:
         print_pre = '[' + Colors.yellow_green + 'restart' + Colors.end + '] '
         try:
-            restart_server(print_pre, s, quiet)
+            restart_server(print_pre, s, s.quiet)
         except BackupFileAlreadyExistsError as e:
             error_and_die(e)
     elif args.start:
         print_pre = '[' + Colors.yellow_green + 'start' + Colors.end + '] '
         try:
-            start_server(print_pre, s, quiet)
+            start_server(print_pre, s, s.quiet)
         except ServerAlreadyRunningError as e:
             error_and_die(e)
     elif args.stop:
@@ -288,14 +287,14 @@ def setup_args(args):
                 s.screen_name,
                 s.server_dir,
                 s.world_name,
-                quiet)
+                s.quiet)
         except ServerNotRunningError as e:
             error_and_die(e)
     # elif args.testing:
     #     print(list_players_as_list(list_players(s)))
     elif args.uptime:
         try:
-            raw_uptime = get_uptime_raw(s.server_dir, s.world_name, quiet)
+            raw_uptime = get_uptime_raw(s.server_dir, s.world_name, s.quiet)
             u = get_uptime(raw_uptime)
             uptime_string = get_uptime_string(u)
             print(
@@ -305,7 +304,7 @@ def setup_args(args):
         except ServerNotRunningError as e:
             error_and_die(e)
     elif args.web:
-        run_webui(s, quiet)
+        run_webui(s, s.quiet)
     else:
         parser.print_usage()
 
@@ -314,9 +313,8 @@ def parse_args():
     # TODO: get actual level seed
     # ensure dependencies are here
     try:
-        dependency_check(
-            get_exe_path('java'),
-            get_exe_path('screen'))
+        [dependency_check(get_exe_path(p)) for p in DEP_PKGS]
+
     except MissingExeError as e:
         error_and_die(e)
 

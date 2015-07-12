@@ -17,6 +17,7 @@ except ImportError:
     runner = None
 
 
+# TODO: daemon doesn't work with multiple servers under the same user.
 class SweetpotatoDaemon(SweetpotatoConfig):
     """
     A bootstrap-able version of SweetpotatoConfig to be used for the daemon

@@ -1,13 +1,16 @@
-BDIST = python3 setup.py bdist
-BUILD = python3 setup.py build --force
+# -*- makefile -*-
+BDIST = ./setup.py bdist
+BUILD = ./setup.py build --force
 CLEAN = /bin/rm -fr MANIFEST build dist *.egg-info sweetpotato/__pycache__
 CLEAN2 = find . -type f -name "*~" -exec /bin/rm -f {} \;
 CLEAN_TEST = /bin/rm -fr /tmp/_sp_test*
-INSTALL = python3 setup.py install --force --optimize 2
-SDIST = python3 setup.py sdist
+DESTDIR = bin
+PREFIX = /usr/local
+INSTALL = ./setup.py install --force --optimize 2
+SDIST = ./setup.py sdist
 TEST = ./tests.py
-UNINSTALL = /bin/rm -rf /usr/local/lib/python3*/dist-packages/sweetpotato* \
-	/usr/local/bin/sweetpotato*
+UNINSTALL = /bin/rm -rf $(PREFIX)/lib/python3*/dist-packages/sweetpotato* \
+	$(PREFIX)/bin/sweetpotato*
 UNINSTALL_PYENV = \
 	/bin/rm -rf "~/.pyenv/versions/3*/lib/python3*/site-packages/sweetpotato*" \
 	~/.pyenv/shims/sweetpotato ~/.pyenv/shims/sweetpotatod
