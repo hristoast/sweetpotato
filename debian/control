@@ -1,0 +1,13 @@
+Source: sweetpotato
+Section: games 
+Priority: extra
+Maintainer: Hristos N. Triantafillou <me@hristos.triantafillou.us>
+Build-Depends: debhelper, python-dev
+Standards-Version: 3.7.2
+
+Package: sweetpotato
+Architecture: all
+Depends: python3
+Recommends: python3-bottle, python3-markdown
+Description: Manage your Minecraft server on a GNU/Linux system.
+

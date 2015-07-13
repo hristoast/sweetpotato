@@ -1,0 +1,75 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+# GNU copyright 1997 to 1999 by Joey Hess.
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+PKG=sweetpotato
+PREFIX=$(CURDIR)/debian/$(PKG)/usr
+DEBVER=$(shell dpkg-parsechangelog |sed -n -e '/^Version:/s/^Version: //p')
+DEB_BUILD_PROG:=debuild --preserve-envvar PATH --preserve-envvar CCACHE_DIR -us -uc $(DEB_BUILD_PROG_OPTS)
+
+build: build-stamp
+
+build-stamp:  
+	dh_testdir
+	touch build-stamp
+
+clean:
+	dh_testdir
+	dh_testroot
+	rm -f build-stamp
+	-$(MAKE) clean
+	find . -name "__pycache__" -exec rm -fr {} \;
+	dh_clean
+
+install: build
+	dh_testdir
+	dh_testroot
+	dh_prep
+	dh_installdirs
+
+	install -m 0755 -t $(PREFIX)/games \
+		$(CURDIR)/scripts/sweetpotato
+
+	install -m 0755 -t $(PREFIX)/games \
+		$(CURDIR)/scripts/sweetpotatod
+
+	install -m 0644 -t $(PREFIX)/lib/python3/dist-packages/sweetpotato \
+			$(CURDIR)/README.md
+
+	if test -d /usr/lib/python3 ; then \
+		install -m 0644 -t $(PREFIX)/lib/python3/dist-packages/sweetpotato/sweetpotato \
+		 	$(CURDIR)/sweetpotato/* ; \
+		install -m 0644 -t $(PREFIX)/lib/python3/dist-packages/sweetpotato/data/static \
+			$(CURDIR)/data/static/* ; \
+		install -m 0644 -t $(PREFIX)/lib/python3/dist-packages/sweetpotato/data/tpl \
+			$(CURDIR)/data/tpl/* ; \
+	fi
+
+binary-indep: build install
+
+binary-arch: build install
+	dh_testdir
+	dh_testroot
+	dh_installdocs
+	dh_installmime
+	dh_installman
+	dh_link
+	dh_strip
+	dh_compress
+	dh_fixperms
+	dh_installdeb
+	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+arch-build:
+	rm -rf debian/arch-build
+	mkdir -p debian/arch-build/$(PKG)-$(DEBVER)
+	tar -c --exclude=arch-build --no-recursion -f - `bzr inventory` | (cd debian/arch-build/$(PKG)-$(DEBVER);tar xf -)
+	(cd debian/arch-build/$(PKG)-$(DEBVER) && $(DEB_BUILD_PROG))
+
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install arch-build

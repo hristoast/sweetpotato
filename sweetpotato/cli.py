@@ -11,7 +11,10 @@ from .common import (COMPRESSION_CHOICES, DEFAULT_COMPRESSION,
 from .core import (SweetpotatoConfig, read_conf_file, run_server_backup,
                    validate_directories, validate_mem_values,
                    validate_settings)
-from .daemon import daemon_action
+try:
+    from .daemon import daemon_action
+except ImportError:
+    daemon_action = None
 from .error import (BackupFileAlreadyExistsError, ConfFileError,
                     EmptySettingError, MissingExeError, NoDirFoundError,
                     ServerAlreadyRunningError, ServerNotRunningError)
@@ -232,7 +235,11 @@ def setup_args(args):
         except ServerAlreadyRunningError as e:
             error_and_die(e.msg.strip('"'))
     elif args.daemon:
-        daemon_action(args.daemon)
+        if daemon_action:
+            daemon_action(args.daemon)
+        else:
+            error_and_die("https://github.com/hristoast/python-daemon is "
+                          "required for daemon mode!")
     elif args.genconf:
         print(s.as_conf_file)
     elif args.json:

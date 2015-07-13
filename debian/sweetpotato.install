@@ -1,0 +1,3 @@
+debian/sweetpotato/usr/games/sweetpotato
+debian/sweetpotato/usr/games/sweetpotatod
+debian/sweetpotato/usr/lib/python*/site-packages/sweetpotato/*.py

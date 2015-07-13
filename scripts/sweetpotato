@@ -1,0 +1,8 @@
+#!/usr/bin/env python3
+import sys
+
+from sweetpotato.sweetpotato.cli import parse_args
+
+
+if __name__ == '__main__':
+    sys.exit(parse_args())

@@ -7,7 +7,7 @@ AUTHOR = '{0} <{1}>'.format(AUTHOR_NAME, AUTHOR_EMAIL)
 LICENSE = 'GPLv3'
 MCVERSION = '1.8.7'
 PROGNAME = 'sweetpotato'
-VERSION = '0.34.26b0'
+VERSION = '0.34.27b0'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -20,7 +20,6 @@ DEFAULT_SERVER_PORT = '25565'
 DEFAULT_WEBUI_PORT = 8080
 DEFAULT_WORLD_NAME = DEFAULT_SCREEN_NAME
 DESCRIPTION = "Manage your Minecraft server on a GNU/Linux system."
-EGG_DIR = BASE_DIR.rstrip('/' + PROGNAME)
 HOME_DIR = os.getenv('HOME')
 CONFIG_DIR = '{0}/.config/{1}'.format(HOME_DIR, PROGNAME)
 DEFAULT_CONF_FILE = '{0}/{1}.conf'.format(CONFIG_DIR, PROGNAME)
@@ -30,17 +29,20 @@ DEFAULT_PIDFILE = os.path.join(CONFIG_DIR, 'run',
                                '{}.pid'.format(PROGNAME))
 DEFAULT_PIDFILE_TIMEOUT = 1
 DEP_PKGS = ('java', 'screen')
-README_MD = os.path.join(EGG_DIR, 'README.md')
-REQUIRED = 'backup_dir mem_format mem_max mem_min port screen_name server_dir' \
-           ' world_name'
+README_MD = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), '..', 'README.md')
+REQUIRED = 'backup_dir mem_format mem_max mem_min port screen_name' \
+           ' server_dir world_name'
 SERVER_WAIT_TIME = 1
 FORGE_DL_URL = 'http://files.minecraftforge.net/maven/net/minecraftforge/' \
                'forge/{0}/{1}'
 FORGE_JAR_NAME = 'forge-{}-universal.jar'
 VANILLA_DL_URL = 'https://s3.amazonaws.com/Minecraft.Download/versions/{0}/{1}'
 VANILLA_JAR_NAME = 'minecraft_server.{}.jar'
-WEB_STATIC = os.path.join(EGG_DIR, 'data/static')
-WEB_TPL = os.path.join(EGG_DIR, 'data/tpl')
+WEB_STATIC = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'static')
+WEB_TPL = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'tpl')
 
 _colors = collections.namedtuple(
     'Colors',

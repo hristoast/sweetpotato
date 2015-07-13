@@ -1,0 +1,13 @@
+#!/usr/bin/env python3
+import sys
+
+from sweetpotato.sweetpotato.system import error_and_die
+try:
+    from sweetpotato.sweetpotato.daemon import run_daemon
+except ImportError:
+    error_and_die("https://github.com/hristoast/python-daemon is "
+                  "required for daemon mode!")
+
+
+if __name__ == '__main__':
+    sys.exit(run_daemon())
