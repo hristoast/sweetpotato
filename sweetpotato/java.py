@@ -72,4 +72,4 @@ def get_jar(settings):
     else:
         raise NoJarFoundError(
             'The configured server jar file "{}" does not exist.'
-            'Do you need to run --create?'.format(jar_name))
+            ' Do you need to run --create?'.format(jar_name))

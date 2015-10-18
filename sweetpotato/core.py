@@ -1,3 +1,4 @@
+# TODO: @run_if_bottle decorator and the like
 import configparser
 import json
 import os
@@ -346,7 +347,7 @@ def validate_directories(*dirs):
         if not os.path.isdir(d):
             raise NoDirFoundError(
                 'The configured directory "{}" does not exist.'
-                'Do you need to run --create?'.format(d))
+                ' Do you need to run --create?'.format(d))
 
 
 def validate_mem_values(min_mem, max_mem):

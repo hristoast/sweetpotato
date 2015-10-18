@@ -1,11 +1,17 @@
+try:
+    import bottle
+except ImportError:
+    bottle = None
 import configparser
 import os
 import sys
 
-from lockfile import LockTimeout
-from .common import (DAEMON_PY3K_ERROR, DEFAULT_CONF_FILE, DEFAULT_LOG_DIR,
-                     DEFAULT_LOG_FILE, DEFAULT_PIDFILE,
-                     DEFAULT_PIDFILE_TIMEOUT, PROGNAME)
+try:
+    from lockfile import LockTimeout
+except ImportError:
+    LockTimeout = None
+from .common import (DAEMON_PY3K_ERROR, DEFAULT_CONF_FILE, DEFAULT_LOG_DIR, DEFAULT_LOG_FILE,
+                     DEFAULT_PIDFILE, DEFAULT_PIDFILE_TIMEOUT, PROGNAME)
 from .core import SweetpotatoConfig, read_conf_file
 from .error import ConfFileError
 from .system import error_and_die
@@ -44,8 +50,7 @@ class SweetpotatoDaemon(SweetpotatoConfig):
             read_conf_file(DEFAULT_CONF_FILE, self)
             self.conf_file = DEFAULT_CONF_FILE
         except (configparser.NoSectionError, ConfFileError):
-            error_and_die('You must set a default configuration to use'
-                          ' {}d!'.format(PROGNAME))
+            error_and_die('You must set a default configuration to use {}d!'.format(PROGNAME))
 
     def run(self):
         while True:
@@ -80,15 +85,19 @@ def _ensure_default_run_dir():
 
 def run_daemon():
     s = _setup_daemon()
-    if runner:
-        daemon_runner = runner.DaemonRunner(s)
-        try:
-            daemon_runner.do_action()
-        except (LockTimeout, runner.DaemonRunnerStopFailureError) as e:
-            error_and_die(e)
+    if LockTimeout and bottle:
+        if runner:
+            daemon_runner = runner.DaemonRunner(s)
+            try:
+                daemon_runner.do_action()
+            except (LockTimeout, runner.DaemonRunnerStopFailureError) as e:
+                error_and_die(e)
+        else:
+            # TODO: warning about requiring patched version
+            error_and_die(DAEMON_PY3K_ERROR)
     else:
-        # TODO: warning about requiring patched version
-        error_and_die(DAEMON_PY3K_ERROR)
+        # error_and_die("The 'lockfile' module is not installed! Please install it and try again.")
+        error_and_die("TODO: ERROR ABOUT DEPENDENCIES GOES HERE!")
 
 
 def _setup_daemon():

@@ -3,7 +3,7 @@ import configparser
 import os
 import sys
 
-from .common import (COMPRESSION_CHOICES, DEFAULT_COMPRESSION,
+from .common import (COMPRESSION_CHOICES, DAEMON_PY3K_ERROR, DEFAULT_COMPRESSION,
                      DEFAULT_CONF_FILE, DEFAULT_LOG_DIR, DEFAULT_PERMGEN,
                      DEFAULT_PIDFILE, DEFAULT_SERVER_PORT, DEFAULT_WEBUI_PORT,
                      DEFAULT_WORLD_NAME, DEP_PKGS, DESCRIPTION, MCVERSION,
@@ -18,9 +18,9 @@ except ImportError:
 from .error import (BackupFileAlreadyExistsError, ConfFileError,
                     EmptySettingError, MissingExeError, NoDirFoundError,
                     ServerAlreadyRunningError, ServerNotRunningError)
-from .server import (create_server, is_server_running, get_uptime,
-                     get_uptime_raw, get_uptime_string, list_players,
-                     restart_server, send_command, start_server, stop_server)
+from .server import (create_server, is_server_running, get_uptime, get_uptime_raw,
+                     get_uptime_string, list_players, restart_server, save_all,
+                     send_command, start_server, stop_server)
 from .system import dependency_check, die_silently, error_and_die, get_exe_path
 from .web import run_webui
 
@@ -46,6 +46,8 @@ def setup_args(args):
                          help='make an offline backup (stops the server)')
     actions.add_argument('-r', '--restart', action='store_true',
                          help='restart the server')
+    actions.add_argument('-A', '--save-all', '--save', action='store_true',
+                         help='Send a "save-all" to the server')
     actions.add_argument('--say', help=argparse.SUPPRESS)
     actions.add_argument('--start', action='store_true',
                          help='start the server in a screen session')
@@ -222,8 +224,7 @@ def setup_args(args):
     running = is_server_running(s.server_dir)
 
     if args.backup:
-        print_pre = '[' + Colors.yellow_green + 'live-backup' \
-                    + Colors.end + '] '
+        print_pre = '[' + Colors.yellow_green + 'live-backup' + Colors.end + '] '
         try:
             run_server_backup(print_pre, s, s.quiet, running, s.world_only)
         except BackupFileAlreadyExistsError as e:
@@ -238,8 +239,7 @@ def setup_args(args):
         if daemon_action:
             daemon_action(args.daemon)
         else:
-            error_and_die("https://github.com/hristoast/python-daemon is "
-                          "required for daemon mode!")
+            error_and_die(DAEMON_PY3K_ERROR)
     elif args.genconf:
         print(s.as_conf_file)
     elif args.json:
@@ -252,8 +252,7 @@ def setup_args(args):
             players = list_players(s)
             if players:
                 for p in players:
-                    print(print_pre + Colors.light_blue + p.strip()
-                          + Colors.end)
+                    print(print_pre + Colors.light_blue + p.strip() + Colors.end)
             else:
                 print(print_pre +
                       Colors.yellow +
@@ -264,14 +263,22 @@ def setup_args(args):
         else:
             die_silently()
     elif args.offline:
-        print_pre = '[' + Colors.yellow_green + 'offline-backup' \
-                    + Colors.end + '] '
+        print_pre = '[' + Colors.yellow_green + 'offline-backup' + Colors.end + '] '
         try:
             run_server_backup(print_pre, s, s.quiet, running, s.world_only,
                               offline=True)
         except BackupFileAlreadyExistsError as e:
             start_server(None, s, s.quiet)
             error_and_die(e)
+    elif args.save_all:
+        if running:
+            print_pre = '[' + Colors.yellow_green + 'save-all' + Colors.end + '] '
+            print(print_pre + Colors.light_blue +
+                  'Saving "{}" ...'.format(s.world_name), end=' ')
+            save_all(s)
+            print('Done!' + Colors.end)
+        else:
+            error_and_die("{} is not running!".format(s.world_name))
     elif args.say:
         send_command('say ' + args.say, s.screen_name)
     elif args.restart:

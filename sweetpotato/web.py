@@ -12,7 +12,7 @@ try:
 except ImportError:
     markdown = None
 from threading import Thread
-from .common import PROGNAME, README_MD, WEB_STATIC, WEB_TPL, VERSION, Colors
+from .common import NO_BOTTLEPY_ERROR, PROGNAME, README_MD, WEB_STATIC, WEB_TPL, VERSION, Colors
 from .core import reread_settings, run_server_backup
 from .error import ServerNotRunningError
 from .server import (get_uptime, get_uptime_raw, get_uptime_string,
@@ -264,7 +264,6 @@ def run_webui(settings, quiet):
             else:
                 die_silently()
     elif not quiet:
-        error_and_die('The web component requires both bottle.py to function, '
-                      'with Python-Markdown as an optional dependency.')
+        error_and_die(NO_BOTTLEPY_ERROR)
     else:
         die_silently()

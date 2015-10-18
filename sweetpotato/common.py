@@ -7,13 +7,15 @@ AUTHOR = '{0} <{1}>'.format(AUTHOR_NAME, AUTHOR_EMAIL)
 LICENSE = 'GPLv3'
 MCVERSION = '1.8.7'
 PROGNAME = 'sweetpotato'
-VERSION = '0.34.27b0'
+VERSION = '0.34.28b0'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 DEFAULT_COMPRESSION = 'gz'
 COMPRESSION_CHOICES = ['bz2', DEFAULT_COMPRESSION, 'xz']
-DAEMON_PY3K_ERROR = 'python-daemon-3K is not installed!'
+DAEMON_PY3K_ERROR = """python-daemon-3K is not installed! Install it like this:
+
+pip3 install git+https://github.com/hristoast/python-daemon"""
 DEFAULT_PERMGEN = '256'
 DEFAULT_SCREEN_NAME = '{}World'.format(PROGNAME).capitalize()
 DEFAULT_SERVER_PORT = '25565'
@@ -29,6 +31,7 @@ DEFAULT_PIDFILE = os.path.join(CONFIG_DIR, 'run',
                                '{}.pid'.format(PROGNAME))
 DEFAULT_PIDFILE_TIMEOUT = 1
 DEP_PKGS = ('java', 'screen')
+NO_BOTTLEPY_ERROR = 'The web component requires bottle.py to function, with Python-Markdown as an optional dependency.'
 README_MD = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), '..', 'README.md')
 REQUIRED = 'backup_dir mem_format mem_max mem_min port screen_name' \

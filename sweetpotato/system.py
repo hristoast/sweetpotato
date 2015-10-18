@@ -22,7 +22,7 @@ def create_dir(d):
 def dependency_check(*deps):
     if None in deps:
         raise MissingExeError("Unable to find all dependencies. Please"
-                              "ensure that screen and java are installed.")
+                              " ensure that screen and java are installed.")
 
 
 def die_silently():

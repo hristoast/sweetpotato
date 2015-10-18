@@ -386,6 +386,14 @@ def restart_server(print_pre, settings, quiet):
         print('Done!' + Colors.end)
 
 
+def save_all(settings):
+    """
+    Sends a 'save-all' command to the server.
+    """
+    send_command("save-all", settings.screen_name)
+    return True
+
+
 def send_command(command, screen_name):
     """
     Send a command to the server.
