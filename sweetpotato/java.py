@@ -34,12 +34,12 @@ def get_java_procs():
             pid = P
             c = subprocess.Popen(
                 ['/bin/ls', '-l', '/proc/{0}/cwd'.format(pid)],
-                stdout=subprocess.PIPE)
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             c_out = c.communicate()[0]
             cwd = c_out.decode().split()[-1]
             e = subprocess.Popen(
                 ['/bin/ls', '-l', '/proc/{0}/exe'.format(pid)],
-                stdout=subprocess.PIPE)
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             e_out = e.communicate()[0]
             exe = e_out.decode().split()[-1]
             proc_list.append((cwd, exe, pid))
@@ -61,12 +61,11 @@ def get_jar(settings):
     if settings.forge:
         forge_version = settings.forge
         jar_name = FORGE_JAR_NAME.format(forge_version)
-        launch_cmd = 'java -Xms{0}{2} -Xmx{1}{2} -XX:MaxPermSize={3}M -jar ' \
-                     '{4} nogui'
+        launch_cmd = ' java -Xms{0}{2} -Xmx{1}{2} -XX:MaxPermSize={3}M -jar {4} nogui'
     else:
         mc_version = settings.mc_version
         jar_name = VANILLA_JAR_NAME.format(mc_version)
-        launch_cmd = 'java -Xms{0}{2} -Xmx{1}{2} -jar {3} nogui'
+        launch_cmd = ' java -Xms{0}{2} -Xmx{1}{2} -jar {3} nogui'
     if jar_name in os.listdir(settings.server_dir):
         return jar_name, launch_cmd
     else:

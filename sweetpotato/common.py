@@ -1,13 +1,14 @@
 import collections
 import os
+import sys
 
 AUTHOR_EMAIL = 'me@hristos.triantafillou.us'
 AUTHOR_NAME = 'Hristos N. Triantafillou'
 AUTHOR = '{0} <{1}>'.format(AUTHOR_NAME, AUTHOR_EMAIL)
 LICENSE = 'GPLv3'
-MCVERSION = '1.8.7'
+MCVERSION = '1.8.9'
 PROGNAME = 'sweetpotato'
-VERSION = '0.34.28b0'
+VERSION = '0.34.29'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -61,3 +62,12 @@ Colors = _colors(
     red='\033[31m',
     yellow='\033[33m',
     end='\033[0m')
+
+
+def sp_prnt(*args, pre=None, quiet=False, **kwargs):
+    if not quiet:
+        if pre:
+            print(pre + Colors.light_blue, *args, Colors.end, **kwargs)
+        else:
+            print(Colors.light_blue, *args, Colors.end, **kwargs)
+        sys.stdout.flush()

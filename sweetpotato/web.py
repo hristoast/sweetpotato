@@ -12,13 +12,13 @@ try:
 except ImportError:
     markdown = None
 from threading import Thread
-from .common import NO_BOTTLEPY_ERROR, PROGNAME, README_MD, WEB_STATIC, WEB_TPL, VERSION, Colors
+from .common import NO_BOTTLEPY_ERROR, PROGNAME, README_MD, WEB_STATIC, WEB_TPL, VERSION, Colors, sp_prnt
 from .core import reread_settings, run_server_backup
 from .error import ServerNotRunningError
 from .server import (get_uptime, get_uptime_raw, get_uptime_string,
                      is_server_running, list_players, list_players_as_list,
                      restart_server, start_server, stop_server)
-from .system import die_silently, error_and_die
+from .system import error_and_die
 
 
 def run_webui(settings, quiet):
@@ -251,19 +251,10 @@ def run_webui(settings, quiet):
                 'path': path,
                 '__version__': VERSION}
         try:
-            if not quiet:
-                print(Colors.green + '{0} {1} - launching WebUI now!'.format(
-                    PROGNAME, VERSION))
-                sys.stdout.flush()
+            pre = Colors.green
+            sp_prnt('{0} {1} - launching WebUI now!'.format(PROGNAME, VERSION), pre=pre, quiet=quiet)
             bottle.run(app=app, port=settings.webui_port, quiet=quiet)
         except OSError:
-            if not quiet:
-                error_and_die(
-                    'Port {} is already in use! Exiting ...\n'.format(
-                        settings.webui_port))
-            else:
-                die_silently()
-    elif not quiet:
-        error_and_die(NO_BOTTLEPY_ERROR)
+            error_and_die('Port {} is already in use! Exiting ...\n'.format(settings.webui_port), quiet=quiet)
     else:
-        die_silently()
+        error_and_die(NO_BOTTLEPY_ERROR, quiet=quiet)

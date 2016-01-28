@@ -9,14 +9,14 @@ from datetime import datetime
 from .common import (DEFAULT_COMPRESSION, DEFAULT_SCREEN_NAME,
                      DEFAULT_SERVER_PORT, DEFAULT_WEBUI_PORT,
                      DEFAULT_WORLD_NAME, MCVERSION, PROGNAME, REQUIRED,
-                     Colors)
+                     Colors, sp_prnt)
 from .error import (ConfFileError, EmptySettingError, NoDirFoundError,
                     ServerNotRunningError, UnsupportedVersionError)
 from .screen import is_screen_started
 from .server import (get_uptime, get_uptime_raw, list_players,
                      list_players_as_list, send_command, start_server,
                      wait_for_server_shutdown)
-from .system import create_dir, die_silently, error_and_die, is_forced
+from .system import create_dir, error_and_die, is_forced
 
 
 class SweetpotatoConfig:
@@ -172,11 +172,6 @@ def _can_xz():
         return True
 
 
-def _emit_msg(msg, **kwargs):
-    print(msg, **kwargs)
-    sys.stdout.flush()
-
-
 def read_conf_file(file, settings):
     """
     The arg 'file' is a conf file path, and 'settings' is a
@@ -239,12 +234,12 @@ def reread_settings(old_settings):
     return s
 
 
-def run_server_backup(print_pre, settings, quiet, running,
+def run_server_backup(pre, settings, quiet, running,
                       world_only, offline=False, force=False):
     """
     Runs the configured backup on the configured server.
 
-    @param print_pre:
+    @param pre:
     @param settings:
     @param quiet:
     @param running:
@@ -272,32 +267,23 @@ def run_server_backup(print_pre, settings, quiet, running,
         sys.stdout.flush()
         try:
             with open(full_path_to_backup_file, 'rb'):
-                if not quiet:
-                    error_and_die('File "{}" already exists!'.format(
-                        full_path_to_backup_file))
-                else:
-                    die_silently()
+                error_and_die('File "{}" already exists!'.format(full_path_to_backup_file),
+                              quiet=quiet)
         except IOError:
             pass
 
     if offline:
-        print(print_pre + Colors.light_blue, end=' ')
         if running:
             server_pid = running.get('pid')
-            if not quiet:
-                _emit_msg('Stopping "{}" ...'.format(world_name), end=' ')
+            sp_prnt('Stopping "{}" ... '.format(world_name), quiet=quiet, end='')
             wait_for_server_shutdown(screen_name, server_pid)
-            if not quiet:
-                print('backing up ...', end=' ')
-        elif not quiet:
-            _emit_msg('Backing up "{}" ...'.format(world_name), end=' ')
+            print('backing up ...', end=' ')
+        sp_prnt('Backing up "{}" ... '.format(world_name), quiet=quiet, end='')
     elif running:
         send_command('save-all', is_screen_started(screen_name))
         send_command('save-off', is_screen_started(screen_name))
-        if not quiet:
-            _emit_msg(print_pre + Colors.light_blue +
-                      'Running live backup of "{}" ...'.format(
-                          world_name), end=' ')
+        sp_prnt('Running live backup of "{}" ...'.format(world_name),
+                pre=pre, quiet=quiet, end='')
         send_command('say Server backing up now',
                      is_screen_started(screen_name))
 
@@ -309,15 +295,13 @@ def run_server_backup(print_pre, settings, quiet, running,
     tar = tarfile.open(full_path_to_backup_file, 'w:{}'.format(compression))
     if world_only:
         if not running and not offline:
-            print_pre = '[' + Colors.yellow_green + 'backup' + Colors.end +\
-                        '] '
-            print(print_pre + Colors.light_blue, end='')
-            _emit_msg('Backing up "{}" ...'.format(world_name), end=' ')
+            pre = '[' + Colors.yellow_green + 'backup' + Colors.end + ']'
+            sp_prnt('Backing up "{}" ... '.format(world_name), pre=pre, end='')
         tar.add(os.path.join(server_dir, world_name))
     elif forge:
-        tar.add(server_dir, exclude=lambda x: 'dynmap' in x)
+        tar.add(server_dir, exclude=lambda x: 'dynmap' in x or '.git' in x or 'client-files' in x)
     else:
-        tar.add(server_dir)
+        tar.add(server_dir, exclude=lambda x: '.git' in x)
     tar.close()
 
     if not offline and running:

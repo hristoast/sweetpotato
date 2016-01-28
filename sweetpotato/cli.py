@@ -7,10 +7,9 @@ from .common import (COMPRESSION_CHOICES, DAEMON_PY3K_ERROR, DEFAULT_COMPRESSION
                      DEFAULT_CONF_FILE, DEFAULT_LOG_DIR, DEFAULT_PERMGEN,
                      DEFAULT_PIDFILE, DEFAULT_SERVER_PORT, DEFAULT_WEBUI_PORT,
                      DEFAULT_WORLD_NAME, DEP_PKGS, DESCRIPTION, MCVERSION,
-                     PROGNAME, VERSION, Colors)
+                     PROGNAME, VERSION, Colors, sp_prnt)
 from .core import (SweetpotatoConfig, read_conf_file, run_server_backup,
-                   validate_directories, validate_mem_values,
-                   validate_settings)
+                   validate_directories, validate_mem_values, validate_settings)
 try:
     from .daemon import daemon_action
 except ImportError:
@@ -21,7 +20,7 @@ from .error import (BackupFileAlreadyExistsError, ConfFileError,
 from .server import (create_server, is_server_running, get_uptime, get_uptime_raw,
                      get_uptime_string, list_players, restart_server, save_all,
                      send_command, start_server, stop_server)
-from .system import dependency_check, die_silently, error_and_die, get_exe_path
+from .system import dependency_check, error_and_die, get_exe_path
 from .web import run_webui
 
 
@@ -224,9 +223,9 @@ def setup_args(args):
     running = is_server_running(s.server_dir)
 
     if args.backup:
-        print_pre = '[' + Colors.yellow_green + 'live-backup' + Colors.end + '] '
+        pre = '[' + Colors.yellow_green + 'live-backup' + Colors.end + ']'
         try:
-            run_server_backup(print_pre, s, s.quiet, running, s.world_only)
+            run_server_backup(pre, s, s.quiet, running, s.world_only)
         except BackupFileAlreadyExistsError as e:
             send_command('say Backup Done!', s.screen_name)
             error_and_die(e)
@@ -247,63 +246,56 @@ def setup_args(args):
             s.running = running
         print(s.as_json)
     elif args.list:
-        if running and not s.quiet:
-            print_pre = '[' + Colors.yellow_green + 'list' + Colors.end + '] '
+        if running:
+            pre = '[' + Colors.yellow_green + 'list' + Colors.end + ']'
             players = list_players(s)
             if players:
                 for p in players:
-                    print(print_pre + Colors.light_blue + p.strip() + Colors.end)
+                    sp_prnt(p.strip(), pre=pre)
             else:
-                print(print_pre +
-                      Colors.yellow +
-                      'Nobody on right now :(' +
-                      Colors.end)
-        elif not s.quiet:
-            error_and_die(s.world_name + " is not running!")
+                sp_prnt('Nobody on right now :(', quiet=s.quiet)
         else:
-            die_silently()
+            error_and_die(s.world_name + " is not running!", quiet=s.quiet)
     elif args.offline:
-        print_pre = '[' + Colors.yellow_green + 'offline-backup' + Colors.end + '] '
+        pre = '[' + Colors.yellow_green + 'offline-backup' + Colors.end + ']'
         try:
-            run_server_backup(print_pre, s, s.quiet, running, s.world_only,
-                              offline=True)
+            run_server_backup(pre, s, s.quiet, running, s.world_only, offline=True)
         except BackupFileAlreadyExistsError as e:
             start_server(None, s, s.quiet)
             error_and_die(e)
     elif args.save_all:
         if running:
-            print_pre = '[' + Colors.yellow_green + 'save-all' + Colors.end + '] '
-            print(print_pre + Colors.light_blue +
-                  'Saving "{}" ...'.format(s.world_name), end=' ')
+            pre = '[' + Colors.yellow_green + 'save-all' + Colors.end + ']'
+            sp_prnt('Saving "{}" ...'.format(s.world_name), quiet=s.quiet, end='')
             save_all(s)
-            print('Done!' + Colors.end)
+            sp_prnt('Done!', quiet=s.quiet)
         else:
-            error_and_die("{} is not running!".format(s.world_name))
+            error_and_die("{} is not running!".format(s.world_name), quiet=s.quiet)
     elif args.say:
         send_command('say ' + args.say, s.screen_name)
     elif args.restart:
-        print_pre = '[' + Colors.yellow_green + 'restart' + Colors.end + '] '
+        pre = '[' + Colors.yellow_green + 'restart' + Colors.end + ']'
         try:
-            restart_server(print_pre, s, s.quiet)
+            restart_server(pre, s, s.quiet)
         except BackupFileAlreadyExistsError as e:
             error_and_die(e)
     elif args.start:
-        print_pre = '[' + Colors.yellow_green + 'start' + Colors.end + '] '
+        pre = '[' + Colors.yellow_green + 'start' + Colors.end + ']'
         try:
-            start_server(print_pre, s, s.quiet)
+            start_server(pre, s, s.quiet)
         except ServerAlreadyRunningError as e:
-            error_and_die(e)
+            error_and_die(e, quiet=s.quiet)
     elif args.stop:
-        print_pre = '[' + Colors.yellow_green + 'stop' + Colors.end + '] '
+        pre = '[' + Colors.yellow_green + 'stop' + Colors.end + ']'
         try:
             stop_server(
-                print_pre,
+                pre,
                 s.screen_name,
                 s.server_dir,
                 s.world_name,
                 s.quiet)
         except ServerNotRunningError as e:
-            error_and_die(e)
+            error_and_die(e, quiet=s.quiet)
     # elif args.testing:
     #     print(list_players_as_list(list_players(s)))
     elif args.uptime:
@@ -311,12 +303,11 @@ def setup_args(args):
             raw_uptime = get_uptime_raw(s.server_dir, s.world_name, s.quiet)
             u = get_uptime(raw_uptime)
             uptime_string = get_uptime_string(u)
-            print(
-                Colors.green + '{}'.format(s.world_name) +
-                Colors.blue + ' has been up for ' +
-                Colors.yellow_green + uptime_string + Colors.end)
+            pre = Colors.green + '{}'.format(s.world_name)
+            sp_prnt(' has been up for ' + Colors.yellow_green + uptime_string,
+                    pre=pre, quiet=s.quiet)
         except ServerNotRunningError as e:
-            error_and_die(e)
+            error_and_die(e, quiet=s.quiet)
     elif args.web:
         run_webui(s, s.quiet)
     else:

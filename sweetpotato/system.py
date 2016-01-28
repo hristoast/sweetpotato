@@ -25,25 +25,18 @@ def dependency_check(*deps):
                               " ensure that screen and java are installed.")
 
 
-def die_silently():
-    """
-    For when we need to die quietly.
-
-    @return:
-    """
-    sys.exit(1)
-
-
-def error_and_die(msg):
+def error_and_die(msg, quiet=False):
     """
     For those times when you just want to quit and say why.
 
     @param msg:
+    @param quiet:
     @return:
     """
-    sys.stderr.write(
-        Colors.light_red + 'FATAL: ' + Colors.red + msg.__str__().strip("'")
-        + Colors.end + '\n')
+    if not quiet:
+        sys.stderr.write(
+            Colors.light_red + 'FATAL: ' + Colors.red + msg.__str__().strip("'") +
+            Colors.end + '\n')
     sys.exit(1)
 
 
@@ -62,13 +55,13 @@ def is_forced(settings):
     return force
 
 
-def get_exe_path(exe):
+def get_exe_path(exe: str) -> list or None:
     """
     Checks for exe in $PATH.
 
     @param exe:
     @return:
     """
-    p = subprocess.Popen(['which', exe], stdout=subprocess.PIPE)
+    p = subprocess.Popen(['which', exe], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     byte_output = p.communicate()[0]
     return byte_output.decode().strip() or None

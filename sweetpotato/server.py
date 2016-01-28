@@ -1,5 +1,4 @@
 import os
-import sys
 import time
 import urllib.error
 import urllib.request
@@ -7,41 +6,37 @@ import urllib.request
 from datetime import datetime
 from .common import (FORGE_DL_URL, FORGE_JAR_NAME, SERVER_WAIT_TIME,
                      VANILLA_DL_URL, VANILLA_JAR_NAME, Colors)
+from .core import sp_prnt
 from .error import (NoJarFoundError, ServerAlreadyRunningError,
                     ServerNotRunningError, UnsupportedVersionError)
 from .java import get_jar, get_java_procs
 from .screen import is_screen_started, start_screen
-from .system import create_dir, die_silently, error_and_die, is_forced
+from .system import create_dir, error_and_die, is_forced
 
 
-def _agree_to_eula(eula_txt, force, print_pre, quiet):
+def _agree_to_eula(eula_txt, force, pre, quiet):
     """
     Checks for a eula.txt file in server
     and verifies it contains 'eula=true'.
 
     @param eula_txt:
     @param force:
-    @param print_pre:
+    @param pre:
     @return:
     """
     if os.path.isfile(eula_txt) and not force:
         f = open(eula_txt, 'r')
         if 'eula=true' in f.read():
             f.close()
-            if not quiet:
-                print(print_pre + Colors.light_blue + 'Eula agreed to!' +
-                      Colors.end)
+            sp_prnt('Eula agreed to!', pre=pre, quiet=quiet)
             return True
         else:
             f.close()
-    if not quiet:
-        print(print_pre + Colors.light_blue +
-              'Agreeing to the eula ...', end=' ')
+    sp_prnt('Agreeing to the eula ...', pre=pre, quiet=quiet, end='')
     f = open(eula_txt, 'w')
     f.write('eula=true\n')
     f.close()
-    if not quiet:
-        print('Done!' + Colors.end)
+    sp_prnt('Done!', quiet=quiet)
     return True
 
 
@@ -55,7 +50,7 @@ def create_server(settings, quiet):
     @param quiet:
     @return:
     """
-    print_pre = '[' + Colors.yellow_green + 'create' + Colors.end + '] '
+    pre = '[' + Colors.yellow_green + 'create' + Colors.end + ']'
     backup_dir = settings.backup_dir
     force = is_forced(settings)
     server_dir = settings.server_dir
@@ -72,76 +67,45 @@ def create_server(settings, quiet):
 
     is_running = is_server_running(settings.server_dir)
     if is_running:
-        if not quiet:
-            raise ServerAlreadyRunningError(
-                "Can't create '{}' - it's already running!".format(
-                    world_name))
-        else:
-            die_silently()
+        raise ServerAlreadyRunningError(
+            "Can't create '{}' - it's already running!".format(world_name))
 
-    if not quiet:
-        print(print_pre + Colors.blue + 'Creating "{}" ...'.format(
-            world_name) + Colors.end)
+    sp_prnt('Creating "{}" ...'.format(world_name), pre=pre, quiet=quiet)
 
-    if os.path.isdir(backup_dir) and not quiet:
-        print(print_pre + Colors.light_blue + 'Found {}!'.format(backup_dir)
-              + Colors.end)
+    if os.path.isdir(backup_dir):
+        sp_prnt('Found {}!'.format(backup_dir), pre=pre)
     else:
-        if not quiet:
-            print(print_pre + Colors.light_blue + 'Creating {} ...'.format(
-                backup_dir), end=' ')
-            sys.stdout.flush()
-            create_dir(backup_dir)
-            print('Done!' + Colors.end)
-        else:
-            create_dir(backup_dir)
+        sp_prnt('Creating {} ...'.format(backup_dir), pre=pre, end='')
+        create_dir(backup_dir)
+        sp_prnt('Done!', quiet=quiet)
 
     if not os.path.isdir(server_dir):
-        if not quiet:
-            print(print_pre + Colors.light_blue + 'Creating {} ...'.format(
-                server_dir), end=' ')
-            sys.stdout.flush()
-            create_dir(server_dir)
-            print('Done!' + Colors.end)
-        else:
-            create_dir(server_dir)
-    elif not quiet:
-            print(print_pre + Colors.light_blue + 'Found {}!'.format(
-                server_dir) + Colors.end)
+        sp_prnt('Creating {} ...'.format(server_dir))
+        create_dir(server_dir)
+        sp_prnt('Done!', quiet=quiet)
+    else:
+        sp_prnt('Found {}!'.format(server_dir))
 
     full_jar_path = os.path.join(server_dir, jar_name)
-    if not os.path.isfile(full_jar_path) and not quiet or force:
-        print(print_pre + Colors.light_blue +
-              'Downloading {} ...'.format(jar_name), end=' ')
-        sys.stdout.flush()
+    if not os.path.isfile(full_jar_path) or force:
+        sp_prnt('Downloading {} ...'.format(jar_name), pre=pre, quiet=quiet)
         try:
             local_jar = urllib.request.urlretrieve(dl_url, full_jar_path)[0]
             jar = open(local_jar)
             jar.close()
         except urllib.error.HTTPError as e:
-            error_and_die(e.msg + ' Is your version valid?')
-        if not quiet:
-            print('Done!' + Colors.end)
-    elif not quiet:
-        print(print_pre + Colors.light_blue +
-              'Found {}!'.format(jar_name) + Colors.end)
-    elif not os.path.isfile(full_jar_path) and quiet or force:
-        try:
-            local_jar = urllib.request.urlretrieve(dl_url, full_jar_path)[0]
-            jar = open(local_jar)
-            jar.close()
-        except urllib.error.HTTPError:
-            die_silently()
+            error_and_die(e.msg + ' Is your version valid?', quiet=quiet)
+        sp_prnt('Done!', quiet=quiet)
+    else:
+        sp_prnt('Found {}!'.format(jar_name), pre=pre, quiet=quiet)
 
     eula_txt = os.path.join(server_dir, 'eula.txt')
-    _agree_to_eula(eula_txt, force, print_pre, quiet)
+    _agree_to_eula(eula_txt, force, pre, quiet)
 
     server_properties = os.path.join(server_dir, 'server.properties')
-    write_server_properties(print_pre, server_properties, settings, quiet)
+    write_server_properties(pre, server_properties, settings, quiet)
 
-    if not quiet:
-        print(print_pre + Colors.blue +
-              'World "{}" has been created!'.format(world_name) + Colors.end)
+    sp_prnt('World "{}" has been created!'.format(world_name), pre=pre, quiet=quiet)
 
 
 def _format_launch_cmd(settings):
@@ -181,6 +145,7 @@ def get_uptime_raw(server_dir, world_name, quiet):
 
     @param server_dir:
     @param world_name:
+    @param quiet:
     @return:
     """
     fmt = '%a %b %d %H:%M:%S %Z %Y'
@@ -195,12 +160,9 @@ def get_uptime_raw(server_dir, world_name, quiet):
         server_start_time = datetime.strptime(server_start_time_string, fmt)
         uptime = now - server_start_time
         return uptime
-    elif not quiet:
-        raise ServerNotRunningError(
-            '{} is not running'.format(world_name)
-        )
     else:
-        die_silently()
+        raise ServerNotRunningError(
+            '{} is not running'.format(world_name))
 
 
 def get_uptime(raw_uptime):
@@ -268,10 +230,9 @@ def is_server_running(server_dir_name):
     if isinstance(java_procs, tuple):
         # just one java proc
         if server_dir in java_procs:
-            proc = {
-                'cwd': java_procs[0],
-                'exe': java_procs[1],
-                'pid': java_procs[2]}
+            proc = {'cwd': java_procs[0],
+                    'exe': java_procs[1],
+                    'pid': java_procs[2]}
             return proc
         else:
             return False
@@ -279,10 +240,9 @@ def is_server_running(server_dir_name):
         # multiple java procs
         for p in java_procs:
             if server_dir in p[0]:
-                proc = {
-                    'cwd': p[0],
-                    'exe': p[1],
-                    'pid': p[2]}
+                proc = {'cwd': p[0],
+                        'exe': p[1],
+                        'pid': p[2]}
                 return proc
     return False
 
@@ -311,16 +271,19 @@ def list_players(settings):
                     log.close()
                     return log_lines
             except (OSError, IOError):
-                print('failed to read log oh noes!')
+                sp_prnt('failed to read log oh noes!', pre=Colors.red + "WARNING")
         return None
 
     ll = read_latest_log()
 
     if ll:
-        while 'players online:' not in ll[-2:][0]:
-            ll = read_latest_log()
-        else:
-            player_list = ll[-2:]
+        try:
+            while 'players online:' not in ll[-2:][0]:
+                ll = read_latest_log()
+            else:
+                player_list = ll[-2:]
+        except TypeError:
+            player_list = None  # oh.
     else:
         player_list = ll
 
@@ -350,11 +313,11 @@ def list_players_as_list(player_list):
         return None
 
 
-def restart_server(print_pre, settings, quiet):
+def restart_server(pre, settings, quiet):
     """
     Restarts a configured server.
 
-    @param print_pre:
+    @param pre:
     @param settings:
     @return:
     """
@@ -372,18 +335,12 @@ def restart_server(print_pre, settings, quiet):
 
     if server_running:
         server_pid = server_running.get('pid')
-        if not quiet:
-            print(print_pre + Colors.light_blue +
-                  'Restarting {} ...'.format(world_name), end=' ')
-            sys.stdout.flush()
+        sp_prnt('Restarting {} ...'.format(world_name), pre=pre, quiet=quiet)
         wait_for_server_shutdown(screen_name, server_pid)
-    elif not quiet:
-        print(print_pre + Colors.light_blue +
-              'Starting {} ...'.format(world_name), end=' ')
-        sys.stdout.flush()
+    else:
+        sp_prnt('Starting {} ...'.format(world_name), pre=pre, quiet=quiet, end='')
     send_command(launch_server, is_screen_started(screen_name))
-    if not quiet:
-        print('Done!' + Colors.end)
+    sp_prnt('Done!', quiet=quiet)
 
 
 def save_all(settings):
@@ -409,11 +366,11 @@ def send_command(command, screen_name):
     # subprocess.call(cmd_list)
 
 
-def start_server(print_pre, settings, quiet):
+def start_server(pre, settings, quiet):
     """
     Starts a configured server.
 
-    @param print_pre:
+    @param pre:
     @param settings:
     @return:
     """
@@ -423,7 +380,7 @@ def start_server(print_pre, settings, quiet):
     try:
         jar_name, launch_cmd = get_jar(settings)
     except NoJarFoundError as e:
-        error_and_die(e)
+        error_and_die(e, quiet=quiet)
 
     mem_format = settings.mem_format
     mem_max = settings.mem_max
@@ -447,30 +404,23 @@ def start_server(print_pre, settings, quiet):
         start_screen(screen_name, server_dir)
 
     if not server_running:
-        if not quiet:
-            if print_pre:
-                print(print_pre + Colors.light_blue +
-                      'Starting "{}" ...'.format(world_name), end=' ')
-            else:
-                print('starting "{}" ...'.format(world_name), end=' ')
-            sys.stdout.flush()
+        if pre:
+            sp_prnt('Starting "{}" ...'.format(world_name), pre=pre, quiet=quiet, end='')
+        else:
+            sp_prnt('Starting "{}" ...'.format(world_name), quiet=quiet, end='')
         send_command(launch_server, is_screen_started(screen_name))
-        if not quiet:
-            print('Done!' + Colors.end)
-    elif not quiet:
+        sp_prnt('Done!', quiet=quiet)
+    else:
         raise ServerAlreadyRunningError(
             'World "{0}" already running with PID {1}'.format(
-                settings.world_name,
-                server_running.get('pid')))
-    else:
-        die_silently()
+                settings.world_name, server_running.get('pid')))
 
 
-def stop_server(print_pre, screen_name, server_dir, world_name, quiet):
+def stop_server(pre, screen_name, server_dir, world_name, quiet):
     """
     Stops a configured server.
 
-    @param print_pre:
+    @param pre:
     @param screen_name:
     @param server_dir:
     @param world_name:
@@ -481,20 +431,13 @@ def stop_server(print_pre, screen_name, server_dir, world_name, quiet):
 
     if server_running:
         server_pid = server_running.get('pid')
-        if not quiet:
-            print(print_pre + Colors.light_blue +
-                  'Stopping "{}" ...'.format(world_name), end=' ')
-        sys.stdout.flush()
+        sp_prnt('Stopping "{}" ...'.format(world_name), pre=pre, quiet=quiet, end='')
         wait_for_server_shutdown(screen_name, server_pid)
-        send_command('exit', is_screen_started(screen_name))
-        if not quiet:
-            print('Done!' + Colors.end)
-    elif not quiet:
-        raise ServerNotRunningError(
-            'Cannot stop "{}" - it is not running!'.format(world_name)
-        )
+        send_command(' exit', is_screen_started(screen_name))
+        sp_prnt('Done!', quiet=quiet)
     else:
-        die_silently()
+        raise ServerNotRunningError(
+            'Cannot stop "{}" - it is not running!'.format(world_name))
 
 
 def wait_for_server_shutdown(screen_name, server_pid):
@@ -507,39 +450,31 @@ def wait_for_server_shutdown(screen_name, server_pid):
     """
     while os.path.exists("/proc/{0}".format(server_pid)):
         time.sleep(SERVER_WAIT_TIME)
-        send_command('stop', is_screen_started(screen_name))
+        send_command(' stop', is_screen_started(screen_name))
 
 
-def write_server_properties(print_pre, file, settings, quiet):
+def write_server_properties(pre, file, settings, quiet):
     """
     Checks for a server.properties for the specified server_dir
     and world_name, and writes if need be (or forced)
 
-    @param print_pre:
+    @param pre:
     @param file:
     @param settings:
     @return:
     """
     def do_the_write():
-        if not quiet:
-            print(print_pre + Colors.light_blue +
-                  'Generating server.properties ...', end=' ')
-            sys.stdout.flush()
+        sp_prnt('Generating server.properties ...', pre=pre, quiet=quiet, end='')
         file_to_write = open(file, 'w')
         try:
             for l in settings.as_serverproperties.split('\n'):
                 file_to_write.write(l + '\n')
         except UnsupportedVersionError as e:
-            if not quiet:
-                error_and_die(e)
-            else:
-                die_silently()
+            error_and_die(e, quiet=quiet)
         file_to_write.close()
-        if not quiet:
-            print('Done!' + Colors.end)
+        sp_prnt('Done!', quiet=quiet)
 
-    found_msg = (print_pre + Colors.light_blue +
-                 'Found server.properties!' + Colors.end)
+    found_msg = (pre + Colors.light_blue + 'Found server.properties!' + Colors.end)
     if os.path.isfile(file):
         f = open(file, 'r')
         f_readlines = f.readlines()
@@ -549,8 +484,8 @@ def write_server_properties(print_pre, file, settings, quiet):
             or not 'level-seed={}\n'.format(settings.level_seed or '') \
                 in f_readlines or settings.force:
             do_the_write()
-        elif not quiet:
-            print(found_msg)
+        else:
+            sp_prnt(found_msg, quiet=quiet)
         f.close()
     else:
         do_the_write()
