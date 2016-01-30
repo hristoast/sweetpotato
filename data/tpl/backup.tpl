@@ -2,59 +2,67 @@
 <div class="center">
                     <h1><span class="fa fa-file-archive-o"></span> Backup</h1>
                     % if request_method == 'POST':
-                    % if offline:
-                    % if server_running:
+                        % if offline:
+                            % if server_running:
                     <h1><span class="fa fa-spin fa-spinner"></span> "{{world_name}}" is going down for an offline backup now!</h1>
                     <h2>It will be restarted when the backup is complete.</h2>
-                    % else:
+                            % else:
                     <h1><span class="fa fa-spin fa-spinner"></span> "{{world_name}}" is backup up now!</h1>
-                    <h2>It will be started when the backup is complete.</h2>
-                    % end
-                    % else:
+                    <!-- <h2>It will be started when the backup is complete.</h2> TODO: make sure this doesn't happen! -->
+                            % end
+                        % else:
                     <h1><span class="fa fa-spin fa-spinner"></span> Running a live backup on "{{world_name}}" now!</h1>
-                    % end
+                        % end
                     % else:
-                    % if todays_file in backup_dir_contents:
+                        % if todays_file in backup_dir_contents:
                     <h2>"{{world_name}}" has been backed up today. Great Job!</h2>
+                        % end
                     <form action="/backup" method="post">
-                    % if server_running:
-                        <div>
-                            <button class="btn btn-lg btn-primary srvctl" name="force" type="submit"><span class="fa fa-upload"></span> Force Online Backup {{world_name}} now</button>
-                        </div>
-                    % end
-                        <div>
-                            <button class="btn btn-lg btn-warning srvctl" name="force-offline" type="submit"><span class="fa fa-download"></span> Force Offline Backup {{world_name}} now</button>
-                        </div>
-                    % else:
-                    % if server_running:
+                        % if server_running:
                         <div>
                             <button class="btn btn-lg btn-primary srvctl" type="submit"><span class="fa fa-upload"></span> Online Backup {{world_name}} now</button>
                         </div>
-                    % end
+                        % end
                         <div>
                             <button class="btn btn-lg btn-warning srvctl" name="offline" type="submit"><span class="fa fa-download"></span> Offline Backup {{world_name}} now</button>
                         </div>
-                    % end
-                        <h3>World Only?</h3>
-                    % if world_only:
-                        <input name="world-only" id="world-only" type="checkbox" checked="checked">
-                    % else:
-                        <input name="world-only" id="world-only" type="checkbox">
-                    % end
+                        <div class="container">
+                            <div class=" row">
+                                <div class="col-sm-3"></div>
+                                <div class="col-sm-2" style="padding-left: 65px;">
+                                    <h3 class="center">Force?</h3>
+                        % if force:
+                                    <input name="force" id="force" type="checkbox" checked="checked">
+                        % else:
+                                    <input name="force" id="force" type="checkbox">
+                        % end
+                                </div>
+                                <div class="col-sm-3">
+                                    <h3>World Only?</h3>
+                        % if world_only:
+                                    <input name="world-only" id="world-only" type="checkbox" checked="checked">
+                        % else:
+                                    <input name="world-only" id="world-only" type="checkbox">
+                        % end
+                                </div>
+                            </div>
+                        </div>
                     </form>
-                    % if backup_dir_contents:
+                        % if backup_dir_contents:
                     <h3>Click any of the below filenames to download them</h3>
                     <div id="backup_files" class="well">
                         <dl class="dl-horizontal">
-                        % for file_dict in backup_file_list:
-                        % file_bit = file_dict['bit']
-                        % file_name = file_dict['file']
-                        % file_size = file_dict['size']
+                            % for file_dict in backup_file_list:
+                                % file_bit = file_dict['bit']
+                                % file_name = file_dict['file']
+                                % file_size = file_dict['size']
                             <dt><a href="/backups/{{file_name}}" title="{{file_name}}">{{file_name}}</a></dt>
                             <dd>Size: <span class="bold">{{file_size}} {{file_bit}}</span></dd>
-                        % end
+                            % end
                         </dl>
                     </div>
-                    % end
+                        % else:
+                    <h3>No backups yet!</h3>
+                        % end
                     % end
                 </div>

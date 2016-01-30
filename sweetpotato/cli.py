@@ -223,7 +223,7 @@ def setup_args(args):
     running = is_server_running(s.server_dir)
 
     if args.backup:
-        pre = '[' + Colors.yellow_green + 'live-backup' + Colors.end + ']'
+        pre = '[' + Colors.yellow_green + 'live-backup' + Colors.end + '] '
         try:
             run_server_backup(pre, s, s.quiet, running, s.world_only)
         except BackupFileAlreadyExistsError as e:
@@ -247,7 +247,7 @@ def setup_args(args):
         print(s.as_json)
     elif args.list:
         if running:
-            pre = '[' + Colors.yellow_green + 'list' + Colors.end + ']'
+            pre = '[' + Colors.yellow_green + 'list' + Colors.end + '] '
             players = list_players(s)
             if players:
                 for p in players:
@@ -257,7 +257,7 @@ def setup_args(args):
         else:
             error_and_die(s.world_name + " is not running!", quiet=s.quiet)
     elif args.offline:
-        pre = '[' + Colors.yellow_green + 'offline-backup' + Colors.end + ']'
+        pre = '[' + Colors.yellow_green + 'offline-backup' + Colors.end + '] '
         try:
             run_server_backup(pre, s, s.quiet, running, s.world_only, offline=True)
         except BackupFileAlreadyExistsError as e:
@@ -265,7 +265,7 @@ def setup_args(args):
             error_and_die(e)
     elif args.save_all:
         if running:
-            pre = '[' + Colors.yellow_green + 'save-all' + Colors.end + ']'
+            pre = '[' + Colors.yellow_green + 'save-all' + Colors.end + '] '
             sp_prnt('Saving "{}" ...'.format(s.world_name), quiet=s.quiet, end='')
             save_all(s)
             sp_prnt('Done!', quiet=s.quiet)
@@ -274,19 +274,19 @@ def setup_args(args):
     elif args.say:
         send_command('say ' + args.say, s.screen_name)
     elif args.restart:
-        pre = '[' + Colors.yellow_green + 'restart' + Colors.end + ']'
+        pre = '[' + Colors.yellow_green + 'restart' + Colors.end + '] '
         try:
             restart_server(pre, s, s.quiet)
         except BackupFileAlreadyExistsError as e:
             error_and_die(e)
     elif args.start:
-        pre = '[' + Colors.yellow_green + 'start' + Colors.end + ']'
+        pre = '[' + Colors.yellow_green + 'start' + Colors.end + '] '
         try:
             start_server(pre, s, s.quiet)
         except ServerAlreadyRunningError as e:
             error_and_die(e, quiet=s.quiet)
     elif args.stop:
-        pre = '[' + Colors.yellow_green + 'stop' + Colors.end + ']'
+        pre = '[' + Colors.yellow_green + 'stop' + Colors.end + '] '
         try:
             stop_server(
                 pre,

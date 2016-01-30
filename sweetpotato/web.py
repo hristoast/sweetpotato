@@ -87,7 +87,12 @@ def run_webui(settings, quiet):
             else:
                 world_only = None
 
-            backup_dir_contents = os.listdir(s.backup_dir)
+            # Build a list of all non-directory items in `s.backup_dir`
+            backup_dir_contents = []
+            for item in os.listdir(s.backup_dir):
+                if os.path.isfile(item):
+                    backup_dir_contents.append(item)
+
             unsorted_backup_file_list = []
             for backup_file in backup_dir_contents:
                 full_path_to_backup_file = os.path.join(s.backup_dir,
@@ -121,10 +126,13 @@ def run_webui(settings, quiet):
                             'force': force})
                 t.daemon = True
                 t.start()
+            else:
+                force = s.force
 
             return {
                 'backup_dir_contents': backup_dir_contents,
                 'backup_file_list': backup_file_list,
+                'force': force,
                 'offline': offline,
                 'path': path,
                 'request_method': request_method,
@@ -251,8 +259,7 @@ def run_webui(settings, quiet):
                 'path': path,
                 '__version__': VERSION}
         try:
-            pre = Colors.green
-            sp_prnt('{0} {1} - launching WebUI now!'.format(PROGNAME, VERSION), pre=pre, quiet=quiet)
+            sp_prnt('{0} {1} - launching WebUI now!'.format(PROGNAME, VERSION), color=Colors.green, end_color=Colors.yellow_green, quiet=quiet)
             bottle.run(app=app, port=settings.webui_port, quiet=quiet)
         except OSError:
             error_and_die('Port {} is already in use! Exiting ...\n'.format(settings.webui_port), quiet=quiet)

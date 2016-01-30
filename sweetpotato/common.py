@@ -8,7 +8,7 @@ AUTHOR = '{0} <{1}>'.format(AUTHOR_NAME, AUTHOR_EMAIL)
 LICENSE = 'GPLv3'
 MCVERSION = '1.8.9'
 PROGNAME = 'sweetpotato'
-VERSION = '0.34.30'
+VERSION = '0.34.31'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -58,12 +58,13 @@ Colors = _colors(
     end='\033[0m')
 
 
-def sp_prnt(*args, pre=None, quiet=False, **kwargs):
-    msg = Colors.light_blue
+def sp_prnt(*args, color=Colors.light_blue, end_color=Colors.end, pre=None, quiet=False, **kwargs):
+    msg = color
     if args:
         for arg in args:
             msg += arg
-    msg += Colors.end
+    if end_color:
+        msg += end_color
     if not quiet:
         if pre:
             msg = pre + msg

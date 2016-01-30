@@ -32,7 +32,7 @@ def _agree_to_eula(eula_txt, force, pre, quiet):
             return True
         else:
             f.close()
-    sp_prnt('Agreeing to the eula ...', pre=pre, quiet=quiet, end='')
+    sp_prnt('Agreeing to the eula ...', pre=pre, quiet=quiet, end=' ')
     f = open(eula_txt, 'w')
     f.write('eula=true\n')
     f.close()
@@ -50,7 +50,7 @@ def create_server(settings, quiet):
     @param quiet:
     @return:
     """
-    pre = '[' + Colors.yellow_green + 'create' + Colors.end + ']'
+    pre = '[' + Colors.yellow_green + 'create' + Colors.end + '] '
     backup_dir = settings.backup_dir
     force = is_forced(settings)
     server_dir = settings.server_dir
@@ -75,7 +75,7 @@ def create_server(settings, quiet):
     if os.path.isdir(backup_dir):
         sp_prnt('Found {}!'.format(backup_dir), pre=pre)
     else:
-        sp_prnt('Creating {} ...'.format(backup_dir), pre=pre, end='')
+        sp_prnt('Creating {} ...'.format(backup_dir), pre=pre, end=' ')
         create_dir(backup_dir)
         sp_prnt('Done!', quiet=quiet)
 
@@ -335,10 +335,10 @@ def restart_server(pre, settings, quiet):
 
     if server_running:
         server_pid = server_running.get('pid')
-        sp_prnt('Restarting {} ...'.format(world_name), pre=pre, quiet=quiet)
+        sp_prnt('Restarting {} ...'.format(world_name), pre=pre, quiet=quiet, end=' ')
         wait_for_server_shutdown(screen_name, server_pid)
     else:
-        sp_prnt('Starting {} ...'.format(world_name), pre=pre, quiet=quiet, end='')
+        sp_prnt('Starting {} ...'.format(world_name), pre=pre, quiet=quiet, end=' ')
     send_command(launch_server, is_screen_started(screen_name))
     sp_prnt('Done!', quiet=quiet)
 
@@ -405,9 +405,9 @@ def start_server(pre, settings, quiet):
 
     if not server_running:
         if pre:
-            sp_prnt('Starting "{}" ...'.format(world_name), pre=pre, quiet=quiet, end='')
+            sp_prnt('Starting "{}" ...'.format(world_name), pre=pre, quiet=quiet, end=' ')
         else:
-            sp_prnt('Starting "{}" ...'.format(world_name), quiet=quiet, end='')
+            sp_prnt('Starting "{}" ...'.format(world_name), quiet=quiet, end=' ')
         send_command(launch_server, is_screen_started(screen_name))
         sp_prnt('Done!', quiet=quiet)
     else:
@@ -431,7 +431,7 @@ def stop_server(pre, screen_name, server_dir, world_name, quiet):
 
     if server_running:
         server_pid = server_running.get('pid')
-        sp_prnt('Stopping "{}" ...'.format(world_name), pre=pre, quiet=quiet, end='')
+        sp_prnt('Stopping "{}" ...'.format(world_name), pre=pre, quiet=quiet, end=' ')
         wait_for_server_shutdown(screen_name, server_pid)
         send_command(' exit', is_screen_started(screen_name))
         sp_prnt('Done!', quiet=quiet)
@@ -464,7 +464,7 @@ def write_server_properties(pre, file, settings, quiet):
     @return:
     """
     def do_the_write():
-        sp_prnt('Generating server.properties ...', pre=pre, quiet=quiet, end='')
+        sp_prnt('Generating server.properties ...', pre=pre, quiet=quiet, end=' ')
         file_to_write = open(file, 'w')
         try:
             for l in settings.as_serverproperties.split('\n'):
