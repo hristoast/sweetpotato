@@ -90,7 +90,7 @@ def run_webui(settings, quiet):
             # Build a list of all non-directory items in `s.backup_dir`
             backup_dir_contents = []
             for item in os.listdir(s.backup_dir):
-                if os.path.isfile(item):
+                if os.path.isfile(os.path.join(s.backup_dir, item)):
                     backup_dir_contents.append(item)
 
             unsorted_backup_file_list = []
@@ -118,12 +118,13 @@ def run_webui(settings, quiet):
                 postdata = bottle.request.POST
                 force = 'force' in postdata or 'force-offline' in postdata
                 offline = 'offline' in postdata or 'force-offline' in postdata
-                world_only = postdata['world-only'] == 'on' or world_only
-                t = Thread(
-                    target=run_server_backup,
-                    args=('', s, True, is_running, world_only),
-                    kwargs={'offline': offline,
-                            'force': force})
+                try:
+                    world_only = postdata['world-only'] == 'on' or world_only
+                except KeyError:
+                    world_only = False
+                t = Thread(target=run_server_backup,
+                           args=('', s, True, is_running, world_only),
+                           kwargs={'offline': offline, 'force': force})
                 t.daemon = True
                 t.start()
             else:

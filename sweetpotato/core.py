@@ -263,6 +263,11 @@ def run_server_backup(pre, settings, quiet, running,
     full_path_to_backup_file = os.path.join(backup_dir, backup_file)
     backup_made_today = os.path.isfile(full_path_to_backup_file)
 
+    def _exclude_me(tarinfo):
+        plz_exclude = ('level.dat_new', 'dynmap', 'client-files', '.git')
+        if tarinfo.name not in plz_exclude:
+            return tarinfo
+
     if backup_made_today and not force:
         sys.stdout.flush()
         try:
@@ -297,11 +302,11 @@ def run_server_backup(pre, settings, quiet, running,
         if not running and not offline:
             pre = '[' + Colors.yellow_green + 'backup' + Colors.end + ']'
             sp_prnt('Backing up "{}" ... '.format(world_name), pre=pre, end='')
-        tar.add(os.path.join(server_dir, world_name), exclude=lambda x: 'level.dat_new' in x)
+        tar.add(os.path.join(server_dir, world_name), filter=_exclude_me)
     elif forge:
-        tar.add(server_dir, exclude=lambda x: 'dynmap' in x or '.git' in x or 'client-files' in x or 'level.dat_new' in x)
+        tar.add(server_dir, filter=_exclude_me)
     else:
-        tar.add(server_dir, exclude=lambda x: '.git' in x or 'level.dat_new' in x)
+        tar.add(server_dir, filter=_exclude_me)
     tar.close()
 
     if not offline and running:
