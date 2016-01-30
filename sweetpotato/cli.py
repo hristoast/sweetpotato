@@ -253,7 +253,7 @@ def setup_args(args):
                 for p in players:
                     sp_prnt(p.strip(), pre=pre)
             else:
-                sp_prnt('Nobody on right now :(', quiet=s.quiet)
+                sp_prnt('Nobody on right now :(', pre=pre, quiet=s.quiet)
         else:
             error_and_die(s.world_name + " is not running!", quiet=s.quiet)
     elif args.offline:
@@ -304,7 +304,7 @@ def setup_args(args):
             u = get_uptime(raw_uptime)
             uptime_string = get_uptime_string(u)
             pre = Colors.green + '{}'.format(s.world_name)
-            sp_prnt(' has been up for ' + Colors.yellow_green + uptime_string,
+            sp_prnt('has been up for ' + Colors.yellow_green + uptime_string,
                     pre=pre, quiet=s.quiet)
         except ServerNotRunningError as e:
             error_and_die(e, quiet=s.quiet)

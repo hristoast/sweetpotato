@@ -277,7 +277,7 @@ def run_server_backup(pre, settings, quiet, running,
             server_pid = running.get('pid')
             sp_prnt('Stopping "{}" ... '.format(world_name), quiet=quiet, end='')
             wait_for_server_shutdown(screen_name, server_pid)
-            print('backing up ...', end=' ')
+            sp_prnt('backing up ...', end='')
         sp_prnt('Backing up "{}" ... '.format(world_name), quiet=quiet, end='')
     elif running:
         send_command('save-all', is_screen_started(screen_name))
@@ -297,11 +297,11 @@ def run_server_backup(pre, settings, quiet, running,
         if not running and not offline:
             pre = '[' + Colors.yellow_green + 'backup' + Colors.end + ']'
             sp_prnt('Backing up "{}" ... '.format(world_name), pre=pre, end='')
-        tar.add(os.path.join(server_dir, world_name))
+        tar.add(os.path.join(server_dir, world_name), exclude=lambda x: 'level.dat_new' in x)
     elif forge:
-        tar.add(server_dir, exclude=lambda x: 'dynmap' in x or '.git' in x or 'client-files' in x)
+        tar.add(server_dir, exclude=lambda x: 'dynmap' in x or '.git' in x or 'client-files' in x or 'level.dat_new' in x)
     else:
-        tar.add(server_dir, exclude=lambda x: '.git' in x)
+        tar.add(server_dir, exclude=lambda x: '.git' in x or 'level.dat_new' in x)
     tar.close()
 
     if not offline and running:
@@ -312,7 +312,7 @@ def run_server_backup(pre, settings, quiet, running,
         return True
 
     if not quiet:
-        print('Done!' + Colors.end)
+        sp_prnt('Done!' + Colors.end)
 
 
 def save_settings(settings):

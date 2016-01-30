@@ -8,7 +8,7 @@ AUTHOR = '{0} <{1}>'.format(AUTHOR_NAME, AUTHOR_EMAIL)
 LICENSE = 'GPLv3'
 MCVERSION = '1.8.9'
 PROGNAME = 'sweetpotato'
-VERSION = '0.34.29'
+VERSION = '0.34.30'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -28,25 +28,19 @@ CONFIG_DIR = '{0}/.config/{1}'.format(HOME_DIR, PROGNAME)
 DEFAULT_CONF_FILE = '{0}/{1}.conf'.format(CONFIG_DIR, PROGNAME)
 DEFAULT_LOG_DIR = os.path.join(CONFIG_DIR, 'logs')
 DEFAULT_LOG_FILE = os.path.join(DEFAULT_LOG_DIR, 'daemon.log')
-DEFAULT_PIDFILE = os.path.join(CONFIG_DIR, 'run',
-                               '{}.pid'.format(PROGNAME))
+DEFAULT_PIDFILE = os.path.join(CONFIG_DIR, 'run', '{}.pid'.format(PROGNAME))
 DEFAULT_PIDFILE_TIMEOUT = 1
 DEP_PKGS = ('java', 'screen')
 NO_BOTTLEPY_ERROR = 'The web component requires bottle.py to function, with Python-Markdown as an optional dependency.'
-README_MD = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), '..', 'README.md')
-REQUIRED = 'backup_dir mem_format mem_max mem_min port screen_name' \
-           ' server_dir world_name'
+README_MD = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'README.md')
+REQUIRED = 'backup_dir mem_format mem_max mem_min port screen_name server_dir world_name'
 SERVER_WAIT_TIME = 1
-FORGE_DL_URL = 'http://files.minecraftforge.net/maven/net/minecraftforge/' \
-               'forge/{0}/{1}'
+FORGE_DL_URL = 'http://files.minecraftforge.net/maven/net/minecraftforge/forge/{0}/{1}'
 FORGE_JAR_NAME = 'forge-{}-universal.jar'
 VANILLA_DL_URL = 'https://s3.amazonaws.com/Minecraft.Download/versions/{0}/{1}'
 VANILLA_JAR_NAME = 'minecraft_server.{}.jar'
-WEB_STATIC = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'static')
-WEB_TPL = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'tpl')
+WEB_STATIC = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'static')
+WEB_TPL = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'tpl')
 
 _colors = collections.namedtuple(
     'Colors',

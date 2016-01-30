@@ -26,7 +26,11 @@ def get_java_procs():
             ['/bin/ls', '-l', '/proc/{0}/exe'.format(pid)],
             stdout=subprocess.PIPE)
         e_out = e.communicate()[0]
-        exe = e_out.decode().split()[-1]
+        try:
+            exe = e_out.decode().split()[-1]
+        except IndexError:
+            # process may have stopped/restarted
+            return None
     elif output and len(output.split()) > 1:
         # More than one Java process
         proc_list = []
