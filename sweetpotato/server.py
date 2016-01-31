@@ -271,7 +271,8 @@ def list_players(settings):
                     log.close()
                     return log_lines
             except (OSError, IOError):
-                sp_prnt('failed to read log oh noes!', pre=Colors.red + "WARNING")
+                sp_prnt('failed to read log oh noes!',
+                        color=Colors.yellow_green, pre=Colors.yellow + "WARNING: ")
         return None
 
     ll = read_latest_log()

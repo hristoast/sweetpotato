@@ -145,7 +145,7 @@ def setup_args(args):
         try:
             read_conf_file(args.conf, s)
         except ConfFileError as e:
-            error_and_die(e)
+            error_and_die(e, quiet=s.quiet)
         s.conf_file = os.path.realpath(args.conf)
     # Or try to read the default conf file
     elif not args.conf:
@@ -206,13 +206,13 @@ def setup_args(args):
            s.screen_name == DEFAULT_WORLD_NAME:
             s.screen_name = s.world_name
     except EmptySettingError as e:
-        error_and_die(e)
+        error_and_die(e, quiet=s.quiet)
 
     try:
         validate_directories(s.backup_dir, s.server_dir)
     except NoDirFoundError as e:
         if not args.create and not args.genconf:
-            error_and_die(e)
+            error_and_die(e, quiet=s.quiet)
 
     try:
         validate_mem_values(s.mem_min, s.mem_max)
@@ -228,12 +228,12 @@ def setup_args(args):
             run_server_backup(pre, s, s.quiet, running, s.world_only)
         except BackupFileAlreadyExistsError as e:
             send_command('say Backup Done!', s.screen_name)
-            error_and_die(e)
+            error_and_die(e, quiet=s.quiet)
     elif args.create:
         try:
             create_server(s, s.quiet)
         except ServerAlreadyRunningError as e:
-            error_and_die(e.msg.strip('"'))
+            error_and_die(e.msg.strip('"'), quiet=s.quiet)
     elif args.daemon:
         if daemon_action:
             daemon_action(args.daemon)
@@ -262,7 +262,7 @@ def setup_args(args):
             run_server_backup(pre, s, s.quiet, running, s.world_only, offline=True)
         except BackupFileAlreadyExistsError as e:
             start_server(None, s, s.quiet)
-            error_and_die(e)
+            error_and_die(e, quiet=s.quiet)
     elif args.save_all:
         if running:
             pre = '[' + Colors.yellow_green + 'save-all' + Colors.end + '] '
@@ -278,7 +278,7 @@ def setup_args(args):
         try:
             restart_server(pre, s, s.quiet)
         except BackupFileAlreadyExistsError as e:
-            error_and_die(e)
+            error_and_die(e, quiet=s.quiet)
     elif args.start:
         pre = '[' + Colors.yellow_green + 'start' + Colors.end + '] '
         try:

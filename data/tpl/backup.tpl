@@ -33,10 +33,10 @@
                         <div>
                             <button class="btn btn-lg btn-warning srvctl" name="offline" type="submit"><span class="fa fa-download"></span> Offline Backup {{world_name}} now</button>
                         </div>
-                        <div class="container">
-                            <div class=" row">
-                                <div class="col-sm-3"></div>
-                                <div class="col-sm-2" style="padding-left: 65px;">
+                        <div class="container" style="max-width: 900px;">
+                            <div class="row">
+                                <div class="col-sm-4"></div>
+                                <div class="col-sm-1" style="padding-left: 25px;">
                                     <h3 class="center">Force?</h3>
                         % if force:
                                     <input name="force" id="force" type="checkbox" checked="checked">
@@ -44,7 +44,7 @@
                                     <input name="force" id="force" type="checkbox">
                         % end
                                 </div>
-                                <div class="col-sm-3">
+                                <div class="col-sm-3" style="padding-left: 40px;">
                                     <h3>World Only?</h3>
                         % if world_only:
                                     <input name="world-only" id="world-only" type="checkbox" checked="checked">

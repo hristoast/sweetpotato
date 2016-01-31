@@ -8,7 +8,7 @@ AUTHOR = '{0} <{1}>'.format(AUTHOR_NAME, AUTHOR_EMAIL)
 LICENSE = 'GPLv3'
 MCVERSION = '1.8.9'
 PROGNAME = 'sweetpotato'
-VERSION = '0.34.32'
+VERSION = '0.34.33'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -23,6 +23,7 @@ DEFAULT_SERVER_PORT = '25565'
 DEFAULT_WEBUI_PORT = 8080
 DEFAULT_WORLD_NAME = DEFAULT_SCREEN_NAME
 DESCRIPTION = "Manage your Minecraft server on a GNU/Linux system."
+EXCLUDE_FILES = ('level.dat_new', 'dynmap', 'client-files', '.git')
 HOME_DIR = os.getenv('HOME')
 CONFIG_DIR = '{0}/.config/{1}'.format(HOME_DIR, PROGNAME)
 DEFAULT_CONF_FILE = '{0}/{1}.conf'.format(CONFIG_DIR, PROGNAME)
@@ -32,6 +33,7 @@ DEFAULT_PIDFILE = os.path.join(CONFIG_DIR, 'run', '{}.pid'.format(PROGNAME))
 DEFAULT_PIDFILE_TIMEOUT = 1
 DEP_PKGS = ('java', 'screen')
 NO_BOTTLEPY_ERROR = 'The web component requires bottle.py to function, with Python-Markdown as an optional dependency.'
+PYTHON33_OR_GREATER = sys.version_info.major >= 3 and sys.version_info.minor >= 3
 README_MD = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'README.md')
 REQUIRED = 'backup_dir mem_format mem_max mem_min port screen_name server_dir world_name'
 SERVER_WAIT_TIME = 1
@@ -65,10 +67,8 @@ def sp_prnt(*args, color=Colors.light_blue, end_color=Colors.end, pre=None, quie
             msg += arg
     if end_color:
         msg += end_color
+    if pre:
+        msg = pre + msg
     if not quiet:
-        if pre:
-            msg = pre + msg
-            print(msg, **kwargs)
-        else:
-            print(msg, **kwargs)
+        print(msg, **kwargs)
         sys.stdout.flush()

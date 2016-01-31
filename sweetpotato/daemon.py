@@ -91,13 +91,12 @@ def run_daemon():
             try:
                 daemon_runner.do_action()
             except (LockTimeout, runner.DaemonRunnerStopFailureError) as e:
-                error_and_die(e)
+                error_and_die(e, quiet=s.quiet)
         else:
-            # TODO: warning about requiring patched version
-            error_and_die(DAEMON_PY3K_ERROR)
+            error_and_die(DAEMON_PY3K_ERROR, quiet=s.quiet)
     else:
         # error_and_die("The 'lockfile' module is not installed! Please install it and try again.")
-        error_and_die("TODO: ERROR ABOUT DEPENDENCIES GOES HERE!")
+        error_and_die("TODO: ERROR ABOUT DEPENDENCIES GOES HERE!", quiet=s.quiet)
 
 
 def _setup_daemon():

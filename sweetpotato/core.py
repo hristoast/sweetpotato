@@ -6,10 +6,9 @@ import sys
 import tarfile
 
 from datetime import datetime
-from .common import (DEFAULT_COMPRESSION, DEFAULT_SCREEN_NAME,
-                     DEFAULT_SERVER_PORT, DEFAULT_WEBUI_PORT,
-                     DEFAULT_WORLD_NAME, MCVERSION, PROGNAME, REQUIRED,
-                     Colors, sp_prnt)
+from .common import (DEFAULT_COMPRESSION, DEFAULT_SCREEN_NAME, DEFAULT_SERVER_PORT,
+                     DEFAULT_WEBUI_PORT, DEFAULT_WORLD_NAME, EXCLUDE_FILES, MCVERSION,
+                     PROGNAME,PYTHON33_OR_GREATER, REQUIRED, Colors, sp_prnt)
 from .error import (ConfFileError, EmptySettingError, NoDirFoundError,
                     ServerNotRunningError, UnsupportedVersionError)
 from .screen import is_screen_started
@@ -73,8 +72,7 @@ class SweetpotatoConfig:
                 'days': u[0],
                 'hours': u[1],
                 'minutes': u[2],
-                'seconds': u[3]
-            }
+                'seconds': u[3]}
             self_dict['running'].update(players=players)
             self_dict['running'].update(uptime=uptime)
         except ServerNotRunningError:
@@ -163,13 +161,6 @@ motd=Welcome to {0}!
                 "We can't generate a server.properties for "
                 "the version ov MC you are trying to use ({}).".format(
                     self.mc_version))
-
-
-def _can_xz():
-    if sys.version_info[1] < 3:
-        return False
-    else:
-        return True
 
 
 def read_conf_file(file, settings):
@@ -263,9 +254,14 @@ def run_server_backup(pre, settings, quiet, running,
     full_path_to_backup_file = os.path.join(backup_dir, backup_file)
     backup_made_today = os.path.isfile(full_path_to_backup_file)
 
+    def _can_xz():
+        if PYTHON33_OR_GREATER:
+            return False
+        else:
+            return True
+
     def _exclude_me(tarinfo):
-        plz_exclude = ('level.dat_new', 'dynmap', 'client-files', '.git')
-        if tarinfo.name not in plz_exclude:
+        if tarinfo.name not in EXCLUDE_FILES:
             return tarinfo
 
     if backup_made_today and not force:
