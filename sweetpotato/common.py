@@ -61,14 +61,19 @@ Colors = _colors(
 
 
 def sp_prnt(*args, color=Colors.light_blue, end_color=Colors.end, pre=None, quiet=False, **kwargs):
-    msg = color
-    if args:
-        for arg in args:
-            msg += arg
-    if end_color:
-        msg += end_color
-    if pre:
-        msg = pre + msg
+    """
+    If quiet is Truthy, then don't do anything.
+
+    Otherwise, do the special printing stuff.
+    """
     if not quiet:
+        msg = color
+        if args:
+            for arg in args:
+                msg += arg
+        if end_color:
+            msg += end_color
+        if pre:
+            msg = pre + msg
         print(msg, **kwargs)
         sys.stdout.flush()

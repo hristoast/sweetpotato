@@ -49,7 +49,7 @@ Using `pyenv` makes it easy to get not only the latest Python 3 but also any pip
 First, prepare your Python 3 environment:
 
  1. [Install `pyenv`](https://github.com/yyuu/pyenv#installation)
- 1. Install Python 3.4.3 (or the newest stable if not this)
+ 1. Install Python 3.5.1 (or the newest stable if not this)
  1. `pip3.4 install git+git://github.com/hristoast/python-daemon.git bottle Markdown`
 
 Then, simply proceed with the above install steps (omitting the use of `sudo`.) If all went well, you've now got `sweetpotato` and `sweetpotatod` installed locally under your `pyenv`. If you want to use this in a cron job, you'll want to manually set `$PATH` as shown in the below sammple `crontab`:
@@ -119,7 +119,7 @@ Just use the `-c` or `--conf` option to configure `sweetpotato`:
 
 That's better, but we could save even more keystrokes if we wanted to by putting our conf file into the default location as expected by `sweetpotato`, which is `$HOME/.config/sweetpotato/sweetpotato.conf`:
 
-    $ mv sweetpotato.conf .config/sweetpotato/
+    $ mv sweetpotato.conf ~/.config/sweetpotato/
     $ sweetpotato --start
     [start] Starting "SweetpotatoWorld" ... Done!
 

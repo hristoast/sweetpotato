@@ -37,7 +37,7 @@
                             <div class="row">
                                 <div class="col-sm-4"></div>
                                 <div class="col-sm-1" style="padding-left: 25px;">
-                                    <h3 class="center">Force?</h3>
+                                    <h3>Force?</h3>
                         % if force:
                                     <input name="force" id="force" type="checkbox" checked="checked">
                         % else:
