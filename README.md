@@ -12,7 +12,7 @@
 
 `stop`
 
-`java -Xms1G -Xmx2G -XX:MaxPermSize=256M -jar forge-1.7.10-10.13.2.1284-universal.jar nogui`
+`java -Xms1G -Xmx2G -XX:MaxPermSize=256M -jar forge-1.7.10-10.13.4.1558-1.7.10-universal.jar nogui`
 
 The above might be pretty close to the normal commands you'd use to restart a Minecraft server 'by hand'.
 
@@ -50,9 +50,9 @@ First, prepare your Python 3 environment:
 
  1. [Install `pyenv`](https://github.com/yyuu/pyenv#installation)
  1. Install Python 3.5.1 (or the newest stable if not this)
- 1. `pip3.4 install git+git://github.com/hristoast/python-daemon.git bottle Markdown`
+ 1. `pip install git+git://github.com/hristoast/python-daemon.git bottle Markdown`
 
-Then, simply proceed with the above install steps (omitting the use of `sudo`.) If all went well, you've now got `sweetpotato` and `sweetpotatod` installed locally under your `pyenv`. If you want to use this in a cron job, you'll want to manually set `$PATH` as shown in the below sammple `crontab`:
+Then, simply proceed with the above install steps (omitting the use of `sudo`.) If all went well, you've now got `sweetpotato` and `sweetpotatod` installed locally under your `pyenv`. If you want to use this in a cron job, you'll want to manually set `$PATH` as shown in the below sample `crontab`:
 
     crontab -l
     PATH=/srv/minecraft/.pyenv/shims:/usr/bin:/bin
@@ -302,8 +302,8 @@ See your server's uptime if it's running:
 A simple web-based interface for many of the functions offered by `sweetpotato`. By default it binds to port `8080`, but this can be changed with the `--web-port` option or a conf file setting.
 
     $ sweetpotato --web
-    sweetpotato 0.34.6b - launching WebUI now!
-    Bottle v0.12.7 server starting up (using WSGIRefServer())...
+    sweetpotato 0.34.33 - launching WebUI now!
+    Bottle v0.12.9 server starting up (using WSGIRefServer())...
     Listening on http://127.0.0.1:3434/
     Hit Ctrl-C to quit.
 
@@ -343,7 +343,7 @@ Here is an example conf file for a Forge server, taken from my server:
     server_dir: /srv/ftb/LLX
     mem_min: 3
     world_name: LarrylandX
-    forge: 1.7.10-10.13.2.1284
+    forge: 1.7.10-10.13.4.1558-1.7.10
 
 ## ETC
 
