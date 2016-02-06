@@ -303,7 +303,8 @@ def setup_args(args):
             raw_uptime = get_uptime_raw(s.server_dir, s.world_name, s.quiet)
             u = get_uptime(raw_uptime)
             uptime_string = get_uptime_string(u)
-            pre = Colors.green + '{}'.format(s.world_name)
+            pre = '[' + Colors.yellow_green + 'uptime' + Colors.end + '] ' +\
+                  Colors.green + '{} '.format(s.world_name)
             sp_prnt('has been up for ' + Colors.yellow_green + uptime_string,
                     pre=pre, quiet=s.quiet)
         except ServerNotRunningError as e:
