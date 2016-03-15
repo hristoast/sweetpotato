@@ -8,7 +8,7 @@ import tarfile
 from datetime import datetime
 from .common import (DEFAULT_COMPRESSION, DEFAULT_SCREEN_NAME, DEFAULT_SERVER_PORT,
                      DEFAULT_WEBUI_PORT, DEFAULT_WORLD_NAME, EXCLUDE_FILES, MCVERSION,
-                     PROGNAME,PYTHON33_OR_GREATER, REQUIRED, Colors, sp_prnt)
+                     PROGNAME, PYTHON33_OR_GREATER, REQUIRED, Colors, sp_prnt)
 from .error import (ConfFileError, EmptySettingError, NoDirFoundError,
                     ServerNotRunningError, UnsupportedVersionError)
 from .screen import is_screen_started
@@ -262,6 +262,7 @@ def run_server_backup(pre, settings, quiet, running,
 
     def _exclude_me(tarinfo):
         if tarinfo.name not in EXCLUDE_FILES:
+            print(tarinfo.name)
             return tarinfo
 
     if backup_made_today and not force:
@@ -298,7 +299,10 @@ def run_server_backup(pre, settings, quiet, running,
         if not running and not offline:
             pre = '[' + Colors.yellow_green + 'backup' + Colors.end + ']'
             sp_prnt('Backing up "{}" ... '.format(world_name), pre=pre, end='')
-        tar.add(os.path.join(server_dir, world_name), filter=_exclude_me)
+        try:
+            tar.add(os.path.join(server_dir, world_name), filter=_exclude_me)
+        except FileNotFoundError:
+            pass
     elif forge:
         tar.add(server_dir, filter=_exclude_me)
     else:
