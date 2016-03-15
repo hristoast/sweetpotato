@@ -4,10 +4,10 @@ import os
 import sys
 
 from .common import (COMPRESSION_CHOICES, DAEMON_PY3K_ERROR, DEFAULT_COMPRESSION,
-                     DEFAULT_CONF_FILE, DEFAULT_LOG_DIR, DEFAULT_PERMGEN,
-                     DEFAULT_PIDFILE, DEFAULT_SERVER_PORT, DEFAULT_WEBUI_PORT,
-                     DEFAULT_WORLD_NAME, DEP_PKGS, DESCRIPTION, MCVERSION,
-                     PROGNAME, VERSION, Colors, sp_prnt)
+                     DEFAULT_CONF_FILE, DEFAULT_EXCLUDE_FILES, DEFAULT_LOG_DIR,
+                     DEFAULT_PERMGEN, DEFAULT_PIDFILE, DEFAULT_SERVER_PORT,
+                     DEFAULT_WEBUI_PORT, DEFAULT_WORLD_NAME, DEP_PKGS, DESCRIPTION,
+                     MCVERSION, PROGNAME, VERSION, Colors, sp_prnt)
 from .core import (SweetpotatoConfig, read_conf_file, run_server_backup,
                    validate_directories, validate_mem_values, validate_settings)
 try:
@@ -69,6 +69,9 @@ def setup_args(args):
     settings.add_argument('-d', '--backup-dir',
                           help='the FULL path to your backups folder',
                           metavar='/path/to/backups')
+    settings.add_argument('-e', '--exclude',
+                          help='A space-separated list of files to exclude from backups.'
+                          ' Default: {}'.format(DEFAULT_EXCLUDE_FILES[0]))
     settings.add_argument('-x', '--fancy', action='store_true',
                           help="print json with fancy indentation and sorting")
     settings.add_argument('-F', '--force',
@@ -156,6 +159,9 @@ def setup_args(args):
             pass
     if args.backup_dir:
         s.backup_dir = args.backup_dir
+    if args.exclude:
+        for e in args.exclude.split(" "):
+            s.exclude_files.append(e)
     if args.fancy:
         s.fancy = True
     if args.force:
@@ -225,7 +231,7 @@ def setup_args(args):
     if args.backup:
         pre = '[' + Colors.yellow_green + 'live-backup' + Colors.end + '] '
         try:
-            run_server_backup(pre, s, s.quiet, running, s.world_only)
+            run_server_backup(pre, s.exclude_files, s, s.quiet, running, s.world_only)
         except BackupFileAlreadyExistsError as e:
             send_command('say Backup Done!', s.screen_name)
             error_and_die(e, quiet=s.quiet)
@@ -297,7 +303,7 @@ def setup_args(args):
         except ServerNotRunningError as e:
             error_and_die(e, quiet=s.quiet)
     # elif args.testing:
-    #     print(list_players_as_list(list_players(s)))
+    #     print(s.exclude_files)
     elif args.uptime:
         try:
             raw_uptime = get_uptime_raw(s.server_dir, s.world_name, s.quiet)

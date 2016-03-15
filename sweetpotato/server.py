@@ -70,25 +70,25 @@ def create_server(settings, quiet):
         raise ServerAlreadyRunningError(
             "Can't create '{}' - it's already running!".format(world_name))
 
-    sp_prnt('Creating "{}" ...'.format(world_name), pre=pre, quiet=quiet)
+    sp_prnt('Creating "{}" ...'.format(world_name), pre=pre, quiet=quiet, sweetpotato=True)
 
     if os.path.isdir(backup_dir):
         sp_prnt('Found {}!'.format(backup_dir), pre=pre)
     else:
-        sp_prnt('Creating {} ...'.format(backup_dir), pre=pre, end=' ')
+        sp_prnt('Creating {} ...'.format(backup_dir), pre=pre, sweetpotato=True, end=' ')
         create_dir(backup_dir)
         sp_prnt('Done!', quiet=quiet)
 
     if not os.path.isdir(server_dir):
-        sp_prnt('Creating {} ...'.format(server_dir))
+        sp_prnt('Creating {} ...'.format(server_dir), sweetpotato=True)
         create_dir(server_dir)
         sp_prnt('Done!', quiet=quiet)
     else:
-        sp_prnt('Found {}!'.format(server_dir))
+        sp_prnt('Found {}!'.format(server_dir), sweetpotato=True)
 
     full_jar_path = os.path.join(server_dir, jar_name)
     if not os.path.isfile(full_jar_path) or force:
-        sp_prnt('Downloading {} ...'.format(jar_name), pre=pre, quiet=quiet)
+        sp_prnt('Downloading {} ...'.format(jar_name), pre=pre, quiet=quiet, sweetpotato=True)
         try:
             local_jar = urllib.request.urlretrieve(dl_url, full_jar_path)[0]
             jar = open(local_jar)
@@ -97,7 +97,7 @@ def create_server(settings, quiet):
             error_and_die(e.msg + ' Is your version valid?', quiet=quiet)
         sp_prnt('Done!', quiet=quiet)
     else:
-        sp_prnt('Found {}!'.format(jar_name), pre=pre, quiet=quiet)
+        sp_prnt('Found {}!'.format(jar_name), pre=pre, quiet=quiet, sweetpotato=True)
 
     eula_txt = os.path.join(server_dir, 'eula.txt')
     _agree_to_eula(eula_txt, force, pre, quiet)
@@ -105,7 +105,7 @@ def create_server(settings, quiet):
     server_properties = os.path.join(server_dir, 'server.properties')
     write_server_properties(pre, server_properties, settings, quiet)
 
-    sp_prnt('World "{}" has been created!'.format(world_name), pre=pre, quiet=quiet)
+    sp_prnt('World "{}" has been created!'.format(world_name), pre=pre, quiet=quiet, sweetpotato=True)
 
 
 def _format_launch_cmd(settings):
@@ -336,10 +336,10 @@ def restart_server(pre, settings, quiet):
 
     if server_running:
         server_pid = server_running.get('pid')
-        sp_prnt('Restarting {} ...'.format(world_name), pre=pre, quiet=quiet, end=' ')
+        sp_prnt('Restarting {} ...'.format(world_name), pre=pre, quiet=quiet, sweetpotato=True, end=' ')
         wait_for_server_shutdown(screen_name, server_pid)
     else:
-        sp_prnt('Starting {} ...'.format(world_name), pre=pre, quiet=quiet, end=' ')
+        sp_prnt('Starting {} ...'.format(world_name), pre=pre, quiet=quiet, sweetpotato=True, end=' ')
     send_command(launch_server, is_screen_started(screen_name))
     sp_prnt('Done!', quiet=quiet)
 
@@ -406,9 +406,9 @@ def start_server(pre, settings, quiet):
 
     if not server_running:
         if pre:
-            sp_prnt('Starting "{}" ...'.format(world_name), pre=pre, quiet=quiet, end=' ')
+            sp_prnt('Starting "{}" ...'.format(world_name), pre=pre, quiet=quiet, sweetpotato=True, end=' ')
         else:
-            sp_prnt('Starting "{}" ...'.format(world_name), quiet=quiet, end=' ')
+            sp_prnt('Starting "{}" ...'.format(world_name), quiet=quiet, sweetpotato=True, end=' ')
         send_command(launch_server, is_screen_started(screen_name))
         sp_prnt('Done!', quiet=quiet)
     else:
@@ -432,7 +432,7 @@ def stop_server(pre, screen_name, server_dir, world_name, quiet):
 
     if server_running:
         server_pid = server_running.get('pid')
-        sp_prnt('Stopping "{}" ...'.format(world_name), pre=pre, quiet=quiet, end=' ')
+        sp_prnt('Stopping "{}" ...'.format(world_name), pre=pre, quiet=quiet, sweetpotato=True, end=' ')
         wait_for_server_shutdown(screen_name, server_pid)
         send_command(' exit', is_screen_started(screen_name))
         sp_prnt('Done!', quiet=quiet)
