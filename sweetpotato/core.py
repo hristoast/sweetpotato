@@ -6,9 +6,9 @@ import sys
 import tarfile
 
 from datetime import datetime
-from .common import (DEFAULT_COMPRESSION, DEFAULT_SCREEN_NAME, DEFAULT_SERVER_PORT,
-                     DEFAULT_WEBUI_PORT, DEFAULT_WORLD_NAME, EXCLUDE_FILES, MCVERSION,
-                     PROGNAME, PYTHON33_OR_GREATER, REQUIRED, Colors, sp_prnt)
+from .common import (DEFAULT_COMPRESSION, DEFAULT_EXCLUDE_FILES, DEFAULT_SCREEN_NAME,
+                     DEFAULT_SERVER_PORT, DEFAULT_WEBUI_PORT, DEFAULT_WORLD_NAME,
+                     MCVERSION, PROGNAME, PYTHON33_OR_GREATER, REQUIRED, Colors, sp_prnt)
 from .error import (ConfFileError, EmptySettingError, NoDirFoundError,
                     ServerNotRunningError, UnsupportedVersionError)
 from .screen import is_screen_started
@@ -27,6 +27,7 @@ class SweetpotatoConfig:
         self.backup_dir = None
         self.compression = DEFAULT_COMPRESSION
         self.conf_file = None
+        self.exclude_files = DEFAULT_EXCLUDE_FILES
         self.fancy = False
         self.force = False
         self.forge = None
@@ -225,12 +226,13 @@ def reread_settings(old_settings):
     return s
 
 
-def run_server_backup(pre, settings, quiet, running,
+def run_server_backup(pre, exclude_files, settings, quiet, running,
                       world_only, offline=False, force=False):
     """
     Runs the configured backup on the configured server.
 
     @param pre:
+    @param exclude_files:
     @param settings:
     @param quiet:
     @param running:
@@ -261,9 +263,10 @@ def run_server_backup(pre, settings, quiet, running,
             return True
 
     def _exclude_me(tarinfo):
-        if tarinfo.name not in EXCLUDE_FILES:
-            print(tarinfo.name)
-            return tarinfo
+        for file in exclude_files:
+            if file not in tarinfo.name:
+                return None
+        return tarinfo
 
     if backup_made_today and not force:
         sys.stdout.flush()
