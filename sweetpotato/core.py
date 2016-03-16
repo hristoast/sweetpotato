@@ -208,7 +208,9 @@ def read_conf_file(file, settings):
     exclude = c[section].get("exclude_files")
     if exclude:
         exclude_list = exclude.split(" ")
-        exclude_list.append(settings.exclude_files)
+    else:
+        exclude_list = []
+    exclude_list.append(settings.exclude_files)
 
     fancy = c[section].getboolean('fancy')
     world_only = c[section].getboolean('world_only')
@@ -221,7 +223,6 @@ def read_conf_file(file, settings):
         options_dict.update(fancy=fancy)
         options_dict.pop('world_only')
         options_dict.update(world_only=world_only)
-        print(options_dict)
     except KeyError:
         pass
     return settings.__dict__.update(**options_dict)
