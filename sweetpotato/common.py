@@ -9,7 +9,7 @@ AUTHOR = '{0} <{1}>'.format(AUTHOR_NAME, AUTHOR_EMAIL)
 LICENSE = 'GPLv3'
 MCVERSION = '1.8.9'
 PROGNAME = 'sweetpotato'
-VERSION = '0.34.33'
+VERSION = '0.34.34'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))

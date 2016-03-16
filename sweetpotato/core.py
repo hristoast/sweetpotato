@@ -153,7 +153,7 @@ generate-structures=true
 view-distance=10
 motd=Welcome to {0}!
         """.format(self.world_name, self.port, self.level_seed or '')
-        if '1.8' in self.mc_version:
+        if '1.8' in self.mc_version or '1.9' in self.mc_version:
             return vanilla_server_properties_18
         elif self.mc_version == '1.7.10':
             return vanilla_server_properties_1710
@@ -264,7 +264,7 @@ def run_server_backup(pre, exclude_files, settings, quiet, running,
 
     def _exclude_me(tarinfo):
         for file in exclude_files:
-            if file not in tarinfo.name:
+            if file in tarinfo.name:
                 return None
         return tarinfo
 
