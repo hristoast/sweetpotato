@@ -18,13 +18,13 @@ COMPRESSION_CHOICES = ['bz2', DEFAULT_COMPRESSION, 'xz']
 DAEMON_PY3K_ERROR = """python-daemon-3K is not installed! Install it like this:
 
 pip3 install git+https://github.com/hristoast/python-daemon"""
+DEFAULT_EXCLUDE_FILES = 'level.dat_new'
 DEFAULT_PERMGEN = '256'
 DEFAULT_SCREEN_NAME = '{}World'.format(PROGNAME).capitalize()
 DEFAULT_SERVER_PORT = '25565'
 DEFAULT_WEBUI_PORT = 8080
 DEFAULT_WORLD_NAME = DEFAULT_SCREEN_NAME
 DESCRIPTION = "Manage your Minecraft server on a GNU/Linux system."
-DEFAULT_EXCLUDE_FILES = ['level.dat_new']
 HOME_DIR = os.getenv('HOME')
 CONFIG_DIR = '{0}/.config/{1}'.format(HOME_DIR, PROGNAME)
 DEFAULT_CONF_FILE = '{0}/{1}.conf'.format(CONFIG_DIR, PROGNAME)

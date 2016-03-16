@@ -41,6 +41,7 @@ class SweetpotatoConfig:
         self.running = False
         self.screen_name = DEFAULT_SCREEN_NAME
         self.server_dir = None
+        self.verbose_backup = False
         self.webui_port = DEFAULT_WEBUI_PORT
         self.world_name = DEFAULT_WORLD_NAME
         self.world_only = False
@@ -52,10 +53,16 @@ class SweetpotatoConfig:
         for k, v in self.__dict__.items():
             if v is not None \
                     and k is not 'conf_file' \
+                    and k is not 'exclude_files' \
                     and k is not 'force' \
                     and k is not 'running'\
                     and not (v is False and k is 'fancy'):
                 conf += '{0}: {1}\n'.format(k, v)
+            elif k == 'exclude_files':
+                    conf += 'exclude_files:'
+                    for i in v:
+                        conf += (' ' + i)
+                    conf += '\n'
         return conf.strip()
 
     @property
@@ -197,14 +204,23 @@ def read_conf_file(file, settings):
     options_dict = {}
     for o in options:
         options_dict[o] = c.get(section, o)
+
+    exclude = c[section].get("exclude_files")
+    exclude_list = exclude.split(" ")
+    exclude_list.append(settings.exclude_files)
+
     fancy = c[section].getboolean('fancy')
     world_only = c[section].getboolean('world_only')
     try:
-        # Special booleans that can be set with truthy values other than True
+        # Special booleans that can be set with truthy values other than True.
+        # Or values that we serialize into Python data structures.
+        options_dict.pop('exclude_files')
+        options_dict.update(exclude_files=exclude_list)
         options_dict.pop('fancy')
         options_dict.update(fancy=fancy)
         options_dict.pop('world_only')
         options_dict.update(world_only=world_only)
+        print(options_dict)
     except KeyError:
         pass
     return settings.__dict__.update(**options_dict)
@@ -227,7 +243,7 @@ def reread_settings(old_settings):
 
 
 def run_server_backup(pre, exclude_files, settings, quiet, running,
-                      world_only, offline=False, force=False):
+                      world_only, offline=False, force=False, verbose_backup=False):
     """
     Runs the configured backup on the configured server.
 
@@ -239,6 +255,7 @@ def run_server_backup(pre, exclude_files, settings, quiet, running,
     @param world_only:
     @param offline:
     @param force:
+    @param verbose_backup:
     @return:
     """
     backup_dir = settings.backup_dir
@@ -256,6 +273,11 @@ def run_server_backup(pre, exclude_files, settings, quiet, running,
     full_path_to_backup_file = os.path.join(backup_dir, backup_file)
     backup_made_today = os.path.isfile(full_path_to_backup_file)
 
+    if verbose_backup:
+        quiet_backup = False
+    else:
+        quiet_backup = True
+
     def _can_xz():
         if PYTHON33_OR_GREATER:
             return False
@@ -266,6 +288,7 @@ def run_server_backup(pre, exclude_files, settings, quiet, running,
         for file in exclude_files:
             if file in tarinfo.name:
                 return None
+        sp_prnt("Adding: ", tarinfo.name, pre=pre, quiet=quiet_backup)
         return tarinfo
 
     if backup_made_today and not force:
@@ -297,6 +320,9 @@ def run_server_backup(pre, exclude_files, settings, quiet, running,
     if not _can_xz() and settings.compression == 'xz':
         compression = 'gz'
 
+    if not quiet_backup:
+        sp_prnt()
+
     tar = tarfile.open(full_path_to_backup_file, 'w:{}'.format(compression))
     if world_only:
         if not running and not offline:
@@ -320,7 +346,10 @@ def run_server_backup(pre, exclude_files, settings, quiet, running,
         return True
 
     if not quiet:
-        sp_prnt('Done!' + Colors.end)
+        if not quiet_backup:
+            sp_prnt('Done!' + Colors.end, pre=pre)
+        else:
+            sp_prnt(' Done!')
 
 
 def save_settings(settings):

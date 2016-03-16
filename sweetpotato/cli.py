@@ -95,6 +95,8 @@ def setup_args(args):
     settings.add_argument('-v', '--mc-version', metavar='MC VERSION',
                           help='set the version of minecraft.'
                                ' Default: ' + MCVERSION)
+    settings.add_argument('-V', '--verbose', action='store_true', help='Show a more '
+                          'verbose output from the backup making process.')
     settings.add_argument('-w', '--world', metavar='WORLD NAME',
                           help='set the name of your Minecraft world.'
                                ' Default: ' + DEFAULT_WORLD_NAME)
@@ -137,7 +139,7 @@ def setup_args(args):
                                 help='Port to bind to for the WebUI.'
                                      ' Default: ' + str(DEFAULT_WEBUI_PORT))
 
-    parser.add_argument('-V', '--version', action='version',
+    parser.add_argument('--version', action='version',
                         version='%(prog)s ' + VERSION)
 
     args = parser.parse_args(args)
@@ -190,6 +192,8 @@ def setup_args(args):
         s.server_dir = args.server_dir
     if args.screen:
         s.screen_name = args.screen
+    if args.verbose:
+        s.verbose_backup = True
     if args.mc_version:
         s.mc_version = args.mc_version
     if args.webui_port:
@@ -231,7 +235,8 @@ def setup_args(args):
     if args.backup:
         pre = '[' + Colors.yellow_green + 'live-backup' + Colors.end + '] '
         try:
-            run_server_backup(pre, s.exclude_files, s, s.quiet, running, s.world_only)
+            run_server_backup(pre, s.exclude_files, s, s.quiet, running, s.world_only,
+                              verbose_backup=s.verbose_backup)
         except BackupFileAlreadyExistsError as e:
             send_command('say Backup Done!', s.screen_name)
             error_and_die(e, quiet=s.quiet)
