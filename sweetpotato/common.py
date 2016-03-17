@@ -18,7 +18,7 @@ COMPRESSION_CHOICES = ['bz2', DEFAULT_COMPRESSION, 'xz']
 DAEMON_PY3K_ERROR = """python-daemon-3K is not installed! Install it like this:
 
 pip3 install git+https://github.com/hristoast/python-daemon"""
-DEFAULT_EXCLUDE_FILES = ['level.dat_new']
+DEFAULT_EXCLUDE_FILES = 'level.dat_new'
 DEFAULT_PERMGEN = '256'
 DEFAULT_SCREEN_NAME = '{}World'.format(PROGNAME).capitalize()
 DEFAULT_SERVER_PORT = '25565'

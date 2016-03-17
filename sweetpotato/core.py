@@ -59,7 +59,10 @@ class SweetpotatoConfig:
                     and not (v is False and k is 'fancy'):
                 conf += '{0}: {1}\n'.format(k, v)
             elif k == 'exclude_files':
-                    conf += 'exclude_files:'
+                conf += '{}:'.format(k)
+                if isinstance(v, str):
+                    conf += ' {}\n'.format(v)
+                else:
                     for i in v:
                         conf += (' ' + i)
                     conf += '\n'

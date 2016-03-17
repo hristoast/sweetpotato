@@ -162,8 +162,11 @@ def setup_args(args):
     if args.backup_dir:
         s.backup_dir = args.backup_dir
     if args.exclude:
+        exclude_files_list = []
+        exclude_files_list.append(s.exclude_files)
         for e in args.exclude.split(" "):
-            s.exclude_files.append(e)
+            exclude_files_list.append(e)
+            s.exclude_files = exclude_files_list
     if args.fancy:
         s.fancy = True
     if args.force:
