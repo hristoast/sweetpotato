@@ -206,7 +206,7 @@ def read_conf_file(file, settings):
         options_dict[o] = c.get(section, o)
 
     exclude = c[section].get("exclude_files")
-    if exclude is not None:
+    if exclude:
         exclude_list = exclude.split(" ")
     else:
         exclude_list = []
