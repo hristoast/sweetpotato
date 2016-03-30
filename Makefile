@@ -1,9 +1,10 @@
 # -*- makefile -*-
 BDIST = ./setup.py bdist
+BINARY = pyinstaller --onefile exe && mv -v dist/exe dist/sweetpotato
 BUILD = ./setup.py build --force
 CLEAN = /bin/rm -fr MANIFEST build build-stamp dist *.egg-info debian/sweetpotato \
 		debian/files debian/sweetpotato.debhelper.log debian/sweetpotato.substvars \
-		sweetpotato/__pycache__
+		sweetpotato/__pycache__ *.spec
 CLEAN2 = find . -type f -name "*~" -exec /bin/rm -f {} \;
 CLEAN_TEST = /bin/rm -fr /tmp/_sp_test*
 DEB = fakeroot debian/rules binary
@@ -26,6 +27,9 @@ all: bdist build clean cleantest deb full_uninstall install i reinstall \
 
 bdist:
 	$(BDIST)
+
+binary:
+	$(BINARY)
 
 build:
 	$(BUILD)

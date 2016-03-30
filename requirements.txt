@@ -1,3 +1,4 @@
-Markdown
-bottle
+Markdown==2.6.5
+bottle==0.12.9
+PyInstaller==3.1.1
 git+git://github.com/hristoast/python-daemon.git
