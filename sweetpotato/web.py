@@ -14,6 +14,10 @@ from threading import Thread
 from .common import NO_BOTTLEPY_ERROR, PROGNAME, README_MD, WEB_STATIC, WEB_TPL, VERSION, Colors, sp_prnt
 from .core import reread_settings, run_server_backup
 from .error import ServerNotRunningError
+try:
+    from rikeripsum import rikeripsum
+except ImportError:
+    rikeripsum = None
 from .server import (get_uptime, get_uptime_raw, get_uptime_string,
                      is_server_running, list_players, list_players_as_list,
                      restart_server, start_server, stop_server)
@@ -122,7 +126,7 @@ def run_webui(settings, quiet):
                 except KeyError:
                     world_only = False
                 t = Thread(target=run_server_backup,
-                           args=('', s, True, is_running, world_only),
+                           args=('', s.exclude_files, s, True, is_running, world_only),
                            kwargs={'offline': offline, 'force': force})
                 t.daemon = True
                 t.start()
@@ -191,6 +195,19 @@ def run_webui(settings, quiet):
             s = reread_settings(settings)
             s.running = is_server_running(s.server_dir)
             return s.as_json
+
+        @bottle.route('/riker')
+        @bottle.view('riker')
+        def riker():
+            context = {
+                'path': bottle.request.path,
+                '__version__': VERSION
+            }
+            if rikeripsum:
+                context.update({'riker': rikeripsum.generate_sentence()})
+            else:
+                context.update({'riker': "You should install my rikeripsum fork! https://github.com/hristoast/rikeripsum"})
+            return context
 
         @bottle.get('/server')
         @bottle.post('/server')
