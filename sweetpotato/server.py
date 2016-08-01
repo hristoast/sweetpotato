@@ -28,11 +28,11 @@ def _agree_to_eula(eula_txt, force, pre, quiet):
         f = open(eula_txt, 'r')
         if 'eula=true' in f.read():
             f.close()
-            sp_prnt('Eula agreed to!', pre=pre, quiet=quiet)
+            sp_prnt('Eula agreed to!', pre=pre, quiet=quiet, sweetpotato=True)
             return True
         else:
             f.close()
-    sp_prnt('Agreeing to the eula ...', pre=pre, quiet=quiet, end=' ')
+    sp_prnt('Agreeing to the eula ...', pre=pre, quiet=quiet, end=' ', sweetpotato=True)
     f = open(eula_txt, 'w')
     f.write('eula=true\n')
     f.close()
@@ -73,22 +73,22 @@ def create_server(settings, quiet):
     sp_prnt('Creating "{}" ...'.format(world_name), pre=pre, quiet=quiet, sweetpotato=True)
 
     if os.path.isdir(backup_dir):
-        sp_prnt('Found {}!'.format(backup_dir), pre=pre)
+        sp_prnt('Found {}!'.format(backup_dir), pre=pre, quiet=quiet, sweetpotato=True)
     else:
-        sp_prnt('Creating {} ...'.format(backup_dir), pre=pre, sweetpotato=True, end=' ')
+        sp_prnt('Creating {} ...'.format(backup_dir), end=' ', pre=pre, quiet=quiet, sweetpotato=True)
         create_dir(backup_dir)
         sp_prnt('Done!', quiet=quiet)
 
     if not os.path.isdir(server_dir):
-        sp_prnt('Creating {} ...'.format(server_dir), sweetpotato=True)
+        sp_prnt('Creating {} ...'.format(server_dir), end=' ', pre=pre, quiet=quiet, sweetpotato=True)
         create_dir(server_dir)
         sp_prnt('Done!', quiet=quiet)
     else:
-        sp_prnt('Found {}!'.format(server_dir), sweetpotato=True)
+        sp_prnt('Found {}!'.format(server_dir), pre=pre, sweetpotato=True)
 
     full_jar_path = os.path.join(server_dir, jar_name)
     if not os.path.isfile(full_jar_path) or force:
-        sp_prnt('Downloading {} ...'.format(jar_name), pre=pre, quiet=quiet, sweetpotato=True)
+        sp_prnt('Downloading {} ... '.format(jar_name), end='', pre=pre, quiet=quiet, sweetpotato=True)
         try:
             local_jar = urllib.request.urlretrieve(dl_url, full_jar_path)[0]
             jar = open(local_jar)
@@ -348,7 +348,7 @@ def save_all(settings):
     """
     Sends a 'save-all' command to the server.
     """
-    send_command("save-all", settings.screen_name)
+    send_command("save-all", is_screen_started(settings.screen_name))
     return True
 
 
@@ -449,7 +449,7 @@ def wait_for_server_shutdown(screen_name, server_pid):
     @param server_pid:
     @return:
     """
-    while os.path.exists("/proc/{0}".format(server_pid)):
+    while os.path.exists("/proc/{}".format(server_pid)):
         time.sleep(SERVER_WAIT_TIME)
         send_command(' stop', is_screen_started(screen_name))
 
@@ -465,7 +465,7 @@ def write_server_properties(pre, file, settings, quiet):
     @return:
     """
     def do_the_write():
-        sp_prnt('Generating server.properties ...', pre=pre, quiet=quiet, end=' ')
+        sp_prnt('Generating server.properties ...', pre=pre, quiet=quiet, end=' ', sweetpotato=True)
         file_to_write = open(file, 'w')
         try:
             for l in settings.as_serverproperties.split('\n'):
@@ -475,7 +475,7 @@ def write_server_properties(pre, file, settings, quiet):
         file_to_write.close()
         sp_prnt('Done!', quiet=quiet)
 
-    found_msg = (pre + Colors.light_blue + 'Found server.properties!' + Colors.end)
+    found_msg = Colors.light_blue + 'Found server.properties!' + Colors.end
     if os.path.isfile(file):
         f = open(file, 'r')
         f_readlines = f.readlines()
@@ -486,7 +486,7 @@ def write_server_properties(pre, file, settings, quiet):
                 in f_readlines or settings.force:
             do_the_write()
         else:
-            sp_prnt(found_msg, quiet=quiet)
+            sp_prnt(found_msg, pre=pre, quiet=quiet, sweetpotato=True)
         f.close()
     else:
         do_the_write()

@@ -55,6 +55,7 @@ setup(
             'data/tpl/index.tpl',
             'data/tpl/lower_nav.tpl',
             'data/tpl/readme_no_md.tpl',
+            'data/tpl/riker.tpl',
             'data/tpl/server.tpl'])],
     packages=find_packages(),
     entry_points={'console_scripts': [

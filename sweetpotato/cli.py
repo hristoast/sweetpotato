@@ -17,6 +17,7 @@ except ImportError:
 from .error import (BackupFileAlreadyExistsError, ConfFileError,
                     EmptySettingError, MissingExeError, NoDirFoundError,
                     ServerAlreadyRunningError, ServerNotRunningError)
+from .screen import is_screen_started
 from .server import (create_server, is_server_running, get_uptime, get_uptime_raw,
                      get_uptime_string, list_players, restart_server, save_all,
                      send_command, start_server, stop_server)
@@ -35,6 +36,8 @@ def setup_args(args):
     actions.add_argument('-D', '--daemon',
                          choices=['stop', 'start', 'restart'],
                          help="run the WebUI as a background process")
+    actions.add_argument('-R', '--dynmap-fullrender', action='store_true',
+                         help="Trigger a fullrender with Dynmap.")
     actions.add_argument('-g', '--genconf', action='store_true',
                          help='generate conf file from passed-in arguments')
     actions.add_argument('-j', '--json', action='store_true',
@@ -241,7 +244,7 @@ def setup_args(args):
             run_server_backup(pre, s.exclude_files, s, s.quiet, running, s.world_only,
                               verbose_backup=s.verbose_backup)
         except BackupFileAlreadyExistsError as e:
-            send_command('say Backup Done!', s.screen_name)
+            send_command('say Backup Done!', is_screen_started(s.screen_name))
             error_and_die(e, quiet=s.quiet)
     elif args.create:
         try:
@@ -253,6 +256,13 @@ def setup_args(args):
             daemon_action(args.daemon)
         else:
             error_and_die(DAEMON_PY3K_ERROR)
+    elif args.dynmap_fullrender:
+        pre = '[' + Colors.yellow_green + "fullrender" + Colors.end + '] '
+        if running:
+            sp_prnt("Attempting a dynmap fullrender ...", pre=pre, quiet=s.quiet, sweetpotato=True)
+            send_command('dynmap fullrender {}'.format(s.world_name), is_screen_started(s.screen_name))
+        else:
+            error_and_die(s.world_name + " is not running!", quiet=s.quiet)
     elif args.genconf:
         print(s.as_conf_file)
     elif args.json:
@@ -271,9 +281,10 @@ def setup_args(args):
         else:
             error_and_die(s.world_name + " is not running!", quiet=s.quiet)
     elif args.offline:
+        # TODO: offline output is broken and terrible
         pre = '[' + Colors.yellow_green + 'offline-backup' + Colors.end + '] '
         try:
-            run_server_backup(pre, s, s.quiet, running, s.world_only, offline=True)
+            run_server_backup(pre, s.exclude_files, s, s.quiet, running, s.world_only, offline=True)
         except BackupFileAlreadyExistsError as e:
             start_server(None, s, s.quiet)
             error_and_die(e, quiet=s.quiet)
@@ -286,7 +297,7 @@ def setup_args(args):
         else:
             error_and_die("{} is not running!".format(s.world_name), quiet=s.quiet)
     elif args.say:
-        send_command('say ' + args.say, s.screen_name)
+        send_command('say ' + args.say, is_screen_started(s.screen_name))
     elif args.restart:
         pre = '[' + Colors.yellow_green + 'restart' + Colors.end + '] '
         try:

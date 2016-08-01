@@ -9,8 +9,7 @@ from datetime import datetime
 from .common import (DEFAULT_COMPRESSION, DEFAULT_EXCLUDE_FILES, DEFAULT_SCREEN_NAME,
                      DEFAULT_SERVER_PORT, DEFAULT_WEBUI_PORT, DEFAULT_WORLD_NAME,
                      MCVERSION, PROGNAME, PYTHON33_OR_GREATER, REQUIRED, Colors, sp_prnt)
-from .error import (ConfFileError, EmptySettingError, NoDirFoundError,
-                    ServerNotRunningError, UnsupportedVersionError)
+from .error import (ConfFileError, EmptySettingError, NoDirFoundError, ServerNotRunningError)
 from .screen import is_screen_started
 from .server import (get_uptime, get_uptime_raw, list_players,
                      list_players_as_list, send_command, start_server,
@@ -163,15 +162,16 @@ generate-structures=true
 view-distance=10
 motd=Welcome to {0}!
         """.format(self.world_name, self.port, self.level_seed or '')
-        if '1.8' in self.mc_version or '1.9' in self.mc_version:
-            return vanilla_server_properties_18
-        elif self.mc_version == '1.7.10':
+        if self.mc_version == '1.7.10':
             return vanilla_server_properties_1710
         else:
-            raise UnsupportedVersionError(
-                "We can't generate a server.properties for "
-                "the version ov MC you are trying to use ({}).".format(
-                    self.mc_version))
+            return vanilla_server_properties_18
+        # TODO: can probably generalize this ...
+        # else:
+        #     raise UnsupportedVersionError(
+        #         "We can't generate a server.properties for "
+        #         "the version ov MC you are trying to use ({}).".format(
+        #             self.mc_version))
 
 
 def read_conf_file(file, settings):
@@ -186,6 +186,7 @@ def read_conf_file(file, settings):
     :param file:
     :param settings:
     """
+    # TODO: getboolean() seems to _only_ work for true/false -- not True, yes, no, False, or anything else...
     if len(file.split('/')) == 1:
         file_path = os.path.join(os.getcwd(), file)
     else:
@@ -247,8 +248,9 @@ def reread_settings(old_settings):
     return s
 
 
-def run_server_backup(pre, exclude_files, settings, quiet, running,
-                      world_only, offline=False, force=False, verbose_backup=False):
+def run_server_backup(pre: str, exclude_files: list, settings: SweetpotatoConfig, quiet: bool,
+                      running: bool, world_only: bool,
+                      offline=False, force=False, verbose_backup=False):
     """
     Runs the configured backup on the configured server.
 
@@ -267,21 +269,16 @@ def run_server_backup(pre, exclude_files, settings, quiet, running,
     date_stamp = datetime.now().strftime('%Y-%m-%d')
     if not force:
         force = is_forced(settings)
-    forge = settings.forge
 
     screen_name = settings.screen_name
     server_dir = settings.server_dir
+    server_dir_name = server_dir.split(os.path.sep)[-1]
     world_name = settings.world_name
     compression = settings.compression
 
     backup_file = '{0}_{1}.tar.{2}'.format(date_stamp, world_name, compression)
     full_path_to_backup_file = os.path.join(backup_dir, backup_file)
     backup_made_today = os.path.isfile(full_path_to_backup_file)
-
-    if verbose_backup:
-        quiet_backup = False
-    else:
-        quiet_backup = True
 
     def _can_xz():
         if PYTHON33_OR_GREATER:
@@ -290,10 +287,18 @@ def run_server_backup(pre, exclude_files, settings, quiet, running,
             return True
 
     def _exclude_me(tarinfo):
-        for file in exclude_files:
-            if file in tarinfo.name:
+        # TODO: maybe some day don't do whatever it is I do that forces me to use isinstance ...
+        # Excluding just one file
+        if isinstance(exclude_files, str):
+            if tarinfo.name == exclude_files:
                 return None
-        sp_prnt("Adding: ", tarinfo.name, pre=pre, quiet=quiet_backup)
+
+        # List of files to exclude
+        else:
+            for _file in exclude_files:
+                if _file in tarinfo.name:
+                    return None
+        sp_prnt("Adding: ", tarinfo.name, pre=pre, quiet=(not verbose_backup), sweetpotato=True)
         return tarinfo
 
     if backup_made_today and not force:
@@ -308,15 +313,20 @@ def run_server_backup(pre, exclude_files, settings, quiet, running,
     if offline:
         if running:
             server_pid = running.get('pid')
-            sp_prnt('Stopping "{}" ... '.format(world_name), quiet=quiet, end='')
+            sp_prnt('Stopping "{}" ... '.format(world_name), pre=pre, quiet=quiet, sweetpotato=True, end='')
             wait_for_server_shutdown(screen_name, server_pid)
             sp_prnt('backing up ...', end='')
-        sp_prnt('Backing up "{}" ... '.format(world_name), quiet=quiet, end='')
+        else:
+            sp_prnt('Backing up "{}" ... '.format(world_name), quiet=quiet, end='')
+        if verbose_backup:
+            sp_prnt()
     elif running:
         send_command('save-all', is_screen_started(screen_name))
         send_command('save-off', is_screen_started(screen_name))
         sp_prnt('Running live backup of "{}" ...'.format(world_name),
-                pre=pre, quiet=quiet, end='')
+                pre=pre, quiet=quiet, sweetpotato=True, end='')
+        if verbose_backup:
+            sp_prnt()
         send_command('say Server backing up now',
                      is_screen_started(screen_name))
 
@@ -325,22 +335,21 @@ def run_server_backup(pre, exclude_files, settings, quiet, running,
     if not _can_xz() and settings.compression == 'xz':
         compression = 'gz'
 
-    if not quiet_backup:
-        sp_prnt()
-
+    os.chdir(os.path.join(server_dir, '..'))
     tar = tarfile.open(full_path_to_backup_file, 'w:{}'.format(compression))
+    if not running and not offline:
+        pre = '[' + Colors.yellow_green + 'backup' + Colors.end + '] '
+        sp_prnt('Backing up "{}" ... '.format(world_name), pre=pre, sweetpotato=True, end='')
+        if verbose_backup:
+            print('')
     if world_only:
-        if not running and not offline:
-            pre = '[' + Colors.yellow_green + 'backup' + Colors.end + ']'
-            sp_prnt('Backing up "{}" ... '.format(world_name), pre=pre, end='')
-        try:
-            tar.add(os.path.join(server_dir, world_name), filter=_exclude_me)
-        except FileNotFoundError:
-            pass
-    elif forge:
-        tar.add(server_dir, filter=_exclude_me)
+        # TODO: can't remember why i try/except'd here so commenting it out...
+        # try:
+        tar.add(os.path.join(server_dir_name, world_name), filter=_exclude_me)
+        # except FileNotFoundError as e:
+        #     print("ERROR? {}".format(e))
     else:
-        tar.add(server_dir, filter=_exclude_me)
+        tar.add(server_dir_name, filter=_exclude_me)
     tar.close()
 
     if not offline and running:
@@ -351,10 +360,10 @@ def run_server_backup(pre, exclude_files, settings, quiet, running,
         return True
 
     if not quiet:
-        if not quiet_backup:
-            sp_prnt('Done!' + Colors.end, pre=pre)
+        if verbose_backup:
+            sp_prnt('Done!' + Colors.end, pre=pre, quiet=quiet, sweetpotato=True)
         else:
-            sp_prnt(' Done!')
+            sp_prnt(' Done!' + Colors.end)
 
 
 def save_settings(settings):

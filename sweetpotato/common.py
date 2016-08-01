@@ -7,9 +7,9 @@ AUTHOR_EMAIL = 'me@hristos.triantafillou.us'
 AUTHOR_NAME = 'Hristos N. Triantafillou'
 AUTHOR = '{0} <{1}>'.format(AUTHOR_NAME, AUTHOR_EMAIL)
 LICENSE = 'GPLv3'
-MCVERSION = '1.8.9'
+MCVERSION = '1.10.2'
 PROGNAME = 'sweetpotato'
-VERSION = '0.34.34'
+VERSION = '1.0.0'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -90,7 +90,7 @@ def sp_prnt(*args, color=Colors.light_blue, end_color=Colors.end,
     if not quiet:
         msg = color
         if sweetpotato:
-            msg += SYMBOLA_SWEETPOTATO + ' '
+            msg += SYMBOLA_SWEETPOTATO + '  '
         if args:
             for arg in args:
                 msg += arg
