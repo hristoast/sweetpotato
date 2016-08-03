@@ -7,7 +7,7 @@ from .common import (COMPRESSION_CHOICES, DAEMON_PY3K_ERROR, DEFAULT_COMPRESSION
                      DEFAULT_CONF_FILE, DEFAULT_EXCLUDE_FILES, DEFAULT_LOG_DIR,
                      DEFAULT_PERMGEN, DEFAULT_PIDFILE, DEFAULT_SERVER_PORT,
                      DEFAULT_WEBUI_PORT, DEFAULT_WORLD_NAME, DEP_PKGS, DESCRIPTION,
-                     MCVERSION, PROGNAME, VERSION, Colors, sp_prnt)
+                     MCVERSION, PROGNAME, SYMBOLA_SWEETPOTATO, VERSION, Colors, sp_prnt)
 from .core import (SweetpotatoConfig, read_conf_file, run_server_backup,
                    validate_directories, validate_mem_values, validate_settings)
 try:
@@ -143,7 +143,7 @@ def setup_args(args):
                                      ' Default: ' + str(DEFAULT_WEBUI_PORT))
 
     parser.add_argument('--version', action='version',
-                        version='%(prog)s ' + VERSION)
+                        version=SYMBOLA_SWEETPOTATO + '  %(prog)s ' + VERSION)
 
     args = parser.parse_args(args)
     s = SweetpotatoConfig()
