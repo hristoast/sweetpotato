@@ -36,6 +36,8 @@
                             <dt>Compression Type:</dt>
                             % elif k is 'conf_file':
                             <dt>Conf File:</dt>
+                            % elif k is 'exclude_files':
+                            <dt>Excluded files:</dt>
                             % elif k is 'fancy':
                             <dt>Fancy json:</dt>
                             % elif k is 'forge':
@@ -50,12 +52,16 @@
                             <dt>Max Server Memory:</dt>
                             % elif k is 'mem_min':
                             <dt>Min Server Memory:</dt>
+                            % elif 'quiet' in k:
+                            <dt>Quiet output:</dt>
                             % elif k is 'permgen':
                             <dt>Permgen:</dt>
                             % elif k is 'port':
                             <dt>Server Port:</dt>
                             % elif k is 'screen_name':
                             <dt>Screen Session Name:</dt>
+                            % elif k is 'seed':
+                            <dt>Seed:</dt>
                             % elif k is 'server_dir':
                             <dt>Server Directory:</dt>
                             % elif k is 'webui_port':

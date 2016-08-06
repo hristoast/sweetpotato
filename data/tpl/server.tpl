@@ -2,8 +2,11 @@
 <div class="center">
                     <h1><span class="fa fa-spin fa-cog"></span> Server Control</h1>
                 % if request_method == 'POST':
-                % if restart is not None:
+                % if dynmap_fullrender is not None:
+                    <h3><span class="fa fa-spin fa-map"></span> Attempting a Dynmap fullrender on "{{world_name}}" ...</h3>
+                % elif restart is not None:
                     <h3><span class="fa fa-spin fa-spinner"></span> "{{world_name}}" is being restarted!</h3>
+                    <h4>Please wait a few moments before loading another page...</h4>
                 % elif start is not None:
                     <h3><span class="fa fa-spin fa-spinner"></span> "{{world_name}}" is being started!</h3>
                 % elif stop is not None:
@@ -20,6 +23,9 @@
                     </form>
                     <form action="/server" method="post">
                         <button class="btn btn-lg btn-warning srvctl" name="restart" type="submit"><span class="fa fa-spin fa-refresh"></span> Restart {{world_name}}</button>
+                    </form>
+                    <form action="/server" method="post">
+                        <button class="btn btn-lg btn-primary srvctl" name="dynmap_fullrender" type="submit"><span class="fa fa-map"></span> Dynmap fullrender</button>
                     </form>
                 % end
                 % end

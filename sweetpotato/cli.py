@@ -7,7 +7,8 @@ from .common import (COMPRESSION_CHOICES, DAEMON_PY3K_ERROR, DEFAULT_COMPRESSION
                      DEFAULT_CONF_FILE, DEFAULT_EXCLUDE_FILES, DEFAULT_LOG_DIR,
                      DEFAULT_PERMGEN, DEFAULT_PIDFILE, DEFAULT_SERVER_PORT,
                      DEFAULT_WEBUI_PORT, DEFAULT_WORLD_NAME, DEP_PKGS, DESCRIPTION,
-                     MCVERSION, PROGNAME, SYMBOLA_SWEETPOTATO, VERSION, Colors, sp_prnt)
+                     MCVERSION, PROGNAME, SYMBOLA_SWEETPOTATO, VERSION, Colors,
+                     format_pre, sp_prnt)
 from .core import (SweetpotatoConfig, read_conf_file, run_server_backup,
                    validate_directories, validate_mem_values, validate_settings)
 try:
@@ -44,8 +45,6 @@ def setup_args(args):
                          help='output settings as json')
     actions.add_argument('-l', '--list', action='store_true',
                          help='list logged-in players')
-    actions.add_argument('-o', '--offline', action='store_true',
-                         help='make an offline backup (stops the server)')
     actions.add_argument('-r', '--restart', action='store_true',
                          help='restart the server')
     actions.add_argument('-A', '--save-all', '--save', action='store_true',
@@ -142,8 +141,14 @@ def setup_args(args):
                                 help='Port to bind to for the WebUI.'
                                      ' Default: ' + str(DEFAULT_WEBUI_PORT))
 
+    def _version_string():
+        v = SYMBOLA_SWEETPOTATO + ' %(prog)s ' + VERSION
+        # if SHA:
+        #     v += (' ' + SHA)
+        return v
+
     parser.add_argument('--version', action='version',
-                        version=SYMBOLA_SWEETPOTATO + '  %(prog)s ' + VERSION)
+                        version=_version_string())
 
     args = parser.parse_args(args)
     s = SweetpotatoConfig()
@@ -239,7 +244,7 @@ def setup_args(args):
     running = is_server_running(s.server_dir)
 
     if args.backup:
-        pre = '[' + Colors.yellow_green + 'live-backup' + Colors.end + '] '
+        pre = format_pre('backup')
         try:
             run_server_backup(pre, s.exclude_files, s, s.quiet, running, s.world_only,
                               verbose_backup=s.verbose_backup)
@@ -257,7 +262,7 @@ def setup_args(args):
         else:
             error_and_die(DAEMON_PY3K_ERROR)
     elif args.dynmap_fullrender:
-        pre = '[' + Colors.yellow_green + "fullrender" + Colors.end + '] '
+        pre = format_pre('fullrender')
         if running:
             sp_prnt("Attempting a dynmap fullrender ...", pre=pre, quiet=s.quiet, sweetpotato=True)
             send_command('dynmap fullrender {}'.format(s.world_name), is_screen_started(s.screen_name))
@@ -271,26 +276,20 @@ def setup_args(args):
         print(s.as_json)
     elif args.list:
         if running:
-            pre = '[' + Colors.yellow_green + 'list' + Colors.end + '] '
+            pre = format_pre('list')
             players = list_players(s)
             if players:
                 for p in players:
-                    sp_prnt(p.strip(), pre=pre)
+                    sp_prnt(p.strip(),
+                            pre=pre, quiet=s.quiet, sweetpotato=True)
             else:
-                sp_prnt('Nobody on right now :(', pre=pre, quiet=s.quiet)
+                sp_prnt('Nobody on right now :(',
+                        pre=pre, quiet=s.quiet, sweetpotato=True)
         else:
             error_and_die(s.world_name + " is not running!", quiet=s.quiet)
-    elif args.offline:
-        # TODO: offline output is broken and terrible
-        pre = '[' + Colors.yellow_green + 'offline-backup' + Colors.end + '] '
-        try:
-            run_server_backup(pre, s.exclude_files, s, s.quiet, running, s.world_only, offline=True)
-        except BackupFileAlreadyExistsError as e:
-            start_server(None, s, s.quiet)
-            error_and_die(e, quiet=s.quiet)
     elif args.save_all:
         if running:
-            pre = '[' + Colors.yellow_green + 'save-all' + Colors.end + '] '
+            pre = format_pre('save-all')
             sp_prnt('Saving "{}" ...'.format(s.world_name), quiet=s.quiet, end='')
             save_all(s)
             sp_prnt('Done!', quiet=s.quiet)
@@ -299,19 +298,19 @@ def setup_args(args):
     elif args.say:
         send_command('say ' + args.say, is_screen_started(s.screen_name))
     elif args.restart:
-        pre = '[' + Colors.yellow_green + 'restart' + Colors.end + '] '
+        pre = format_pre('restart')
         try:
             restart_server(pre, s, s.quiet)
         except BackupFileAlreadyExistsError as e:
             error_and_die(e, quiet=s.quiet)
     elif args.start:
-        pre = '[' + Colors.yellow_green + 'start' + Colors.end + '] '
+        pre = format_pre('start')
         try:
             start_server(pre, s, s.quiet)
         except ServerAlreadyRunningError as e:
             error_and_die(e, quiet=s.quiet)
     elif args.stop:
-        pre = '[' + Colors.yellow_green + 'stop' + Colors.end + '] '
+        pre = format_pre('stop')
         try:
             stop_server(
                 pre,
@@ -328,10 +327,10 @@ def setup_args(args):
             raw_uptime = get_uptime_raw(s.server_dir, s.world_name, s.quiet)
             u = get_uptime(raw_uptime)
             uptime_string = get_uptime_string(u)
-            pre = '[' + Colors.yellow_green + 'uptime' + Colors.end + '] ' +\
-                  Colors.green + '{} '.format(s.world_name)
-            sp_prnt('has been up for ' + Colors.yellow_green + uptime_string,
-                    pre=pre, quiet=s.quiet)
+            pre = format_pre('uptime')
+            sp_prnt(Colors.green + '{} '.format(s.world_name)
+                    + 'has been up for ' + Colors.yellow_green + uptime_string,
+                    pre=pre, quiet=s.quiet, sweetpotato=True)
         except ServerNotRunningError as e:
             error_and_die(e, quiet=s.quiet)
     elif args.web:

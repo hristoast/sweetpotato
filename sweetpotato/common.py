@@ -1,6 +1,5 @@
 import collections
 import os
-import subprocess
 import sys
 
 AUTHOR_EMAIL = 'me@hristos.triantafillou.us'
@@ -9,7 +8,7 @@ AUTHOR = '{0} <{1}>'.format(AUTHOR_NAME, AUTHOR_EMAIL)
 LICENSE = 'GPLv3'
 MCVERSION = '1.10.2'
 PROGNAME = 'sweetpotato'
-VERSION = '1.0.0'
+VERSION = '1.0.0b'
 
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -36,8 +35,10 @@ DEP_PKGS = ('java', 'screen')
 NO_BOTTLEPY_ERROR = 'The web component requires bottle.py to function, with Python-Markdown as an optional dependency.'
 PYTHON33_OR_GREATER = sys.version_info.major >= 3 and sys.version_info.minor >= 3
 README_MD = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'README.md')
+# RELEASE = False
 REQUIRED = 'backup_dir mem_format mem_max mem_min port screen_name server_dir world_name'
 SERVER_WAIT_TIME = 1
+# SHA = None
 SYMBOLA_SWEETPOTATO = "🍠"
 FORGE_DL_URL = 'http://files.minecraftforge.net/maven/net/minecraftforge/forge/{0}/{1}'
 FORGE_JAR_NAME = 'forge-{}-universal.jar'
@@ -62,22 +63,33 @@ Colors = _colors(
     end='\033[0m')
 
 
-def get_git_rev():
-    """What SHA is this??"""
-    source_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-    dot_git = os.path.isdir(os.path.join(source_dir, ".git"))
-    if dot_git:
-        os.chdir(source_dir)
-        p = subprocess.Popen(["git", "rev-list", "HEAD"],
-                             stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        sha = p.communicate()[0].decode().split()[0]
-    else:
-        sha = None
-    return sha
+def format_pre(label: str):
+    p = '[' + Colors.yellow_green + label + Colors.end + '] '
+    return p
 
 
-def have_symbola():
-    pass
+# def get_git_rev():
+#     """What branch and SHA are we working on?"""
+#     # source_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+#     # print(source_dir)
+#     # dot_git = os.path.isdir(os.path.join(source_dir, ".git"))
+#     if not RELEASE:
+#         # os.chdir(source_dir)
+#         # git rev-parse --abbrev-ref HEAD
+#         p_branch = subprocess.Popen(["git", "rev-parse", "--abbrev-ref", "HEAD"],
+#                                     stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+#         branch = p_branch.communicate()[0].decode().split()[0]
+#         p_sha = subprocess.Popen(["git", "rev-parse", '--short', "HEAD"],
+#                                  stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+#         sha = p_sha.communicate()[0].decode().split()[0]
+#     else:
+#         branch = None
+#         sha = None
+#     return branch, sha
+
+
+# def have_symbola():
+#     pass
 
 
 def sp_prnt(*args, color=Colors.light_blue, end_color=Colors.end,

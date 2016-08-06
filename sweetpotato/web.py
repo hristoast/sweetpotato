@@ -18,9 +18,10 @@ try:
     from rikeripsum import rikeripsum
 except ImportError:
     rikeripsum = None
+from .screen import is_screen_started
 from .server import (get_uptime, get_uptime_raw, get_uptime_string,
                      is_server_running, list_players, list_players_as_list,
-                     restart_server, start_server, stop_server)
+                     restart_server, send_command, start_server, stop_server)
 from .system import error_and_die
 
 
@@ -77,7 +78,6 @@ def run_webui(settings, quiet):
             # TODO: POSTing doesn't seem to work when world_only is enabled via
             # conf file but unchecked on this page. Y????
             s = reread_settings(settings)
-            offline = None
             is_running = is_server_running(s.server_dir)
             path = bottle.request.path
             request_method = bottle.request.method
@@ -119,15 +119,14 @@ def run_webui(settings, quiet):
 
             if bottle.request.method == 'POST':
                 postdata = bottle.request.POST
-                force = 'force' in postdata or 'force-offline' in postdata
-                offline = 'offline' in postdata or 'force-offline' in postdata
+                force = 'force' in postdata
                 try:
                     world_only = postdata['world-only'] == 'on' or world_only
                 except KeyError:
                     world_only = False
                 t = Thread(target=run_server_backup,
                            args=('', s.exclude_files, s, True, is_running, world_only),
-                           kwargs={'offline': offline, 'force': force})
+                           kwargs={'force': force})
                 t.daemon = True
                 t.start()
             else:
@@ -137,7 +136,6 @@ def run_webui(settings, quiet):
                 'backup_dir_contents': backup_dir_contents,
                 'backup_file_list': backup_file_list,
                 'force': force,
-                'offline': offline,
                 'path': path,
                 'request_method': request_method,
                 'server_running': is_running,
@@ -217,15 +215,21 @@ def run_webui(settings, quiet):
             is_running = is_server_running(s.server_dir)
             path = bottle.request.path
             request_method = bottle.request.method
+            dynmap_fullrender = None
             restart = None
             start = None
             stop = None
             if bottle.request.method == 'POST':
                 postdata = bottle.request.POST
+                dynmap_fullrender = postdata.get('dynmap_fullrender')
                 restart = postdata.get('restart')
                 start = postdata.get('start')
                 stop = postdata.get('stop')
-                if restart is not None:
+                if dynmap_fullrender is not None:
+                    t = Thread(target=send_command, args=('dynmap fullrender {}'.format(s.world_name), is_screen_started(s.screen_name)))
+                    t.daemon = True
+                    t.start()
+                elif restart is not None:
                     t = Thread(target=restart_server, args=('', s, True))
                     t.daemon = True
                     t.start()
@@ -240,6 +244,7 @@ def run_webui(settings, quiet):
                     t.daemon = True
                     t.start()
             return {
+                'dynmap_fullrender': dynmap_fullrender,
                 'path': path,
                 'request_method': request_method,
                 'restart': restart,

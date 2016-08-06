@@ -3,18 +3,12 @@
                     <h1><span class="fa fa-file-archive-o"></span> Backup</h1>
                     % if request_method == 'POST':
                         % if not todays_file in backup_dir_contents or force:
-                            % if offline:
-                                % if server_running:
-                    <h1><span class="fa fa-spin fa-spinner"></span> "{{world_name}}" is going down for an offline backup now!</h1>
-                    <h2>It will be restarted when the backup is complete.</h2>
-                                % else:
-                    <h1><span class="fa fa-spin fa-spinner"></span> "{{world_name}}" is backing up now!</h1>
-                                % end
-                            % else:
-                    <h1><span class="fa fa-spin fa-spinner"></span> Running a live backup on "{{world_name}}" now!</h1>
-                            % end
+                    <h1><span class="fa fa-spin fa-spinner"></span> Running a backup on "{{world_name}}" now!</h1>
                             % if world_only:
                     <h4>A 'world-only' backup is being performed ...</h4>
+                            % end
+                            % if force:
+                    <h4>A forced backup is being performed ...</h4>
                             % end
                         % else:
                     <h2>You've already made a backup today. Great Job!</h2>
@@ -25,13 +19,8 @@
                     <h2>"{{world_name}}" has been backed up today. Great Job!</h2>
                         % end
                     <form action="/backup" method="post">
-                        % if server_running:
                         <div>
-                            <button class="btn btn-lg btn-primary srvctl" type="submit"><span class="fa fa-upload"></span> Online Backup {{world_name}} now</button>
-                        </div>
-                        % end
-                        <div>
-                            <button class="btn btn-lg btn-warning srvctl" name="offline" type="submit"><span class="fa fa-download"></span> Offline Backup {{world_name}} now</button>
+                            <button class="btn btn-lg btn-primary srvctl" type="submit"><span class="fa fa-upload"></span> Backup {{world_name}} now</button>
                         </div>
                         <div class="container" style="max-width: 900px;">
                             <div class="row">

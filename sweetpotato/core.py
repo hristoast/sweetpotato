@@ -8,12 +8,11 @@ import tarfile
 from datetime import datetime
 from .common import (DEFAULT_COMPRESSION, DEFAULT_EXCLUDE_FILES, DEFAULT_SCREEN_NAME,
                      DEFAULT_SERVER_PORT, DEFAULT_WEBUI_PORT, DEFAULT_WORLD_NAME,
-                     MCVERSION, PROGNAME, PYTHON33_OR_GREATER, REQUIRED, Colors, sp_prnt)
+                     MCVERSION, PROGNAME, PYTHON33_OR_GREATER, REQUIRED, Colors,
+                     format_pre, sp_prnt)
 from .error import (ConfFileError, EmptySettingError, NoDirFoundError, ServerNotRunningError)
 from .screen import is_screen_started
-from .server import (get_uptime, get_uptime_raw, list_players,
-                     list_players_as_list, send_command, start_server,
-                     wait_for_server_shutdown)
+from .server import get_uptime, get_uptime_raw, list_players, list_players_as_list, send_command
 from .system import create_dir, error_and_die, is_forced
 
 
@@ -250,7 +249,7 @@ def reread_settings(old_settings):
 
 def run_server_backup(pre: str, exclude_files: list, settings: SweetpotatoConfig, quiet: bool,
                       running: bool, world_only: bool,
-                      offline=False, force=False, verbose_backup=False):
+                      force=False, verbose_backup=False):
     """
     Runs the configured backup on the configured server.
 
@@ -260,7 +259,6 @@ def run_server_backup(pre: str, exclude_files: list, settings: SweetpotatoConfig
     @param quiet:
     @param running:
     @param world_only:
-    @param offline:
     @param force:
     @param verbose_backup:
     @return:
@@ -310,25 +308,15 @@ def run_server_backup(pre: str, exclude_files: list, settings: SweetpotatoConfig
         except IOError:
             pass
 
-    if offline:
         if running:
-            server_pid = running.get('pid')
-            sp_prnt('Stopping "{}" ... '.format(world_name), pre=pre, quiet=quiet, sweetpotato=True, end='')
-            wait_for_server_shutdown(screen_name, server_pid)
-            sp_prnt('backing up ...', end='')
-        else:
-            sp_prnt('Backing up "{}" ... '.format(world_name), quiet=quiet, end='')
-        if verbose_backup:
-            sp_prnt()
-    elif running:
-        send_command('save-all', is_screen_started(screen_name))
-        send_command('save-off', is_screen_started(screen_name))
-        sp_prnt('Running live backup of "{}" ...'.format(world_name),
-                pre=pre, quiet=quiet, sweetpotato=True, end='')
-        if verbose_backup:
-            sp_prnt()
-        send_command('say Server backing up now',
-                     is_screen_started(screen_name))
+            send_command('save-all', is_screen_started(screen_name))
+            send_command('save-off', is_screen_started(screen_name))
+            sp_prnt('Running live backup of "{}" ...'.format(world_name),
+                    pre=pre, quiet=quiet, sweetpotato=True, end='')
+            if verbose_backup:
+                sp_prnt()
+            send_command('say Server backing up now',
+                         is_screen_started(screen_name))
 
     create_dir(backup_dir)
 
@@ -337,8 +325,8 @@ def run_server_backup(pre: str, exclude_files: list, settings: SweetpotatoConfig
 
     os.chdir(os.path.join(server_dir, '..'))
     tar = tarfile.open(full_path_to_backup_file, 'w:{}'.format(compression))
-    if not running and not offline:
-        pre = '[' + Colors.yellow_green + 'backup' + Colors.end + '] '
+    if not running:
+        pre = format_pre('backup')
         sp_prnt('Backing up "{}" ... '.format(world_name), pre=pre, sweetpotato=True, end='')
         if verbose_backup:
             print('')
@@ -352,12 +340,9 @@ def run_server_backup(pre: str, exclude_files: list, settings: SweetpotatoConfig
         tar.add(server_dir_name, filter=_exclude_me)
     tar.close()
 
-    if not offline and running:
+    if running:
         send_command('say Backup complete', is_screen_started(screen_name))
         send_command('save-on', is_screen_started(screen_name))
-    elif offline and running:
-        start_server('', settings, quiet)
-        return True
 
     if not quiet:
         if verbose_backup:
