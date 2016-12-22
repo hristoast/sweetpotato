@@ -308,15 +308,11 @@ def run_server_backup(pre: str, exclude_files: list, settings: SweetpotatoConfig
         except IOError:
             pass
 
-        if running:
-            send_command('save-all', is_screen_started(screen_name))
-            send_command('save-off', is_screen_started(screen_name))
-            sp_prnt('Running live backup of "{}" ...'.format(world_name),
-                    pre=pre, quiet=quiet, sweetpotato=True, end='')
-            if verbose_backup:
-                sp_prnt()
-            send_command('say Server backing up now',
-                         is_screen_started(screen_name))
+    if running:
+        send_command('save-all', is_screen_started(screen_name))
+        send_command('save-off', is_screen_started(screen_name))
+        send_command('say Server backing up now',
+                     is_screen_started(screen_name))
 
     create_dir(backup_dir)
 
@@ -327,15 +323,13 @@ def run_server_backup(pre: str, exclude_files: list, settings: SweetpotatoConfig
     tar = tarfile.open(full_path_to_backup_file, 'w:{}'.format(compression))
     if not running:
         pre = format_pre('backup')
-        sp_prnt('Backing up "{}" ... '.format(world_name), pre=pre, sweetpotato=True, end='')
-        if verbose_backup:
-            print('')
+    else:
+        pre = format_pre('live-backup')
+    sp_prnt('Backing up "{}" ... '.format(world_name), pre=pre, sweetpotato=True, end='')
+    if verbose_backup:
+        print('')
     if world_only:
-        # TODO: can't remember why i try/except'd here so commenting it out...
-        # try:
         tar.add(os.path.join(server_dir_name, world_name), filter=_exclude_me)
-        # except FileNotFoundError as e:
-        #     print("ERROR? {}".format(e))
     else:
         tar.add(server_dir_name, filter=_exclude_me)
     tar.close()
