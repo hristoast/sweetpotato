@@ -345,6 +345,7 @@ def run_server_backup(exclude_files: list, settings: SweetpotatoConfig,
             emit_msg('Backup of "{}" completed!'.format(world_name), quiet=quiet)
         else:
             emit_msg('Backup of "{}" completed!'.format(world_name))
+        emit_msg("Backup file: " + full_path_to_backup_file)
 
 
 def save_settings(settings):
