@@ -2,7 +2,6 @@ import os
 import subprocess
 import sys
 
-from .common import Colors
 from .error import MissingExeError
 
 
@@ -34,9 +33,7 @@ def error_and_die(msg, quiet=False):
     @return:
     """
     if not quiet:
-        sys.stderr.write(
-            Colors.light_red + 'FATAL: ' + Colors.red + msg.__str__().strip("'") +
-            Colors.end + '\n')
+        sys.stderr.write('FATAL: ' + msg.__str__().strip("'") + '\n')
     sys.exit(1)
 
 

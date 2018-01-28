@@ -42,22 +42,6 @@ setup(
         'Topic :: Utilities'],
     platforms=['linux2'],
     license=LICENSE,
-    data_files=[
-        ('', ['README.md']),
-        ('data/static', [
-            'data/static/gnu-cat.png',
-            'data/static/{}.min.css'.format(PROGNAME)]),
-        ('data/tpl', [
-            'data/tpl/404.tpl',
-            'data/tpl/500.tpl',
-            'data/tpl/backup.tpl',
-            'data/tpl/base.tpl',
-            'data/tpl/index.tpl',
-            'data/tpl/lower_nav.tpl',
-            'data/tpl/readme_no_md.tpl',
-            'data/tpl/riker.tpl',
-            'data/tpl/server.tpl'])],
     packages=find_packages(),
-    entry_points={'console_scripts': [
-        '{0} = {0}.cli:parse_args'.format(PROGNAME),
-        '{0}d = {0}.daemon:run_daemon'.format(PROGNAME)]})
+    entry_points={'console_scripts':
+                  ['{0} = {0}.cli:parse_args'.format(PROGNAME), ]})

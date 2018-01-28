@@ -6,13 +6,14 @@ import sys
 import tarfile
 
 from datetime import datetime
-from .common import (DEFAULT_COMPRESSION, DEFAULT_EXCLUDE_FILES, DEFAULT_SCREEN_NAME,
-                     DEFAULT_SERVER_PORT, DEFAULT_WEBUI_PORT, DEFAULT_WORLD_NAME,
-                     MCVERSION, PROGNAME, PYTHON33_OR_GREATER, REQUIRED, Colors,
-                     format_pre, sp_prnt)
-from .error import (ConfFileError, EmptySettingError, NoDirFoundError, ServerNotRunningError)
+from .common import DEFAULT_COMPRESSION, DEFAULT_EXCLUDE_FILES, \
+    DEFAULT_SCREEN_NAME, DEFAULT_SERVER_PORT, DEFAULT_WORLD_NAME, MCVERSION, \
+    PROGNAME, PYTHON33_OR_GREATER, emit_msg
+from .error import ConfFileError, EmptySettingError, NoDirFoundError, \
+    ServerNotRunningError
 from .screen import is_screen_started
-from .server import get_uptime, get_uptime_raw, list_players, list_players_as_list, send_command
+from .server import get_uptime, get_uptime_raw, list_players, \
+    list_players_as_list, send_command
 from .system import create_dir, error_and_die, is_forced
 
 
@@ -34,13 +35,11 @@ class SweetpotatoConfig:
         self.mem_max = None
         self.mem_min = None
         self.mc_version = MCVERSION
-        self.permgen = None
         self.port = DEFAULT_SERVER_PORT
         self.running = False
         self.screen_name = DEFAULT_SCREEN_NAME
         self.server_dir = None
         self.verbose_backup = False
-        self.webui_port = DEFAULT_WEBUI_PORT
         self.world_name = DEFAULT_WORLD_NAME
         self.world_only = False
 
@@ -68,11 +67,8 @@ class SweetpotatoConfig:
 
     @property
     def as_json(self):
+        # TODO: don't copy?
         self_dict = self.__dict__.copy()
-        try:
-            self_dict.pop('pidfile')
-        except KeyError:
-            pass
         try:
             players = list_players_as_list(list_players(self))
             raw = get_uptime_raw(self.server_dir, self.world_name, False)
@@ -213,7 +209,8 @@ def read_conf_file(file, settings):
         exclude_list = exclude.split(" ")
     else:
         exclude_list = []
-    exclude_list.append(settings.exclude_files)
+    if settings.exclude_files not in exclude_list:
+        exclude_list.append(settings.exclude_files)
 
     fancy = c[section].getboolean('fancy')
     world_only = c[section].getboolean('world_only')
@@ -247,13 +244,12 @@ def reread_settings(old_settings):
     return s
 
 
-def run_server_backup(pre: str, exclude_files: list, settings: SweetpotatoConfig, quiet: bool,
-                      running: bool, world_only: bool,
+def run_server_backup(exclude_files: list, settings: SweetpotatoConfig,
+                      quiet: bool, running: bool, world_only: bool,
                       force=False, verbose_backup=False):
     """
     Runs the configured backup on the configured server.
 
-    @param pre:
     @param exclude_files:
     @param settings:
     @param quiet:
@@ -296,7 +292,7 @@ def run_server_backup(pre: str, exclude_files: list, settings: SweetpotatoConfig
             for _file in exclude_files:
                 if _file in tarinfo.name:
                     return None
-        sp_prnt("Adding: ", tarinfo.name, pre=pre, quiet=(not verbose_backup), sweetpotato=True)
+        emit_msg("Adding: " + tarinfo.name, quiet=(not verbose_backup))
         return tarinfo
 
     if backup_made_today and not force:
@@ -321,17 +317,20 @@ def run_server_backup(pre: str, exclude_files: list, settings: SweetpotatoConfig
 
     os.chdir(os.path.join(server_dir, '..'))
     tar = tarfile.open(full_path_to_backup_file, 'w:{}'.format(compression))
-    if not running:
-        pre = format_pre('backup')
-    else:
-        pre = format_pre('live-backup')
-    sp_prnt('Backing up "{}" ... '.format(world_name), pre=pre, sweetpotato=True, end='')
-    if verbose_backup:
-        print('')
+    emit_msg('Backing up "{}" ... '.format(world_name))
     if world_only:
-        tar.add(os.path.join(server_dir_name, world_name), filter=_exclude_me)
+        # File "/home/llx/.local/lib/python3.6/site-packages/sweetpotato/core.py", line 332, in run_server_backup
+        #   tar.add(os.path.join(server_dir_name, world_name), filter=_exclude_me)
+        # FileNotFoundError: [Errno 2] No such file or directory: 'MMGA/MMGA/level.dat_new'
+        try:
+            tar.add(os.path.join(server_dir_name, world_name), filter=_exclude_me)
+        except FileNotFoundError:
+            pass
     else:
-        tar.add(server_dir_name, filter=_exclude_me)
+        try:
+            tar.add(server_dir_name, filter=_exclude_me)
+        except FileNotFoundError:
+            pass
     tar.close()
 
     if running:
@@ -339,10 +338,11 @@ def run_server_backup(pre: str, exclude_files: list, settings: SweetpotatoConfig
         send_command('save-on', is_screen_started(screen_name))
 
     if not quiet:
+        # TODO: wtf is this if for?!
         if verbose_backup:
-            sp_prnt('Done!' + Colors.end, pre=pre, quiet=quiet, sweetpotato=True)
+            emit_msg('Backup of "{}" completed!'.format(world_name), quiet=quiet)
         else:
-            sp_prnt(' Done!' + Colors.end)
+            emit_msg('Backup of "{}" completed!'.format(world_name))
 
 
 def save_settings(settings):
@@ -358,10 +358,11 @@ def validate_directories(*dirs):
     @return:
     """
     for d in dirs:
-        if not os.path.isdir(d):
-            raise NoDirFoundError(
-                'The configured directory "{}" does not exist.'
-                ' Do you need to run --create?'.format(d))
+        if d:
+            if not os.path.isdir(d):
+                raise NoDirFoundError(
+                    'The configured directory "{}" does not exist.'
+                    ' Do you need to run --create?'.format(d))
 
 
 def validate_mem_values(min_mem, max_mem):
@@ -379,7 +380,9 @@ def validate_mem_values(min_mem, max_mem):
         min_value = int(min_mem)
         max_value = int(max_mem)
     except ValueError:
-        error_and_die('The memory values you provided are invalid!')
+        error_and_die('The provided memory values are invalid!')
+    except TypeError:
+        error_and_die('No memory values were provided!')
 
     if min_value > max_value:
         raise ValueError
@@ -393,10 +396,6 @@ def validate_settings(settings):
     @return:
     """
     missing = []
-    for setting, value in settings.__dict__.items():
-        if setting in REQUIRED and value is None:
-            missing.append(setting)
-
     if missing:
         raise EmptySettingError(
             'One or more required settings are not present: {}'.format(

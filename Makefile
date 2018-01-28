@@ -1,68 +1,16 @@
 # -*- makefile -*-
-BDIST = ./setup.py bdist
-BINARY = pyinstaller --onefile exe && mv -v dist/exe dist/sweetpotato
-BUILD = ./setup.py build --force
-CLEAN = /bin/rm -fr MANIFEST build build-stamp dist *.egg-info debian/sweetpotato \
-		debian/files debian/sweetpotato.debhelper.log debian/sweetpotato.substvars \
-		sweetpotato/__pycache__ *.spec
-CLEAN2 = find . -type f -name "*~" -exec /bin/rm -f {} \;
-CLEAN_TEST = /bin/rm -fr /tmp/_sp_test*
-DEB = fakeroot debian/rules binary
-DESTDIR = bin
-PREFIX = /usr/local
-INSTALL = ./setup.py install --force --optimize 2
-SDIST = ./setup.py sdist
-TEST = ./tests.py
-UNINSTALL = /bin/rm -rf $(PREFIX)/lib/python3*/dist-packages/sweetpotato* \
-			$(PREFIX)/bin/sweetpotato*
-UNINSTALL_PYENV = \
-	/bin/rm -rf "~/.pyenv/versions/3*/lib/python3*/site-packages/sweetpotato*" \
-	~/.pyenv/shims/sweetpotato ~/.pyenv/shims/sweetpotatod
+CD = cd ${CURDIR}
 
-.DEFAULT_GOAL := sdist
+.DEFAULT_GOAL := install
 .PHONY: all
 
-all: bdist build clean cleantest deb full_uninstall install i reinstall \
-	 sdist test uninstall uninstall_pyenv
-
-bdist:
-	$(BDIST)
-
-binary:
-	$(BINARY)
-
-build:
-	$(BUILD)
+all: clean install test
 
 clean:
-	$(CLEAN) && $(CLEAN2)
-
-cleantest:
-	$(CLEAN_TEST)
-
-deb:
-	$(DEB)
-
-full_uninstall:
-	$(UNINSTALL) && $(UNINSTALL_PYENV)
+	$(CD) && rm -rf build dist sweetpotato.egg-info
 
 install:
-	$(INSTALL)
-
-i:
-	$(INSTALL) && $(CLEAN) && $(CLEAN2)
-
-reinstall:
-	$(INSTALL)
-
-sdist:
-	$(SDIST)
+	$(CD) && ./setup.py install --force --optimize 2 --user
 
 test:
-	$(TEST)
-
-uninstall:
-	$(UNINSTALL)
-
-uninstall_pyenv:
-	$(UNINSTALL_PYENV)
+	$(CD) && ./tests.py

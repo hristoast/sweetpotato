@@ -1,32 +1,31 @@
 import argparse
 import configparser
+import logging
 import os
 import sys
 
-from .common import (COMPRESSION_CHOICES, DAEMON_PY3K_ERROR, DEFAULT_COMPRESSION,
-                     DEFAULT_CONF_FILE, DEFAULT_EXCLUDE_FILES, DEFAULT_LOG_DIR,
-                     DEFAULT_PERMGEN, DEFAULT_PIDFILE, DEFAULT_SERVER_PORT,
-                     DEFAULT_WEBUI_PORT, DEFAULT_WORLD_NAME, DEP_PKGS, DESCRIPTION,
-                     MCVERSION, PROGNAME, SYMBOLA_SWEETPOTATO, VERSION, Colors,
-                     format_pre, sp_prnt)
-from .core import (SweetpotatoConfig, read_conf_file, run_server_backup,
-                   validate_directories, validate_mem_values, validate_settings)
+from .common import COMPRESSION_CHOICES, DEFAULT_COMPRESSION, \
+    DEFAULT_CONF_FILE, DEFAULT_EXCLUDE_FILES, DEFAULT_SERVER_PORT, \
+    DEFAULT_WORLD_NAME, DESCRIPTION, LOGFMT, MCVERSION, PROGNAME, \
+    VERSION, emit_msg
+from .core import SweetpotatoConfig, read_conf_file, run_server_backup, \
+    validate_directories, validate_mem_values, validate_settings
 try:
     from .daemon import daemon_action
 except ImportError:
     daemon_action = None
-from .error import (BackupFileAlreadyExistsError, ConfFileError,
-                    EmptySettingError, MissingExeError, NoDirFoundError,
-                    ServerAlreadyRunningError, ServerNotRunningError)
+from .error import BackupFileAlreadyExistsError, ConfFileError, \
+    EmptySettingError, NoDirFoundError, ServerAlreadyRunningError, \
+    ServerNotRunningError
 from .screen import is_screen_started
-from .server import (create_server, is_server_running, get_uptime, get_uptime_raw,
-                     get_uptime_string, list_players, restart_server, save_all,
-                     send_command, start_server, stop_server)
-from .system import dependency_check, error_and_die, get_exe_path
-from .web import run_webui
+from .server import create_server, is_server_running, get_uptime, \
+    get_uptime_raw, get_uptime_string, list_players, restart_server, save_all, \
+    send_command, start_server, stop_server
+from .system import error_and_die
 
 
 def setup_args(args):
+    logging.basicConfig(format=LOGFMT, level=logging.INFO, stream=sys.stdout)
     parser = argparse.ArgumentParser(description=DESCRIPTION, prog=PROGNAME)
 
     actions = parser.add_mutually_exclusive_group(required=True)
@@ -34,9 +33,6 @@ def setup_args(args):
                          help='back up your Minecraft server (live)')
     actions.add_argument('-C', '--create', action='store_true',
                          help='create a server from settings')
-    actions.add_argument('-D', '--daemon',
-                         choices=['stop', 'start', 'restart'],
-                         help="run the WebUI as a background process")
     actions.add_argument('-R', '--dynmap-fullrender', action='store_true',
                          help="Trigger a fullrender with Dynmap.")
     actions.add_argument('-g', '--genconf', action='store_true',
@@ -59,8 +55,6 @@ def setup_args(args):
     #                      help=argparse.SUPPRESS)
     actions.add_argument('-U', '--uptime', action='store_true',
                          help='Show server uptime in hours')
-    actions.add_argument('-W', '--web', action='store_true',
-                         help='run the WebUI')
     # actions.add_argument('--wipe', action='store_true', help='Wipe configs')
 
     settings = parser.add_argument_group('Settings',
@@ -122,27 +116,9 @@ def setup_args(args):
     forge_settings.add_argument('-f', '--forge',
                                 help='version of Forge you are using.',
                                 metavar='FORGE VERSION')
-    forge_settings.add_argument('-P', '--permgen',
-                                help='Amount of permgen to use in MB.'
-                                     ' Default: ' + DEFAULT_PERMGEN)
-
-    webui_settings = parser.add_argument_group('WebUI',
-                                               'More configuration options for'
-                                               ' the WebUI and daemon mode')
-    webui_settings.add_argument('--log-dir', '-L', metavar="LOG DIR",
-                                help='set the log location.'
-                                     ' Default: ' + DEFAULT_LOG_DIR)
-    webui_settings.add_argument('--pidfile', '-pid', metavar='PID FILE',
-                                help='set the pid file used when running in'
-                                     ' daemon mode. Default: ' +
-                                     DEFAULT_PIDFILE)
-    webui_settings.add_argument('--webui-port', dest='webui_port',
-                                metavar='WEBUI PORT',
-                                help='Port to bind to for the WebUI.'
-                                     ' Default: ' + str(DEFAULT_WEBUI_PORT))
 
     def _version_string():
-        v = SYMBOLA_SWEETPOTATO + ' %(prog)s ' + VERSION
+        v = ' %(prog)s ' + VERSION
         # if SHA:
         #     v += (' ' + SHA)
         return v
@@ -191,8 +167,6 @@ def setup_args(args):
         s.mem_min = args.gb[0]
     if args.level_seed:
         s.level_seed = args.level_seed
-    if args.permgen:
-        s.permgen = args.permgen
     if args.port:
         s.port = args.port
     if args.quiet:
@@ -207,8 +181,6 @@ def setup_args(args):
         s.verbose_backup = True
     if args.mc_version:
         s.mc_version = args.mc_version
-    if args.webui_port:
-        s.webui_port = args.webui_port
     if args.world:
         s.world_name = args.world
     if args.world_only:
@@ -218,8 +190,6 @@ def setup_args(args):
 
     if s.forge:
         s.mc_version = s.forge.split('-')[0]
-        if not s.permgen:
-            s.permgen = DEFAULT_PERMGEN
 
     try:
         validate_settings(s)
@@ -244,9 +214,8 @@ def setup_args(args):
     running = is_server_running(s.server_dir)
 
     if args.backup:
-        pre = format_pre('backup')
         try:
-            run_server_backup(pre, s.exclude_files, s, s.quiet, running, s.world_only,
+            run_server_backup(s.exclude_files, s, s.quiet, running, s.world_only,
                               verbose_backup=s.verbose_backup)
         except BackupFileAlreadyExistsError as e:
             send_command('say Backup Done!', is_screen_started(s.screen_name))
@@ -256,15 +225,9 @@ def setup_args(args):
             create_server(s, s.quiet)
         except ServerAlreadyRunningError as e:
             error_and_die(e.msg.strip('"'), quiet=s.quiet)
-    elif args.daemon:
-        if daemon_action:
-            daemon_action(args.daemon)
-        else:
-            error_and_die(DAEMON_PY3K_ERROR)
     elif args.dynmap_fullrender:
-        pre = format_pre('fullrender')
         if running:
-            sp_prnt("Attempting a dynmap fullrender ...", pre=pre, quiet=s.quiet, sweetpotato=True)
+            emit_msg("Attempting a dynmap fullrender ...", quiet=s.quiet)
             send_command('dynmap fullrender {}'.format(s.world_name), is_screen_started(s.screen_name))
         else:
             error_and_die(s.world_name + " is not running!", quiet=s.quiet)
@@ -276,44 +239,36 @@ def setup_args(args):
         print(s.as_json)
     elif args.list:
         if running:
-            pre = format_pre('list')
             players = list_players(s)
             if players:
                 for p in players:
-                    sp_prnt(p.strip(),
-                            pre=pre, quiet=s.quiet, sweetpotato=True)
+                    emit_msg(p.strip(), quiet=s.quiet)
             else:
-                sp_prnt('Nobody on right now :(',
-                        pre=pre, quiet=s.quiet, sweetpotato=True)
+                emit_msg('Nobody on right now :(', quiet=s.quiet)
         else:
             error_and_die(s.world_name + " is not running!", quiet=s.quiet)
     elif args.save_all:
         if running:
-            pre = format_pre('save-all')
-            sp_prnt('Saving "{}" ...'.format(s.world_name), quiet=s.quiet, end='')
+            emit_msg('Saving "{}" ...'.format(s.world_name), quiet=s.quiet, end='')  # TODO: does end work?
             save_all(s)
-            sp_prnt('Done!', quiet=s.quiet)
+            emit_msg('"{}" saved!'.format(s.world_name), quiet=s.quiet)
         else:
             error_and_die("{} is not running!".format(s.world_name), quiet=s.quiet)
     elif args.say:
         send_command('say ' + args.say, is_screen_started(s.screen_name))
     elif args.restart:
-        pre = format_pre('restart')
         try:
-            restart_server(pre, s, s.quiet)
+            restart_server(s, s.quiet)
         except BackupFileAlreadyExistsError as e:
             error_and_die(e, quiet=s.quiet)
     elif args.start:
-        pre = format_pre('start')
         try:
-            start_server(pre, s, s.quiet)
+            start_server(s, s.quiet)
         except ServerAlreadyRunningError as e:
             error_and_die(e, quiet=s.quiet)
     elif args.stop:
-        pre = format_pre('stop')
         try:
             stop_server(
-                pre,
                 s.screen_name,
                 s.server_dir,
                 s.world_name,
@@ -327,27 +282,15 @@ def setup_args(args):
             raw_uptime = get_uptime_raw(s.server_dir, s.world_name, s.quiet)
             u = get_uptime(raw_uptime)
             uptime_string = get_uptime_string(u)
-            pre = format_pre('uptime')
-            sp_prnt(Colors.green + '{} '.format(s.world_name)
-                    + 'has been up for ' + Colors.yellow_green + uptime_string,
-                    pre=pre, quiet=s.quiet, sweetpotato=True)
+            emit_msg(s.world_name + 'has been up for ' + uptime_string, quiet=s.quiet)
         except ServerNotRunningError as e:
             error_and_die(e, quiet=s.quiet)
-    elif args.web:
-        run_webui(s, s.quiet)
     else:
         parser.print_usage()
 
 
 def parse_args():
     # TODO: get actual level seed
-    # ensure dependencies are here
-    try:
-        [dependency_check(get_exe_path(p)) for p in DEP_PKGS]
-
-    except MissingExeError as e:
-        error_and_die(e)
-
     # process cli args and do our stuff
     args = sys.argv[1:]
     setup_args(args)

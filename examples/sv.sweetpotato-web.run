@@ -1,4 +1,0 @@
-#!/bin/sh
-# runit service example
-SP_USER=sweetpotato
-exec chpst - u ${SP_USER}:${SP_USER} sweetpotato --web 2>&1
