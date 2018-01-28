@@ -261,7 +261,8 @@ def run_server_backup(exclude_files: list, settings: SweetpotatoConfig,
     @return:
     """
     backup_dir = settings.backup_dir
-    date_stamp = datetime.now().strftime('%Y-%m-%d')
+    # TODO: make this toggle-able
+    date_stamp = datetime.now().strftime('%Y-%m-%d-%H%M%S')
     if not force:
         force = is_forced(settings)
 
