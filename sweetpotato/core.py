@@ -244,6 +244,7 @@ def reread_settings(old_settings):
     return s
 
 
+# TODO: tweak the file name
 def run_server_backup(exclude_files: list, settings: SweetpotatoConfig,
                       quiet: bool, running: bool, world_only: bool,
                       force=False, verbose_backup=False):

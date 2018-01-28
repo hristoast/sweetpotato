@@ -1,7 +1,9 @@
+import logging
 import os
 import subprocess
 import sys
 
+from .common import emit_msg
 from .error import MissingExeError
 
 
@@ -33,7 +35,7 @@ def error_and_die(msg, quiet=False):
     @return:
     """
     if not quiet:
-        sys.stderr.write('FATAL: ' + msg.__str__().strip("'") + '\n')
+        emit_msg('FATAL: ' + msg.__str__().strip("'"), level=logging.ERROR)
     sys.exit(1)
 
 

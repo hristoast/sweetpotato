@@ -282,7 +282,7 @@ def setup_args(args):
             raw_uptime = get_uptime_raw(s.server_dir, s.world_name, s.quiet)
             u = get_uptime(raw_uptime)
             uptime_string = get_uptime_string(u)
-            emit_msg(s.world_name + 'has been up for ' + uptime_string, quiet=s.quiet)
+            emit_msg(s.world_name + ' has been up for ' + uptime_string, quiet=s.quiet)
         except ServerNotRunningError as e:
             error_and_die(e, quiet=s.quiet)
     else:
