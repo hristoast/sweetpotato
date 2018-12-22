@@ -179,7 +179,11 @@ class SweetpotatoTests(unittest.TestCase):
 
     def test_get_real_exe_path(self):
         ls = get_exe_path('ls')
-        self.assertEqual(ls, '/bin/ls')
+        try:
+            self.assertEqual(ls, '/bin/ls')
+        except AssertionError:
+            # This is where ls lives on void, likely other newer systems
+            self.assertEqual(ls, '/usr/bin/ls')
 
     def test_get_jar(self):
         jar = get_jar(self.config)[0]
