@@ -91,6 +91,8 @@ def setup_args(args):
     settings.add_argument('-v', '--mc-version', metavar='MC VERSION',
                           help='set the version of minecraft.'
                                ' Default: ' + MCVERSION)
+    settings.add_argument('--playerdata-only', help='back up only playerdata files',
+                          action='store_true')
     settings.add_argument('-V', '--verbose', action='store_true', help='Show a more '
                           'verbose output from the backup making process.')
     settings.add_argument('-w', '--world', metavar='WORLD NAME',
@@ -177,6 +179,8 @@ def setup_args(args):
         s.server_dir = args.server_dir
     if args.screen:
         s.screen_name = args.screen
+    if args.playerdata_only:
+        s.playerdata_only = True
     if args.verbose:
         s.verbose_backup = True
     if args.mc_version:
@@ -215,7 +219,8 @@ def setup_args(args):
 
     if args.backup:
         try:
-            run_server_backup(s.exclude_files, s, s.quiet, running, s.world_only,
+            run_server_backup(s.exclude_files, s, s.quiet, running,
+                              s.world_only, playerdata_only=s.playerdata_only,
                               verbose_backup=s.verbose_backup)
         except BackupFileAlreadyExistsError as e:
             send_command('say Backup Done!', is_screen_started(s.screen_name))

@@ -84,7 +84,7 @@ JSON = """{
     "force": false,
     "forge": null,
     "level_seed": null,
-    "mc_version": "1.10.2",
+    "mc_version": "%s",
     "mem_format": "MB",
     "mem_max": "1024",
     "mem_min": "512",
@@ -92,11 +92,12 @@ JSON = """{
     "running": false,
     "screen_name": "Sweetpotatoworld",
     "server_dir": "/tmp/_sp_test_server",
+    "userdata_only": false,
     "verbose_backup": false,
     "webui_port": 8181,
     "world_name": "Sweetpotatoworld",
     "world_only": false
-}"""
+}""" % MCVERSION
 
 
 class SweetpotatoTests(unittest.TestCase):

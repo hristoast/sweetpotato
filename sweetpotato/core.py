@@ -39,6 +39,7 @@ class SweetpotatoConfig:
         self.running = False
         self.screen_name = DEFAULT_SCREEN_NAME
         self.server_dir = None
+        self.playerdata_only = False
         self.verbose_backup = False
         self.world_name = DEFAULT_WORLD_NAME
         self.world_only = False
@@ -247,7 +248,7 @@ def reread_settings(old_settings):
 # TODO: tweak the file name
 def run_server_backup(exclude_files: list, settings: SweetpotatoConfig,
                       quiet: bool, running: bool, world_only: bool,
-                      force=False, verbose_backup=False):
+                      force=False, playerdata_only=False, verbose_backup=False):
     """
     Runs the configured backup on the configured server.
 
@@ -272,7 +273,10 @@ def run_server_backup(exclude_files: list, settings: SweetpotatoConfig,
     world_name = settings.world_name
     compression = settings.compression
 
-    backup_file = '{0}_{1}.tar.{2}'.format(date_stamp, world_name, compression)
+    if playerdata_only:
+        backup_file = '{0}_{1}_playerdata.tar.{2}'.format(date_stamp, world_name, compression)
+    else:
+        backup_file = '{0}_{1}.tar.{2}'.format(date_stamp, world_name, compression)
     full_path_to_backup_file = os.path.join(backup_dir, backup_file)
     backup_made_today = os.path.isfile(full_path_to_backup_file)
 
@@ -306,7 +310,7 @@ def run_server_backup(exclude_files: list, settings: SweetpotatoConfig,
         except IOError:
             pass
 
-    if running:
+    if running and not playerdata_only:
         send_command('save-all', is_screen_started(screen_name))
         send_command('save-off', is_screen_started(screen_name))
         send_command('say Server backing up now',
@@ -320,7 +324,12 @@ def run_server_backup(exclude_files: list, settings: SweetpotatoConfig,
     os.chdir(os.path.join(server_dir, '..'))
     tar = tarfile.open(full_path_to_backup_file, 'w:{}'.format(compression))
     emit_msg('Backing up "{}" ... '.format(world_name))
-    if world_only:
+    if playerdata_only:
+        try:
+            tar.add(os.path.join(server_dir_name, world_name, "playerdata"), filter=_exclude_me)
+        except FileNotFoundError:
+            pass
+    elif world_only:
         # File "/home/llx/.local/lib/python3.6/site-packages/sweetpotato/core.py", line 332, in run_server_backup
         #   tar.add(os.path.join(server_dir_name, world_name), filter=_exclude_me)
         # FileNotFoundError: [Errno 2] No such file or directory: 'MMGA/MMGA/level.dat_new'
@@ -335,7 +344,7 @@ def run_server_backup(exclude_files: list, settings: SweetpotatoConfig,
             pass
     tar.close()
 
-    if running:
+    if running and not playerdata_only:
         send_command('say Backup complete', is_screen_started(screen_name))
         send_command('save-on', is_screen_started(screen_name))
 
