@@ -10,10 +10,11 @@ def is_screen_started(screen_name):
     @param screen_name:
     @return:
     """
-    proc = subprocess.Popen(
-        ['screen', '-ls', '{0}'.format(screen_name)], stdout=subprocess.PIPE)
-    output = proc.communicate()[0]
-    split_output = output.decode().split()
+    with open(os.devnull, "w") as FNULL:
+        proc = subprocess.Popen(
+            ['screen', '-ls', '{0}'.format(screen_name)], stdout=subprocess.PIPE, stderr=FNULL)
+        output = proc.communicate()[0]
+        split_output = output.decode().split()
 
     if split_output[0] == 'No':
         # no screens named `screen_name`
